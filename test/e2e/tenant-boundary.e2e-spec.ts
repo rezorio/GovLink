@@ -107,6 +107,26 @@ describe('Tenant boundary (e2e)', () => {
                 .set(authHeader(mayorToken))
                 .expect(200);
         });
+
+        it('GET /barangays lists municipality barangays', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/barangays')
+                .set(authHeader(mayorToken))
+                .expect(200);
+
+            const ids = response.body.map((row: { id: string }) => row.id);
+            expect(ids).toContain(fixture.barangayAId);
+            expect(ids).toContain(fixture.barangayBId);
+        });
+    });
+
+    describe('Barangay municipal-only endpoints', () => {
+        it('GET /barangays returns 403 for barangay captain', async () => {
+            await request(app.getHttpServer())
+                .get('/api/barangays')
+                .set(authHeader(captainAToken))
+                .expect(403);
+        });
     });
 
     describe('Barangay inbox isolation', () => {

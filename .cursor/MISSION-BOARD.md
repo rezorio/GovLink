@@ -1,8 +1,8 @@
 # GovLink — Mission Board
 
 > **Last updated:** 2026-08-22  
-> **Current mission:** Mission 5 — Vue inbox + dashboard  
-> **Phase:** 5 (Frontend shell)
+> **Current mission:** MVP spine complete — pick next from "Missing / not yet scoped"  
+> **Phase:** Post-MVP planning
 
 **Source of truth for active work.** Update this file at end-of-session or when a mission completes.  
 For stable reference (stack, tenancy, pilot data): [PROJECT-OVERVIEW.md](PROJECT-OVERVIEW.md).  
@@ -18,7 +18,7 @@ For long-term feature catalog: [context/FEATURES.md](context/FEATURES.md).
 | 2 | Auth spine | ✅ Done |
 | 3 | Directive flow API | ✅ Done |
 | 4 | Tenant boundary test | ✅ Done |
-| 5 | Vue inbox + dashboard | 🔄 **Current** |
+| 5 | Vue inbox + dashboard | ✅ Done |
 
 **MVP flow we're building toward:**
 
@@ -114,7 +114,7 @@ DirectiveTemplate → SupervisoryTask → TaskAssignment → EvidenceSubmission 
 
 ---
 
-## Mission 5 — Vue inbox + dashboard 🔄
+## Mission 5 — Vue inbox + dashboard ✅
 
 **Goal:** Browser demo with two roles — mayor dashboard and barangay task inbox.
 
@@ -124,17 +124,19 @@ DirectiveTemplate → SupervisoryTask → TaskAssignment → EvidenceSubmission 
 
 ### Tasks
 
-- [ ] Vue 3 app scaffold (`frontend/`)
-- [ ] Auth: login page, JWT storage, API client with tenant headers
-- [ ] Mayor compliance dashboard (heatmap table)
-- [ ] Barangay task inbox
-- [ ] Review slide-over drawer (accept / return)
-- [ ] Status badges (emerald / amber / rose)
-- [ ] Mobile-first field upload UI
+- [x] Vue 3 app scaffold (`frontend/`)
+- [x] Auth: login page, JWT storage, API client with Bearer token
+- [x] Mayor compliance dashboard (heatmap table + assign form)
+- [x] Barangay task inbox (acknowledge + evidence upload)
+- [x] Review slide-over drawer (accept / return)
+- [x] Status badges (emerald / amber / rose)
+- [x] Mobile-first field upload UI
+- [x] CORS enabled on API for `http://localhost:5173`
+- [x] Production build verified (`npm run build` in `frontend/`)
 
-### Blockers
+**Completed:** 2026-08-22
 
-- Depends on Missions 2–3 (API must exist)
+**Known gap:** None for MVP assign flow — barangay picker uses `GET /barangays`.
 
 ---
 
@@ -144,8 +146,8 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 
 | Item | Notes | Target |
 |------|-------|--------|
-| Initial git commit | Repo not yet committed | Before Mission 2 ships |
-| CI pipeline | lint, test, migrate check | After Mission 4 (first API tests) |
+| Barangay list API | Done | `GET /barangays` for mayor assign picker |
+| CI pipeline | lint, test, migrate check | Post-MVP |
 | Bulk assign to all barangays | Convenience after single-assign | Post–Mission 3 |
 | Full compliance catalog seed | ADM / SOC / SK codes | Phase 4 |
 | DILG PDF / Excel exports | Letterhead + QR verification | Phase 5 |
@@ -180,6 +182,6 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 
 _Completed mission details stay in sections above with ✅. Add dated notes here for major milestones._
 
-- **2026-08-22** — Mission 1 complete. DB + seed verified locally.
+- **2026-08-22** — Mission 5 complete. Vue 3 frontend shell (login, mayor dashboard, barangay inbox, review drawer).
 - **2026-08-22** — Mission 4 complete. Supertest tenant boundary suite (`npm run test:e2e`).
 - **2026-08-22** — Mission 3 complete. Directive flow API + audit log + security hardening.

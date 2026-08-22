@@ -192,7 +192,9 @@ AI development assets already in place. **Do not add more skills until the MVP s
 
 > **Live status:** See [MISSION-BOARD.md](MISSION-BOARD.md) for current mission, task checkboxes, and blockers.
 
-**Phase 1 complete.** Mission 2 (auth spine) is next. Mission 1 delivered schema, migration, PSGC seed, Docker, and docs.
+**Phase 5 complete.** Missions 1–5 delivered the full MVP spine: DB + seed, auth, directive API, tenant e2e tests, and Vue frontend shell.
+
+**Recommended next:** Barangay list API (mayor assign UX), then CI pipeline.
 
 ---
 
@@ -213,10 +215,10 @@ AI development assets already in place. **Do not add more skills until the MVP s
 Execute in order. Full task lists and exit criteria: [MISSION-BOARD.md](MISSION-BOARD.md).
 
 1. ~~Schema + seed~~ — done
-2. **Auth spine** — current
-3. Directive flow API
-4. Tenant boundary test
-5. Vue inbox + dashboard
+2. ~~Auth spine~~ — done
+3. ~~Directive flow API~~ — done
+4. ~~Tenant boundary test~~ — done
+5. ~~Vue inbox + dashboard~~ — done
 
 ---
 
@@ -228,6 +230,7 @@ Document in `.env.example` when scaffold exists. Never commit `.env`.
 DATABASE_URL=
 JWT_SECRET=
 JWT_EXPIRES_IN_HOURS=8
+FRONTEND_URL=http://localhost:5173
 S3_BUCKET=
 S3_REGION=
 S3_ACCESS_KEY_ID=
@@ -260,10 +263,11 @@ Directive templates seeded from DILG MC references (BDRRMP, FDPP, BADAC).
 | **1** | DB + seed | Done |
 | **2** | Auth + API bootstrap | Done |
 | **3** | Directive flow API | Done |
-| **4** (now) | Tenant boundary test | Supertest 403 cases |
-| **4** | Compliance catalog | Full ADM/SOC/SK requirements seeded |
-| **5** | Audit exports | PDF scorecard + QR verification |
-| **6** | Procurement | APP, contracts, SVP thresholds |
+| **4** | Tenant boundary test | Done |
+| **5** | Vue frontend shell | Done |
+| **6** | Compliance catalog | Full ADM/SOC/SK requirements seeded |
+| **7** | Audit exports | PDF scorecard + QR verification |
+| **8** | Procurement | APP, contracts, SVP thresholds |
 
 ---
 

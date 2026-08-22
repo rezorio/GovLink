@@ -37,6 +37,14 @@ All protected routes require `Authorization: Bearer <access_token>`.
 
 ---
 
+## Barangays
+
+| Method | Path | Roles | Description |
+|--------|------|-------|-------------|
+| `GET` | `/barangays` | `MAYOR`, `DEPT_HEAD` | List active barangays in municipality |
+
+---
+
 ## Assignments
 
 | Method | Path | Roles | Description |

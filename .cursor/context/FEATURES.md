@@ -47,6 +47,7 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 | RBAC (`@Roles()`) | Done | Mission 2 — apply on mutating routes in Mission 3 |
 | List directive templates | Done | `GET /api/directives/templates` |
 | Mayor assigns task to barangay(s) | Done | `POST /api/directives/tasks` |
+| List barangays (municipal picker) | Done | `GET /api/barangays` |
 | Bulk assign to all barangays | Deferred | After single-assign works |
 | Barangay acknowledge task | Done | `POST /api/assignments/:id/acknowledge` |
 | Evidence upload (presigned S3) | Done | Metadata stub; fileKey tenant-prefix validated |
@@ -60,11 +61,13 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Mayor compliance dashboard | Planned | Mission 5 — heatmap table |
-| Barangay task inbox | Planned | Mission 5 |
-| Review slide-over drawer | Planned | Mission 5 |
-| Status badges (emerald/amber/rose) | Planned | Per `vue-tailwind-dashboard` skill |
-| Mobile-first field uploads | Planned | Mission 5 |
+| Mayor compliance dashboard | Done | `/mayor` — heatmap table + assign form |
+| Barangay task inbox | Done | `/barangay` — acknowledge + upload |
+| Review slide-over drawer | Done | Accept / return with comment |
+| Status badges (emerald/amber/rose) | Done | `StatusBadge.vue` |
+| Mobile-first field uploads | Done | `EvidenceUpload.vue` |
+| Login + JWT session | Done | Pinia auth store, route guards |
+| Barangay list (mayor assign picker) | Done | `GET /barangays` |
 
 ---
 
@@ -107,10 +110,7 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 
 ## Current mission
 
-**Mission 5 — Vue inbox + dashboard**
+**MVP spine complete (Missions 1–5).** Next candidates:
 
-- [ ] Vue 3 app scaffold (`frontend/`)
-- [ ] Login page + JWT API client
-- [ ] Mayor dashboard + barangay inbox + review drawer
-
-Exit criteria: browser demo with mayor and Punong Barangay roles.
+- CI pipeline (`lint`, `test:e2e`, migrate check)
+- Full compliance catalog seed (ADM/SOC/SK)

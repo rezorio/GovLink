@@ -96,6 +96,32 @@ API base URL: `http://localhost:3000/api`
 
 ---
 
+## Frontend dev server
+
+Requires the API running on port 3000 (see step 7 above).
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+App URL: `http://localhost:5173`
+
+Vite proxies `/api` to `http://localhost:3000` during development.
+
+| Route | Role | Purpose |
+|-------|------|---------|
+| `/login` | Public | JWT login |
+| `/mayor` | MAYOR / DEPT_HEAD | Compliance heatmap, assign tasks, review drawer |
+| `/barangay` | BARANGAY_* | Task inbox, acknowledge, evidence upload |
+
+After login, users are routed by role. Demo passwords: `GovLinkDemo1!`
+
+**Mayor assign:** Barangay dropdown loads from `GET /api/barangays` (municipal roles only).
+
+---
+
 ## Demo accounts
 
 Password for all demo users: `GovLinkDemo1!`
@@ -171,5 +197,6 @@ This should not happen with the current upsert-based seed. Run `npm run db:reset
 
 ## Next steps after setup
 
-1. Verify seed data in Prisma Studio
-2. Proceed to **Mission 2:** NestJS auth spine (see [MISSION-BOARD.md](../.cursor/MISSION-BOARD.md))
+1. Start API (`npm run start:dev`) and frontend (`cd frontend && npm run dev`)
+2. Log in as mayor or Punong Barangay and walk the assign → acknowledge → submit → review flow
+3. Run `npm run test:e2e` to verify tenant isolation

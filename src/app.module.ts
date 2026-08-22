@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AssignmentsModule } from './modules/assignments/assignments.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CommonModule } from './modules/common/common.module';
+import { BarangaysModule } from './modules/barangays/barangays.module';
 import { DirectivesModule } from './modules/directives/directives.module';
 import { RolesGuard } from './modules/common/guards/roles.guard';
 import { HealthModule } from './modules/health/health.module';
@@ -18,6 +19,7 @@ import { PrismaModule } from './modules/prisma/prisma.module';
         AuthModule,
         HealthModule,
         DirectivesModule,
+        BarangaysModule,
         AssignmentsModule,
     ],
     providers: [

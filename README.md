@@ -2,7 +2,7 @@
 
 B2G SaaS for Philippine municipal governance — auditable task tracking and document submissions between **Municipalities** and their **Barangays**, replacing informal channels (Viber, Messenger, paper).
 
-**Status:** MVP API complete (auth + directive flow + e2e tenant tests); Vue frontend not yet built.
+**Status:** MVP spine complete — NestJS API + Vue 3 frontend demo (auth, directive flow, tenant tests, inbox + dashboard).
 
 ---
 
@@ -35,6 +35,15 @@ docker compose up -d
 npm run db:migrate
 npm run db:seed
 npm run db:studio   # optional — browse seeded data
+npm run start:dev   # API at http://localhost:3000/api
+```
+
+**Frontend (separate terminal):**
+
+```powershell
+cd frontend
+npm install
+npm run dev         # http://localhost:5173
 ```
 
 ---
@@ -45,8 +54,10 @@ npm run db:studio   # optional — browse seeded data
 |-------|-------|--------|
 | 0 | AI harness + domain skills | Done |
 | 1 | Database + seed | Done |
-| 2 | Auth + API spine | **Next** |
-| 3 | Vue frontend shell | Planned |
+| 2 | Auth + API spine | Done |
+| 3 | Directive flow API | Done |
+| 4 | Tenant boundary tests | Done |
+| 5 | Vue frontend shell | Done |
 
 See [.cursor/MISSION-BOARD.md](.cursor/MISSION-BOARD.md) for the active mission and task checklist.
 
