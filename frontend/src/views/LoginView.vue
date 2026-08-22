@@ -20,51 +20,65 @@ async function onSubmit() {
 </script>
 
 <template>
-    <div class="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-        <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div class="mb-6 text-center">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Republic of the Philippines</p>
-                <h1 class="mt-1 text-2xl font-bold text-slate-900">GovLink</h1>
-                <p class="mt-1 text-sm text-slate-600">Municipal–Barangay supervision portal</p>
+    <div class="relative flex min-h-screen items-center justify-center px-4 py-12">
+        <div class="absolute inset-0 -z-10 bg-paper" />
+        <div
+            class="absolute inset-x-0 top-0 -z-10 h-[42vh]"
+            style="
+                background: linear-gradient(
+                    165deg,
+                    rgba(15, 107, 92, 0.18) 0%,
+                    transparent 70%
+                );
+            "
+        />
+
+        <div class="w-full max-w-md">
+            <div class="mb-8">
+                <p class="font-display text-5xl font-bold tracking-tight text-ink">GovLink</p>
+                <p class="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-brand">
+                    Republic of the Philippines
+                </p>
+                <p class="mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">
+                    Municipal–Barangay supervision portal for auditable directives and compliance.
+                </p>
             </div>
 
-            <form class="space-y-4" @submit.prevent="onSubmit">
+            <form class="gl-panel space-y-4 p-6" @submit.prevent="onSubmit">
                 <div>
-                    <label for="email" class="mb-1 block text-sm font-medium text-slate-700">Email</label>
+                    <label for="email" class="mb-1 block text-sm font-medium text-ink">Email</label>
                     <input
                         id="email"
                         v-model="email"
                         type="email"
                         required
                         autocomplete="username"
-                        class="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                        class="min-h-11 w-full border border-rule bg-paper px-3 text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                        style="border-radius: 2px"
                     />
                 </div>
                 <div>
-                    <label for="password" class="mb-1 block text-sm font-medium text-slate-700">Password</label>
+                    <label for="password" class="mb-1 block text-sm font-medium text-ink">Password</label>
                     <input
                         id="password"
                         v-model="password"
                         type="password"
                         required
                         autocomplete="current-password"
-                        class="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                        class="min-h-11 w-full border border-rule bg-paper px-3 text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                        style="border-radius: 2px"
                     />
                 </div>
 
-                <p v-if="auth.error" class="text-sm text-rose-600">{{ auth.error }}</p>
+                <p v-if="auth.error" class="text-sm text-status-danger">{{ auth.error }}</p>
 
-                <button
-                    type="submit"
-                    class="min-h-11 w-full rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
-                    :disabled="auth.loading"
-                >
+                <button type="submit" class="gl-btn-primary w-full disabled:opacity-50" :disabled="auth.loading">
                     {{ auth.loading ? 'Signing in…' : 'Sign in' }}
                 </button>
             </form>
 
-            <div class="mt-6 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
-                <p class="font-semibold text-slate-800">Demo accounts</p>
+            <div class="mt-5 border-l-2 border-brand/40 pl-3 text-xs leading-relaxed text-ink-muted">
+                <p class="font-semibold text-ink">Demo accounts</p>
                 <p>Mayor: mayor@san-jose-batangas.gov.ph</p>
                 <p>Punong Barangay: captain@aguila-sj-batangas.gov.ph</p>
                 <p>Password: GovLinkDemo1!</p>

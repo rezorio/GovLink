@@ -29,10 +29,10 @@ export function complianceStatusLabel(status: ComplianceStatus): string {
 export function cellTint(status: ComplianceStatus): string {
     const variant = complianceStatusToVariant(status);
     if (variant === 'approved') {
-        return 'bg-emerald-50';
+        return 'bg-status-ok/10';
     }
     if (variant === 'overdue') {
-        return 'bg-rose-50';
+        return 'bg-status-danger/10';
     }
-    return 'bg-amber-50';
+    return 'bg-status-warn/10';
 }

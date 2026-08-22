@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import AppShell from '@/components/library/layout/AppShell.vue';
 import ReviewDrawer from '@/components/library/drawer/ReviewDrawer.vue';
+import ComplianceReviewDrawer from '@/components/library/drawer/ComplianceReviewDrawer.vue';
 import StatusBadge from '@/components/library/badges/StatusBadge.vue';
 import {
     fetchAssignments,
@@ -10,10 +11,20 @@ import {
     reviewAssignment,
 } from '@/api/assignments';
 import { fetchBarangays } from '@/api/barangays';
-import { fetchComplianceMatrix, openCompliancePeriods } from '@/api/compliance';
+import {
+    fetchComplianceMatrix,
+    fetchComplianceReviewQueue,
+    openCompliancePeriods,
+    reviewComplianceInstance,
+} from '@/api/compliance';
+import {
+    downloadComplianceScorecardExcel,
+    downloadComplianceScorecardPdf,
+} from '@/api/exports';
 import { useAuthStore } from '@/stores/auth';
 import type {
     BarangaySummary,
+    ComplianceInstance,
     ComplianceMatrix,
     ComplianceMatrixCell,
     ComplianceStatus,
@@ -33,12 +44,15 @@ const assignments = ref<TaskAssignment[]>([]);
 const templates = ref<DirectiveTemplate[]>([]);
 const barangays = ref<BarangaySummary[]>([]);
 const matrix = ref<ComplianceMatrix | null>(null);
+const reviewQueue = ref<ComplianceInstance[]>([]);
 const loading = ref(true);
 const actionLoading = ref(false);
 const error = ref<string | null>(null);
 
 const selectedAssignment = ref<TaskAssignment | null>(null);
 const drawerOpen = ref(false);
+const selectedCompliance = ref<ComplianceInstance | null>(null);
+const complianceDrawerOpen = ref(false);
 
 const showAssignForm = ref(false);
 const assignForm = ref({
@@ -79,16 +93,18 @@ async function loadData() {
     loading.value = true;
     error.value = null;
     try {
-        const [rows, tpls, brgys, mx] = await Promise.all([
+        const [rows, tpls, brgys, mx, queue] = await Promise.all([
             fetchAssignments(auth.token),
             fetchDirectiveTemplates(auth.token),
             fetchBarangays(auth.token),
             fetchComplianceMatrix(auth.token),
+            fetchComplianceReviewQueue(auth.token),
         ]);
         assignments.value = rows;
         templates.value = tpls;
         barangays.value = brgys;
         matrix.value = mx;
+        reviewQueue.value = queue;
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to load dashboard';
     } finally {
@@ -194,63 +210,180 @@ async function handleOpenPeriods() {
     }
 }
 
+function openComplianceReview(row: ComplianceInstance) {
+    selectedCompliance.value = row;
+    complianceDrawerOpen.value = true;
+}
+
+async function handleComplianceReview(payload: {
+    decision: 'ACCEPTED' | 'RETURNED';
+    returnReason?: string;
+    comment: string;
+}) {
+    if (!auth.token || !selectedCompliance.value) {
+        return;
+    }
+    actionLoading.value = true;
+    try {
+        await reviewComplianceInstance(auth.token, selectedCompliance.value.id, {
+            decision: payload.decision,
+            returnReason: payload.returnReason,
+            comment: payload.comment || undefined,
+        });
+        complianceDrawerOpen.value = false;
+        selectedCompliance.value = null;
+        await loadData();
+    } catch (err) {
+        error.value = err instanceof Error ? err.message : 'Compliance review failed';
+    } finally {
+        actionLoading.value = false;
+    }
+}
+
+async function downloadPdf() {
+    if (!auth.token) {
+        return;
+    }
+    actionLoading.value = true;
+    error.value = null;
+    try {
+        await downloadComplianceScorecardPdf(auth.token);
+    } catch (err) {
+        error.value = err instanceof Error ? err.message : 'PDF download failed';
+    } finally {
+        actionLoading.value = false;
+    }
+}
+
+async function downloadExcel() {
+    if (!auth.token) {
+        return;
+    }
+    actionLoading.value = true;
+    error.value = null;
+    try {
+        await downloadComplianceScorecardExcel(auth.token);
+    } catch (err) {
+        error.value = err instanceof Error ? err.message : 'Excel download failed';
+    } finally {
+        actionLoading.value = false;
+    }
+}
+
 onMounted(loadData);
 </script>
 
 <template>
     <AppShell
-        title="Municipal supervision dashboard"
+        title="Municipal supervision"
         :subtitle="auth.user?.municipality?.name ?? 'Municipality'"
     >
-        <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <p class="text-xs font-semibold uppercase text-amber-800">Catalog pending</p>
-                <p class="text-2xl font-bold text-amber-900">
+        <p class="mb-6 max-w-2xl text-sm leading-relaxed text-ink-muted">
+            Catalog periods, review queue, and directive assignments across all barangays in your municipality.
+        </p>
+
+        <div class="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div class="gl-panel border-l-2 border-status-warn p-4">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-status-warn">Catalog pending</p>
+                <p class="mt-1 font-display text-3xl font-bold text-ink">
                     {{ (matrix?.statusCounts.notStarted ?? 0) + (matrix?.statusCounts.inProgress ?? 0) }}
                 </p>
             </div>
-            <div class="rounded-xl border border-sky-200 bg-sky-50 p-4">
-                <p class="text-xs font-semibold uppercase text-sky-800">Submitted</p>
-                <p class="text-2xl font-bold text-sky-900">{{ matrix?.statusCounts.submitted ?? 0 }}</p>
+            <div class="gl-panel border-l-2 border-brand p-4">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-brand">Submitted</p>
+                <p class="mt-1 font-display text-3xl font-bold text-ink">{{ matrix?.statusCounts.submitted ?? 0 }}</p>
             </div>
-            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                <p class="text-xs font-semibold uppercase text-emerald-800">Accepted</p>
-                <p class="text-2xl font-bold text-emerald-900">{{ matrix?.statusCounts.accepted ?? 0 }}</p>
+            <div class="gl-panel border-l-2 border-status-ok p-4">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-status-ok">Accepted</p>
+                <p class="mt-1 font-display text-3xl font-bold text-ink">{{ matrix?.statusCounts.accepted ?? 0 }}</p>
             </div>
-            <div class="rounded-xl border border-rose-200 bg-rose-50 p-4">
-                <p class="text-xs font-semibold uppercase text-rose-800">Overdue / returned</p>
-                <p class="text-2xl font-bold text-rose-900">
+            <div class="gl-panel border-l-2 border-status-danger p-4">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-status-danger">Overdue / returned</p>
+                <p class="mt-1 font-display text-3xl font-bold text-ink">
                     {{ (matrix?.statusCounts.overdue ?? 0) + (matrix?.statusCounts.returned ?? 0) }}
                 </p>
             </div>
         </div>
 
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
-                <h2 class="text-base font-semibold text-slate-900">Compliance period matrix</h2>
-                <p class="text-sm text-slate-500">
+                <h2 class="font-display text-xl font-semibold text-ink">Compliance period matrix</h2>
+                <p class="mt-1 text-sm text-ink-muted">
                     Per-barangay due status for current ADM/SOC/SK periods
                 </p>
             </div>
-            <button
-                type="button"
-                class="min-h-11 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-50"
-                :disabled="actionLoading"
-                @click="handleOpenPeriods"
-            >
-                Open current periods
-            </button>
+            <div class="flex flex-wrap gap-2">
+                <button type="button" class="gl-btn-secondary disabled:opacity-50" :disabled="actionLoading" @click="downloadPdf">
+                    Download PDF
+                </button>
+                <button type="button" class="gl-btn-secondary disabled:opacity-50" :disabled="actionLoading" @click="downloadExcel">
+                    Download Excel
+                </button>
+                <button type="button" class="gl-btn-primary disabled:opacity-50" :disabled="actionLoading" @click="handleOpenPeriods">
+                    Open current periods
+                </button>
+            </div>
         </div>
 
-        <p v-if="loading" class="mb-6 text-sm text-slate-500">Loading compliance matrix…</p>
+        <div
+            v-if="!loading && reviewQueue.length > 0"
+            class="gl-panel mb-6 overflow-hidden"
+        >
+            <div class="border-b border-rule bg-status-warn/5 px-4 py-3">
+                <h3 class="font-display text-base font-semibold text-ink">Needs attention</h3>
+                <p class="text-xs text-ink-muted">
+                    Submitted, under review, or returned catalog items
+                </p>
+            </div>
+            <ul>
+                <li
+                    v-for="(item, index) in reviewQueue"
+                    :key="item.id"
+                    class="gl-ledger-row pl-5"
+                    :style="{ animationDelay: `${Math.min(index, 8) * 40}ms` }"
+                >
+                    <span
+                        class="gl-rail"
+                        :class="{
+                            'gl-rail-ok': complianceStatusToVariant(item.status) === 'approved',
+                            'gl-rail-danger': complianceStatusToVariant(item.status) === 'overdue',
+                            'gl-rail-warn': complianceStatusToVariant(item.status) === 'pending',
+                        }"
+                        aria-hidden="true"
+                    />
+                    <div class="sm:col-span-3 flex flex-wrap items-center justify-between gap-2">
+                        <div class="min-w-0">
+                            <StatusBadge
+                                :status="complianceStatusToVariant(item.status)"
+                                :label="complianceStatusLabel(item.status)"
+                            />
+                            <p class="mt-1 font-display text-base font-semibold text-ink">
+                                {{ item.barangay.name }} · {{ item.requirement.code }}
+                            </p>
+                            <p class="text-xs text-ink-muted">{{ item.requirement.title }}</p>
+                        </div>
+                        <button
+                            v-if="item.status === 'SUBMITTED' || item.status === 'UNDER_REVIEW'"
+                            type="button"
+                            class="gl-btn-secondary"
+                            @click="openComplianceReview(item)"
+                        >
+                            Review
+                        </button>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <p v-if="loading" class="mb-6 text-sm text-ink-muted">Loading compliance matrix…</p>
         <div
             v-else-if="matrix && matrix.cells.length > 0"
-            class="mb-8 overflow-x-auto rounded-xl border border-slate-200 bg-white"
+            class="gl-panel mb-10 overflow-x-auto"
         >
             <table class="min-w-full border-collapse text-left text-xs">
-                <thead class="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
+                <thead class="bg-brand-soft/50 text-[11px] uppercase tracking-wide text-ink-muted">
                     <tr>
-                        <th class="sticky left-0 z-10 bg-slate-50 px-3 py-3">Barangay</th>
+                        <th class="sticky left-0 z-10 bg-brand-soft/80 px-3 py-3 text-ink">Barangay</th>
                         <th
                             v-for="req in matrix.requirements"
                             :key="req.id"
@@ -265,69 +398,69 @@ onMounted(loadData);
                     <tr
                         v-for="brgy in matrix.barangays"
                         :key="brgy.id"
-                        class="border-t border-slate-100"
+                        class="border-t border-rule"
                     >
-                        <td class="sticky left-0 z-10 bg-white px-3 py-2 font-medium text-slate-900">
+                        <td class="sticky left-0 z-10 bg-surface px-3 py-2 font-medium text-ink">
                             {{ brgy.name }}
                         </td>
                         <td
                             v-for="req in matrix.requirements"
                             :key="`${brgy.id}-${req.id}`"
                             class="px-1 py-1 text-center"
-                            :class="cellFor(brgy.id, req.id) ? cellTint(cellFor(brgy.id, req.id)!.status) : 'bg-slate-50'"
+                            :class="cellFor(brgy.id, req.id) ? cellTint(cellFor(brgy.id, req.id)!.status) : 'bg-paper/60'"
                         >
                             <StatusBadge
                                 v-if="cellFor(brgy.id, req.id)"
                                 :status="complianceStatusToVariant(cellFor(brgy.id, req.id)!.status as ComplianceStatus)"
                                 :label="complianceStatusLabel(cellFor(brgy.id, req.id)!.status as ComplianceStatus)"
                             />
-                            <span v-else class="text-slate-300">—</span>
+                            <span v-else class="text-rule">—</span>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <p v-else class="mb-8 text-sm text-slate-500">
+        <p v-else class="mb-10 text-sm text-ink-muted">
             No compliance instances yet. Click “Open current periods” to generate them for all barangays.
         </p>
 
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-base font-semibold text-slate-900">Directive assignments</h2>
-            <button
-                type="button"
-                class="min-h-11 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800"
-                @click="showAssignForm = !showAssignForm"
-            >
+        <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+                <h2 class="font-display text-xl font-semibold text-ink">Directive assignments</h2>
+                <p class="mt-1 text-sm text-ink-muted">Ad-hoc and DILG-templated tasks by barangay</p>
+            </div>
+            <button type="button" class="gl-btn-primary" @click="showAssignForm = !showAssignForm">
                 {{ showAssignForm ? 'Cancel assign' : 'Assign directive' }}
             </button>
         </div>
 
         <div class="mb-4 grid grid-cols-3 gap-3">
-            <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
-                <p class="text-xs font-semibold uppercase text-amber-800">Directive pending</p>
-                <p class="text-xl font-bold text-amber-900">{{ statusCounts.pending }}</p>
+            <div class="gl-panel border-l-2 border-status-warn p-3">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-status-warn">Pending</p>
+                <p class="font-display text-2xl font-bold text-ink">{{ statusCounts.pending }}</p>
             </div>
-            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-                <p class="text-xs font-semibold uppercase text-emerald-800">Directive approved</p>
-                <p class="text-xl font-bold text-emerald-900">{{ statusCounts.approved }}</p>
+            <div class="gl-panel border-l-2 border-status-ok p-3">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-status-ok">Approved</p>
+                <p class="font-display text-2xl font-bold text-ink">{{ statusCounts.approved }}</p>
             </div>
-            <div class="rounded-xl border border-rose-200 bg-rose-50 p-3">
-                <p class="text-xs font-semibold uppercase text-rose-800">Directive action</p>
-                <p class="text-xl font-bold text-rose-900">{{ statusCounts.overdue }}</p>
+            <div class="gl-panel border-l-2 border-status-danger p-3">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-status-danger">Action</p>
+                <p class="font-display text-2xl font-bold text-ink">{{ statusCounts.overdue }}</p>
             </div>
         </div>
 
         <form
             v-if="showAssignForm"
-            class="mb-6 space-y-3 rounded-xl border border-slate-200 bg-white p-4"
+            class="gl-panel mb-6 space-y-3 p-4"
             @submit.prevent="submitAssign"
         >
             <div class="grid gap-3 sm:grid-cols-2">
                 <div class="sm:col-span-2">
-                    <label class="mb-1 block text-sm font-medium text-slate-700">DILG template (optional)</label>
+                    <label class="mb-1 block text-sm font-medium text-ink">DILG template (optional)</label>
                     <select
                         v-model="assignForm.templateId"
-                        class="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"
+                        class="min-h-11 w-full border border-rule bg-paper px-3 text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                        style="border-radius: 2px"
                         @change="onTemplateChange"
                     >
                         <option value="">Custom task</option>
@@ -337,12 +470,13 @@ onMounted(loadData);
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Barangay</label>
+                    <label class="mb-1 block text-sm font-medium text-ink">Barangay</label>
                     <select
                         v-model="assignForm.barangayId"
                         :required="!assignForm.assignToAll"
                         :disabled="assignForm.assignToAll"
-                        class="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm disabled:bg-slate-100 disabled:text-slate-500"
+                        class="min-h-11 w-full border border-rule bg-paper px-3 text-sm text-ink disabled:bg-brand-soft/40 disabled:text-ink-muted focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                        style="border-radius: 2px"
                     >
                         <option value="" disabled>Select barangay</option>
                         <option v-for="brgy in barangays" :key="brgy.id" :value="brgy.id">
@@ -351,53 +485,66 @@ onMounted(loadData);
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Due date</label>
+                    <label class="mb-1 block text-sm font-medium text-ink">Due date</label>
                     <input
                         v-model="assignForm.dueDate"
                         type="date"
                         required
-                        class="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"
+                        class="min-h-11 w-full border border-rule bg-paper px-3 text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                        style="border-radius: 2px"
                     />
                 </div>
                 <div class="sm:col-span-2">
-                    <label class="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-slate-700">
+                    <label class="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-ink">
                         <input
                             v-model="assignForm.assignToAll"
                             type="checkbox"
-                            class="size-4 rounded border-slate-300"
+                            class="size-4 border-rule"
                             @change="assignForm.barangayId = ''"
                         />
                         Assign to all barangays ({{ barangays.length }})
                     </label>
                 </div>
                 <div class="sm:col-span-2">
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Title</label>
-                    <input v-model="assignForm.title" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm" />
+                    <label class="mb-1 block text-sm font-medium text-ink">Title</label>
+                    <input
+                        v-model="assignForm.title"
+                        required
+                        class="min-h-11 w-full border border-rule bg-paper px-3 text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                        style="border-radius: 2px"
+                    />
                 </div>
                 <div class="sm:col-span-2">
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Description</label>
-                    <textarea v-model="assignForm.description" required rows="2" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                    <label class="mb-1 block text-sm font-medium text-ink">Description</label>
+                    <textarea
+                        v-model="assignForm.description"
+                        required
+                        rows="2"
+                        class="w-full border border-rule bg-paper px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                        style="border-radius: 2px"
+                    />
                 </div>
                 <div class="sm:col-span-2">
-                    <label class="mb-1 block text-sm font-medium text-slate-700">Legal basis</label>
-                    <input v-model="assignForm.legalBasis" required class="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm" />
+                    <label class="mb-1 block text-sm font-medium text-ink">Legal basis</label>
+                    <input
+                        v-model="assignForm.legalBasis"
+                        required
+                        class="min-h-11 w-full border border-rule bg-paper px-3 text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                        style="border-radius: 2px"
+                    />
                 </div>
             </div>
-            <button
-                type="submit"
-                class="min-h-11 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-                :disabled="actionLoading"
-            >
+            <button type="submit" class="gl-btn-primary disabled:opacity-50" :disabled="actionLoading">
                 {{ assignForm.assignToAll ? 'Assign to all barangays' : 'Assign to barangay' }}
             </button>
         </form>
 
-        <p v-if="error" class="mb-4 text-sm text-rose-600">{{ error }}</p>
-        <p v-if="loading" class="text-sm text-slate-500">Loading assignments…</p>
+        <p v-if="error" class="mb-4 text-sm text-status-danger">{{ error }}</p>
+        <p v-if="loading" class="text-sm text-ink-muted">Loading assignments…</p>
 
-        <div v-else class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+        <div v-else class="gl-panel overflow-x-auto">
             <table class="min-w-full text-left text-sm">
-                <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <thead class="border-b border-rule bg-brand-soft/40 text-xs uppercase tracking-wide text-ink-muted">
                     <tr>
                         <th class="px-4 py-3">Barangay</th>
                         <th class="px-4 py-3">Directive</th>
@@ -408,25 +555,25 @@ onMounted(loadData);
                 </thead>
                 <tbody>
                     <tr v-if="assignments.length === 0">
-                        <td colspan="5" class="px-4 py-8 text-center text-slate-500">
+                        <td colspan="5" class="px-4 py-8 text-center text-ink-muted">
                             No assignments yet. Use “Assign directive” to create one.
                         </td>
                     </tr>
                     <tr
                         v-for="row in assignments"
                         :key="row.id"
-                        class="border-b border-slate-100 hover:bg-slate-50"
+                        class="border-b border-rule hover:bg-brand-soft/30"
                     >
-                        <td class="px-4 py-3 font-medium text-slate-900">{{ row.barangay.name }}</td>
-                        <td class="px-4 py-3 text-slate-700">{{ row.task.title }}</td>
+                        <td class="px-4 py-3 font-medium text-ink">{{ row.barangay.name }}</td>
+                        <td class="px-4 py-3 text-ink-muted">{{ row.task.title }}</td>
                         <td class="px-4 py-3">
                             <StatusBadge :status="statusToVariant(row.status)" :label="statusLabel(row.status)" />
                         </td>
-                        <td class="px-4 py-3 text-slate-600">
+                        <td class="px-4 py-3 text-ink-muted">
                             {{ formatDueDate(row.task.dueDate) }}
                             <span
                                 class="ml-1 text-xs"
-                                :class="daysRemaining(row.task.dueDate) < 0 ? 'text-rose-600' : 'text-slate-400'"
+                                :class="daysRemaining(row.task.dueDate) < 0 ? 'text-status-danger' : 'text-ink-muted'"
                             >
                                 ({{ daysRemaining(row.task.dueDate) }}d)
                             </span>
@@ -435,7 +582,7 @@ onMounted(loadData);
                             <button
                                 v-if="row.status === 'SUBMITTED'"
                                 type="button"
-                                class="min-h-11 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-white"
+                                class="gl-btn-secondary"
                                 @click="openReview(row)"
                             >
                                 Review
@@ -452,6 +599,13 @@ onMounted(loadData);
             :loading="actionLoading"
             @close="drawerOpen = false"
             @review="handleReview"
+        />
+        <ComplianceReviewDrawer
+            :open="complianceDrawerOpen"
+            :instance="selectedCompliance"
+            :loading="actionLoading"
+            @close="complianceDrawerOpen = false"
+            @review="handleComplianceReview"
         />
     </AppShell>
 </template>

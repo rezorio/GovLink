@@ -1,7 +1,7 @@
 # GovLink — Project Overview
 
 > **Last updated:** 2026-08-23  
-> **Phase:** Mission 8 in progress — ComplianceInstance period tracking  
+> **Phase:** Missions 1–11 complete — civic UI system locked  
 > **Audience:** Developers, AI agents, and future contributors
 
 ---
@@ -15,6 +15,7 @@
 | [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) | Stack, MVP flow, roles, tenancy |
 | [docs/API.md](../docs/API.md) | MVP HTTP endpoints + demo flow |
 | [context/FEATURES.md](context/FEATURES.md) | Feature build status tracker |
+| [context/DESIGN-SYSTEM.md](context/DESIGN-SYSTEM.md) | **Locked civic UI system** (colors, type, ledger patterns) |
 | [MISSION-BOARD.md](MISSION-BOARD.md) | **Active missions, tasks, blockers** |
 | **This file** | Stable reference (stack, tenancy, pilot data) |
 
@@ -40,7 +41,8 @@ These are fixed for the MVP spine. Do not introduce TypeORM or alternate stacks 
 | Backend | **NestJS** (TypeScript) | Modular `src/modules/` layout |
 | ORM | **Prisma** | Single ORM; ignore TypeORM examples in legacy skill snippets |
 | Database | **PostgreSQL** | Row-level tenant isolation via explicit filters |
-| Frontend | **Vue 3** (Composition API, `<script setup>`) | Tailwind CSS, Lucide Vue Next |
+| Frontend | **Vue 3** (Composition API, `<script setup>`) | Tailwind + **civic design system** (see DESIGN-SYSTEM.md) |
+| UI fonts | **Bricolage Grotesque** + **Source Sans 3** | Locked — do not substitute Inter/Roboto |
 | Auth | **JWT** | Payload carries `municipality_id`, optional `barangay_id`, `roles[]` |
 | File storage | **S3-compatible presigned uploads** | PDF/JPG/PNG, 10 MB max |
 | Geographic IDs | **PSGC codes** | Use `psgc` npm package for seeding; never rely on name alone |
@@ -177,10 +179,12 @@ AI development assets already in place. **Do not add more skills until the MVP s
 |-------|------|---------|
 | PH LGU domain | `.cursor/skills/ph-lgu-governance/` | RA 7160, compliance catalog, data model |
 | NestJS multi-tenant | `.cursor/skills/nestjs-multi-tenant/` | Prisma tenant isolation, RBAC, uploads |
-| Vue dashboard UI | `.cursor/skills/vue-tailwind-dashboard/` | Status badges, drawers, field uploads |
+| Vue dashboard UI | `.cursor/skills/vue-tailwind-dashboard/` | Civic UI + badges, drawers, uploads |
+| Civic design system | `.cursor/context/DESIGN-SYSTEM.md` | Locked fonts, tokens, ledger patterns |
 | B2G procurement | `.cursor/skills/b2g-procurement-ph/` | RA 9184 / RA 12009 (phase 2) |
-| Audit exports | `.cursor/skills/lgu-audit-export/` | DILG/COA PDF + Excel (phase 2) |
+| Audit exports | `.cursor/skills/lgu-audit-export/` | DILG/COA PDF + Excel |
 | Security rule | `.cursor/rules/lgu-multi-tenant-security.mdc` | Tenant + RBAC on `src/**/*.ts` |
+| Civic UI rule | `.cursor/rules/govlink-civic-ui.mdc` | Enforces DESIGN-SYSTEM on `frontend/**` |
 | Subagents | `.cursor/agents/*.md` | Security, DB, E2E, DILG, UX, sales |
 
 **Canonical entity definitions:** `.cursor/skills/ph-lgu-governance/data-model.md`  
@@ -190,11 +194,28 @@ AI development assets already in place. **Do not add more skills until the MVP s
 
 ## Session checkpoint
 
-> **Live status:** See [MISSION-BOARD.md](MISSION-BOARD.md) for current mission, task checkboxes, and blockers.
+> **Live status:** See [MISSION-BOARD.md](MISSION-BOARD.md) for current mission, task checkboxes, and blockers.  
+> **Last handoff:** 2026-08-23 (civic UI rollout complete; Missions 9–11 on `master`)
 
-**Mission 8 in progress.** ComplianceInstance schema, seed, matrix API, and mayor heatmap shipped; e2e/docs closing out.
+### Where we are
 
-**Recommended next:** Close Mission 8 (e2e green), then Phase 8 audit exports (PDF scorecard + QR).
+| Area | Status |
+|------|--------|
+| Missions 1–11 | Done (periods, lifecycle, audit exports, MinIO uploads) |
+| Civic design system | Locked — all primary FE surfaces Done (see `DESIGN-SYSTEM.md`) |
+| Postgres | Host port **5433** (`GOVLINK_PG_PORT`) |
+| MinIO | Compose ports **9000** / **9001**; S3 env in `.env.example` |
+
+### Start next chat here
+
+1. Read this checkpoint + [MISSION-BOARD.md](MISSION-BOARD.md) “Current mission”.
+2. Follow [DESIGN-SYSTEM.md](context/DESIGN-SYSTEM.md) + `govlink-civic-ui` for any UI work.
+3. **Recommended next mission:** **SGLG scoring dashboards** (Mission 12 — not yet scoped on board; promote from FEATURES deferred list).
+
+### Local demo
+
+- API: `http://localhost:3000/api` · FE: Vite (often `5174` if `5173` busy)
+- Mayor: `mayor@san-jose-batangas.gov.ph` / Punong Barangay: `captain@aguila-sj-batangas.gov.ph` · password `GovLinkDemo1!`
 
 ---
 
@@ -221,7 +242,11 @@ Execute in order. Full task lists and exit criteria: [MISSION-BOARD.md](MISSION-
 5. ~~Vue inbox + dashboard~~ — done
 6. ~~CI pipeline~~ — done
 7. ~~Compliance catalog seed~~ — done
-8. ComplianceInstance periods — in progress
+8. ~~ComplianceInstance periods~~ — done
+9. ~~Compliance instance lifecycle~~ — done
+10. ~~Audit exports (PDF/Excel/QR)~~ — done
+11. ~~Real S3/MinIO uploads~~ — done
+12. **SGLG scoring dashboards** — next (scope on start)
 
 ---
 

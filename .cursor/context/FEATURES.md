@@ -51,7 +51,7 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 | List compliance requirements | Done | `GET /api/compliance/requirements` |
 | Bulk assign to all barangays | Done | `assignToAllBarangays` flag + mayor UI checkbox |
 | Barangay acknowledge task | Done | `POST /api/assignments/:id/acknowledge` |
-| Evidence upload (presigned S3) | Done | Metadata stub; fileKey tenant-prefix validated |
+| Evidence upload (presigned S3) | Done | MinIO/S3 presign → PUT → confirm |
 | Municipal accept / return | Done | `POST /api/assignments/:id/review` |
 | Audit log on state changes | Done | `AuditLogService` |
 | Cross-barangay 403 test | Done | `npm run test:e2e` |
@@ -62,12 +62,14 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Mayor compliance dashboard | Done | `/mayor` — heatmap table + assign form |
-| Barangay task inbox | Done | `/barangay` — acknowledge + upload |
+| Frontend (Vue 3) | Done | Civic design system locked — see DESIGN-SYSTEM.md |
+| Mayor compliance dashboard | Done | `/mayor` — heatmap + assign (civic ledger) |
+| Barangay task inbox | Done | `/barangay` — ledger UI |
+| Barangay My compliance | Done | `/barangay/compliance` — ledger UI |
 | Review slide-over drawer | Done | Accept / return with comment |
-| Status badges (emerald/amber/rose) | Done | `StatusBadge.vue` |
-| Mobile-first field uploads | Done | `EvidenceUpload.vue` |
-| Login + JWT session | Done | Pinia auth store, route guards |
+| Status badges | Done | Civic tint badges (`StatusBadge.vue`) |
+| Mobile-first field uploads | Done | Presign → MinIO PUT → confirm |
+| Login + JWT session | Done | Brand-forward login |
 | Barangay list (mayor assign picker) | Done | `GET /barangays` |
 
 ---
@@ -77,13 +79,14 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Compliance catalog seed (ADM/SOC/SK) | Done | 24 requirements via `GET /compliance/requirements` |
-| ComplianceInstance period tracking | In progress | Matrix API + mayor heatmap |
+| ComplianceInstance period tracking | Done | Matrix API + mayor heatmap |
+| Compliance instance lifecycle | Done | Start / submit / review + barangay page |
 | Semestral barangay assembly tracking | Deferred | |
 | BDP / AIP submission tracker | Deferred | |
 | SGLG-aligned scoring | Deferred | |
-| PDF exports with LGU letterhead | Deferred | Phase 5 |
-| Excel audit reports | Deferred | Phase 5 |
-| QR document verification | Deferred | Phase 5 |
+| PDF exports with LGU letterhead | Done | `GET /exports/compliance-scorecard.pdf` |
+| Excel audit reports | Done | `GET /exports/compliance-scorecard.xlsx` |
+| QR document verification | Done | Public `GET /verify/documents/:token` |
 
 ---
 
@@ -112,4 +115,4 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 
 ## Current mission
 
-**Mission 8 in progress.** ComplianceInstance tracking (per-barangay periods) — schema, seed, matrix API, mayor heatmap.
+**Missions 8–11 complete; civic UI locked.** Next chat: **SGLG scoring dashboards** (see PROJECT-OVERVIEW session checkpoint).

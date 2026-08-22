@@ -19,5 +19,20 @@ services:
       timeout: 5s
       retries: 5
 
+  minio:
+    image: minio/minio:latest
+    container_name: govlink-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-govlink}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-govlinksecret}
+    ports:
+      - "${GOVLINK_MINIO_PORT:-9000}:9000"
+      - "${GOVLINK_MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - govlink_minio:/data
+
 volumes:
   govlink_pgdata:
+  govlink_minio:

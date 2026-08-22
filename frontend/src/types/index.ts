@@ -104,6 +104,21 @@ export interface ComplianceMatrixCell {
     status: ComplianceStatus;
 }
 
+export interface ComplianceInstance {
+    id: string;
+    municipalityId: string;
+    barangayId: string;
+    requirementId: string;
+    periodLabel: string;
+    dueDate: string;
+    status: ComplianceStatus;
+    submittedAt: string | null;
+    reviewedAt: string | null;
+    returnReason: string | null;
+    barangay: BarangaySummary;
+    requirement: ComplianceRequirementSummary & { weight?: number };
+}
+
 export interface ComplianceMatrix {
     barangays: BarangaySummary[];
     requirements: ComplianceRequirementSummary[];

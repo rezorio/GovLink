@@ -2,6 +2,166 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-    min-height: 100vh;
+:root {
+    --paper: #eef2ef;
+    --surface: #f7faf8;
+    --ink: #0b1f1a;
+    --ink-muted: #3d524c;
+    --rule: #c5d0cb;
+    --brand: #0f6b5c;
+    --brand-soft: #d8ebe6;
+    --ok: #047857;
+    --warn: #b45309;
+    --danger: #be123c;
+    --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+    body {
+        min-height: 100vh;
+        font-family: var(--font-sans);
+        background-color: var(--paper);
+        color: var(--ink);
+        background-image:
+            radial-gradient(ellipse 90% 55% at 0% -10%, rgba(15, 107, 92, 0.12), transparent 55%),
+            radial-gradient(ellipse 70% 45% at 100% 0%, rgba(11, 31, 26, 0.06), transparent 50%),
+            repeating-linear-gradient(
+                -12deg,
+                transparent,
+                transparent 11px,
+                rgba(197, 208, 203, 0.35) 11px,
+                rgba(197, 208, 203, 0.35) 12px
+            );
+        background-attachment: fixed;
+    }
+
+    h1,
+    h2,
+    .font-display {
+        font-family: var(--font-display);
+    }
+}
+
+@layer components {
+    .gl-shell {
+        @apply min-h-screen;
+    }
+
+    .gl-panel {
+        background: var(--surface);
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+    }
+
+    .gl-ledger-row {
+        @apply relative grid gap-3 border-b px-4 py-4 sm:grid-cols-[5.5rem_minmax(0,1fr)_auto] sm:items-center sm:gap-4;
+        border-color: var(--rule);
+        animation: gl-row-in 280ms ease-out both;
+    }
+
+    .gl-ledger-row:last-child {
+        border-bottom-width: 0;
+    }
+
+    .gl-rail {
+        position: absolute;
+        left: 0;
+        top: 0.75rem;
+        bottom: 0.75rem;
+        width: 3px;
+        transform-origin: top;
+        animation: gl-rail-in 160ms ease-out both;
+    }
+
+    .gl-rail-ok {
+        background: var(--ok);
+    }
+    .gl-rail-warn {
+        background: var(--warn);
+    }
+    .gl-rail-danger {
+        background: var(--danger);
+    }
+
+    .gl-tab {
+        @apply relative min-h-11 px-1 pb-2 text-sm font-semibold transition-colors;
+        color: var(--ink-muted);
+    }
+
+    .gl-tab-active {
+        color: var(--brand);
+    }
+
+    .gl-tab-active::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 2px;
+        background: var(--brand);
+        animation: gl-tab-ink 200ms ease-out;
+    }
+
+    .gl-btn-primary {
+        @apply inline-flex min-h-11 items-center justify-center px-4 text-sm font-semibold text-white transition;
+        background: var(--brand);
+        border-radius: 2px;
+    }
+
+    .gl-btn-primary:hover {
+        filter: brightness(1.06);
+    }
+
+    .gl-btn-secondary {
+        @apply inline-flex min-h-11 items-center justify-center border px-4 text-sm font-semibold transition;
+        color: var(--ink);
+        border-color: var(--rule);
+        background: var(--surface);
+        border-radius: 2px;
+    }
+
+    .gl-btn-secondary:hover {
+        background: var(--brand-soft);
+        border-color: var(--brand);
+        color: var(--brand);
+    }
+
+    .gl-btn-warn {
+        @apply inline-flex min-h-11 items-center justify-center px-4 text-sm font-semibold text-white transition;
+        background: var(--warn);
+        border-radius: 2px;
+    }
+}
+
+@keyframes gl-row-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes gl-rail-in {
+    from {
+        transform: scaleY(0);
+    }
+    to {
+        transform: scaleY(1);
+    }
+}
+
+@keyframes gl-tab-ink {
+    from {
+        transform: scaleX(0.4);
+        opacity: 0.4;
+    }
+    to {
+        transform: scaleX(1);
+        opacity: 1;
+    }
 }

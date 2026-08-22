@@ -24,11 +24,26 @@ jobs:
                     --health-timeout 5s
                     --health-retries 5
 
+            minio:
+                image: bitnami/minio:latest
+                env:
+                    MINIO_ROOT_USER: govlink
+                    MINIO_ROOT_PASSWORD: govlinksecret
+                    MINIO_DEFAULT_BUCKETS: govlink-evidence
+                ports:
+                    - 9000:9000
+
         env:
             DATABASE_URL: postgresql://govlink:govlink@localhost:5432/govlink?schema=public
             JWT_SECRET: ci-test-jwt-secret-do-not-use-in-production
             JWT_EXPIRES_IN_HOURS: 8
             NODE_ENV: test
+            S3_BUCKET: govlink-evidence
+            S3_REGION: us-east-1
+            S3_ACCESS_KEY_ID: govlink
+            S3_SECRET_ACCESS_KEY: govlinksecret
+            S3_ENDPOINT: http://localhost:9000
+            S3_FORCE_PATH_STYLE: "true"
 
         steps:
             - name: Checkout

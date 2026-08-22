@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { LogOut } from 'lucide-vue-next';
-import { useRouter } from 'vue-router';
+import { computed } from 'vue';
+import { RouterLink, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 
 defineProps<{
@@ -11,6 +12,15 @@ defineProps<{
 const auth = useAuthStore();
 const router = useRouter();
 
+const barangayLinks = computed(() =>
+    auth.isBarangay
+        ? [
+              { to: '/barangay', label: 'Directives' },
+              { to: '/barangay/compliance', label: 'My compliance' },
+          ]
+        : [],
+);
+
 function logout() {
     auth.logout();
     router.push({ name: 'login' });
@@ -18,22 +28,41 @@ function logout() {
 </script>
 
 <template>
-    <div class="min-h-screen bg-slate-50">
-        <header class="border-b border-slate-200 bg-white">
-            <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">GovLink</p>
-                    <h1 class="text-lg font-bold text-slate-900">{{ title }}</h1>
-                    <p v-if="subtitle" class="text-sm text-slate-600">{{ subtitle }}</p>
+    <div class="gl-shell">
+        <header class="border-b border-rule/80 bg-surface/90 backdrop-blur-sm">
+            <div class="mx-auto flex max-w-5xl items-end justify-between gap-4 px-4 pb-4 pt-6 sm:px-6">
+                <div class="min-w-0">
+                    <p class="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
+                        GovLink
+                    </p>
+                    <p class="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand">
+                        Municipal supervision
+                    </p>
+                    <h1 class="mt-4 font-display text-xl font-semibold text-ink sm:text-2xl">
+                        {{ title }}
+                    </h1>
+                    <p v-if="subtitle" class="mt-1 text-sm text-ink-muted">{{ subtitle }}</p>
+                    <nav v-if="barangayLinks.length" class="mt-4 flex flex-wrap gap-5">
+                        <RouterLink
+                            v-for="link in barangayLinks"
+                            :key="link.to"
+                            :to="link.to"
+                            class="gl-tab"
+                            active-class="gl-tab-active"
+                        >
+                            {{ link.label }}
+                        </RouterLink>
+                    </nav>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex shrink-0 items-center gap-3 pb-1">
                     <div class="hidden text-right text-sm sm:block">
-                        <p class="font-medium text-slate-900">{{ auth.user?.full_name }}</p>
-                        <p class="text-slate-500">{{ auth.user?.email }}</p>
+                        <p class="font-medium text-ink">{{ auth.user?.full_name }}</p>
+                        <p class="text-ink-muted">{{ auth.user?.email }}</p>
                     </div>
                     <button
                         type="button"
-                        class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                        class="inline-flex min-h-11 min-w-11 items-center justify-center border border-rule bg-surface text-ink hover:border-brand hover:bg-brand-soft"
+                        style="border-radius: 2px"
                         aria-label="Sign out"
                         @click="logout"
                     >
@@ -42,7 +71,7 @@ function logout() {
                 </div>
             </div>
         </header>
-        <main class="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+        <main class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
             <slot />
         </main>
     </div>

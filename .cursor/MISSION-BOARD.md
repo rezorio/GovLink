@@ -1,8 +1,8 @@
 # GovLink — Mission Board
 
 > **Last updated:** 2026-08-23  
-> **Current mission:** Mission 8 — ComplianceInstance period tracking  
-> **Phase:** Post-MVP features
+> **Current mission:** Next → **SGLG scoring dashboards** (Mission 12 — scope on start)  
+> **Phase:** Post-MVP features · civic UI locked
 
 **Source of truth for active work.** Update this file at end-of-session or when a mission completes.  
 For stable reference (stack, tenancy, pilot data): [PROJECT-OVERVIEW.md](PROJECT-OVERVIEW.md).  
@@ -21,7 +21,10 @@ For long-term feature catalog: [context/FEATURES.md](context/FEATURES.md).
 | 5 | Vue inbox + dashboard | ✅ Done |
 | 6 | CI pipeline | ✅ Done |
 | 7 | Compliance catalog seed | ✅ Done |
-| 8 | ComplianceInstance periods | 🔄 In progress |
+| 8 | ComplianceInstance periods | ✅ Done |
+| 9 | Compliance instance lifecycle | ✅ Done |
+| 10 | Audit exports (PDF/Excel/QR) | ✅ Done |
+| 11 | Real S3/MinIO uploads | ✅ Done |
 
 **MVP flow we're building toward:**
 
@@ -183,7 +186,7 @@ DirectiveTemplate → SupervisoryTask → TaskAssignment → EvidenceSubmission 
 
 ---
 
-## Mission 8 — ComplianceInstance period tracking 🔄
+## Mission 8 — ComplianceInstance period tracking ✅
 
 **Goal:** Track per-barangay due status against the ADM/SOC/SK catalog for current reporting periods.
 
@@ -199,7 +202,66 @@ DirectiveTemplate → SupervisoryTask → TaskAssignment → EvidenceSubmission 
 - [x] `GET /compliance/instances`, `GET /compliance/matrix`, `POST /compliance/periods/open`
 - [x] Mayor dashboard heatmap wired to matrix API
 - [x] E2E coverage for open + tenant isolation
-- [ ] Docs / mission board closeout (after local migrate + e2e green)
+- [x] Docs / mission board closeout
+
+**Completed:** 2026-08-23
+
+---
+
+## Mission 9 — Compliance instance lifecycle ✅
+
+**Goal:** Barangay start/submit catalog obligations; mayor accept/return with reason.
+
+**Exit criteria:** Start → submit → review works end-to-end; barangay My compliance page; mayor Needs attention queue; e2e lifecycle.
+
+### Tasks
+
+- [x] `submittedById` + `returnReason` columns
+- [x] `POST .../start`, `.../submit`, `.../review` + `GET /review-queue`
+- [x] Barangay `/barangay/compliance` view
+- [x] Mayor review queue + ComplianceReviewDrawer
+- [x] E2E lifecycle + RBAC negatives
+
+**Completed:** 2026-08-23
+
+---
+
+## Mission 10 — Audit exports (PDF / Excel / QR) ✅
+
+**Goal:** Mayor can download DILG-ready compliance scorecards with verifiable QR.
+
+**Exit criteria:** PDF + Excel download; `ExportDocument` + public verify; e2e covers export + verify + RBAC.
+
+### Tasks
+
+- [x] `ExportDocument` model + migration
+- [x] PDF letterhead scorecard (PDFKit) + QR footer
+- [x] ExcelJS workbook (Scorecard / Audit Log / Legend)
+- [x] `GET /exports/compliance-scorecard.pdf|.xlsx`
+- [x] Public `GET /verify/documents/:token`
+- [x] Mayor download buttons
+- [x] E2E export + verify
+
+**Completed:** 2026-08-23
+
+---
+
+## Mission 11 — Real S3/MinIO evidence uploads ✅
+
+**Goal:** Barangay evidence uses presigned PUT to MinIO/S3, then confirm + submit.
+
+**Exit criteria:** MinIO in compose; presign/confirm APIs; FE progress upload; e2e PUT+confirm; CI has MinIO.
+
+### Tasks
+
+- [x] MinIO service in `docker-compose.yml`
+- [x] `POST /uploads/presign` + `POST /uploads/confirm`
+- [x] Bucket bootstrap + CORS for Vite origins
+- [x] `EvidenceUpload.vue` real presign → PUT → confirm
+- [x] CI MinIO + S3 env
+- [x] E2E upload flow
+
+**Completed:** 2026-08-23
 
 ---
 
@@ -213,7 +275,7 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 | CI pipeline | Done | `.github/workflows/ci.yml` |
 | Bulk assign to all barangays | Done | `assignToAllBarangays: true` on POST /directives/tasks |
 | Full compliance catalog seed | Done | 24 ADM/SOC/SK/MAY codes |
-| DILG PDF / Excel exports | Letterhead + QR verification | Phase 5 |
+| SGLG scoring dashboards | Pillar scores from compliance matrix | **Next mission** |
 | Procurement module | RA 9184 / RA 12009 | Phase 6 |
 | Geotagged photo submissions | Field worker metadata | Post-MVP |
 | Offline upload queue | Field connectivity | Post-MVP |
@@ -245,6 +307,7 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 
 _Completed mission details stay in sections above with ✅. Add dated notes here for major milestones._
 
+- **2026-08-23** — Missions 9–11 + civic UI: compliance lifecycle, PDF/Excel/QR exports, MinIO uploads; municipal ledger design system on all primary views. Handoff: start Mission 12 (SGLG scoring).
 - **2026-08-22** — Mission 7 complete. Compliance catalog schema, seed, and list API.
 - **2026-08-22** — Mission 4 complete. Supertest tenant boundary suite (`npm run test:e2e`).
 - **2026-08-22** — Mission 3 complete. Directive flow API + audit log + security hardening.

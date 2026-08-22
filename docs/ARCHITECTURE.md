@@ -23,7 +23,7 @@ Software provides **oversight and compliance monitoring**, not operational contr
 | Backend | NestJS + TypeScript |
 | ORM | Prisma |
 | Database | PostgreSQL |
-| Frontend | Vue 3 (Composition API) + Tailwind CSS |
+| Frontend | Vue 3 (Composition API) + Tailwind — civic design system (`.cursor/context/DESIGN-SYSTEM.md`) |
 | Auth | JWT (`municipality_id`, `barangay_id`, `roles[]`) |
 | Files | S3 presigned uploads (PDF/JPG/PNG, 10 MB) |
 | Geography | PSGC codes |

@@ -1,0 +1,32 @@
+---
+description: Enforce GovLink civic design system on all frontend Vue/Tailwind UI work
+globs: frontend/**/*.{vue,css,html,js,ts}
+alwaysApply: false
+---
+
+# GovLink Civic UI (locked)
+
+Canonical visual language: **municipal ledger on cool paper**. Full spec: `.cursor/context/DESIGN-SYSTEM.md`.
+
+## Must
+
+- Brand **GovLink** as a hero-level wordmark on shell/login (Bricolage Grotesque via `font-display`).
+- UI body: **Source Sans 3** (`font-sans`). Never Inter, Roboto, Arial, or system as primary.
+- Colors only from CSS vars / Tailwind: `paper`, `surface`, `ink`, `ink-muted`, `rule`, `brand`, `brand-soft`, `status-ok|warn|danger`.
+- Lists: continuous `.gl-panel` ledger + `.gl-ledger-row` + left `.gl-rail` — not stacked white rounded cards.
+- Nav filters: underline `.gl-tab` / `.gl-tab-active` — not filled slate pills.
+- Buttons: `.gl-btn-primary` / `.gl-btn-secondary` / `.gl-btn-warn` (2px radius).
+- Status: `StatusBadge.vue` only; pair color with text label.
+- Keep subtle page atmosphere from `style.css` body background.
+
+## Must not
+
+- Purple / indigo SaaS themes, glow, dark-mode-first shells
+- Cream `#F4F1EA` + terracotta + display-serif cliché
+- Generic `bg-slate-50` + white `rounded-xl shadow-sm` card stacks as the default list pattern
+- `rounded-full` pill clusters for filters or primary status chips
+- Inventing a second design system in a single view
+
+## When unsure
+
+Read `.cursor/context/DESIGN-SYSTEM.md` and match `AppShell.vue` + `BarangayComplianceView.vue`.

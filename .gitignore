@@ -38,8 +38,8 @@ coverage/
 prisma/*.db
 prisma/*.db-journal
 
-# Uploads & temp
-uploads/
+# Uploads & temp (runtime storage only — not NestJS src/modules/uploads)
+/uploads/
 !frontend/src/components/library/uploads/
 tmp/
 temp/

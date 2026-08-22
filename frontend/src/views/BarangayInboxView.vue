@@ -78,64 +78,83 @@ onMounted(loadInbox);
 
 <template>
     <AppShell
-        title="Barangay task inbox"
+        title="Directive inbox"
         :subtitle="auth.user?.barangay?.name ?? auth.user?.full_name"
     >
-        <p v-if="error" class="mb-4 text-sm text-rose-600">{{ error }}</p>
-        <p v-if="loading" class="text-sm text-slate-500">Loading tasks…</p>
+        <p class="mb-6 max-w-xl text-sm leading-relaxed text-ink-muted">
+            Municipal directives assigned to your barangay — acknowledge, attach proof, and await review.
+        </p>
 
-        <div v-else class="space-y-3">
-            <article
-                v-for="row in assignments"
-                :key="row.id"
-                class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+        <p v-if="error" class="mb-4 text-sm text-status-danger">{{ error }}</p>
+        <p v-if="loading" class="text-sm text-ink-muted">Loading tasks…</p>
+
+        <div v-else class="gl-panel overflow-hidden">
+            <p
+                v-if="assignments.length === 0"
+                class="px-4 py-10 text-center text-sm text-ink-muted"
             >
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div class="min-w-0 flex-1">
-                        <StatusBadge :status="statusToVariant(row.status)" :label="statusLabel(row.status)" />
-                        <h2 class="mt-2 text-base font-semibold text-slate-900">{{ row.task.title }}</h2>
-                        <p class="mt-1 text-sm text-slate-600">{{ row.task.description }}</p>
-                        <p class="mt-2 text-xs text-slate-500">
-                            Due {{ formatDueDate(row.task.dueDate) }} ·
-                            {{ daysRemaining(row.task.dueDate) }} days remaining
-                        </p>
-                        <p class="mt-1 text-xs text-slate-500">{{ row.task.legalBasis }}</p>
-                    </div>
-                </div>
-
-                <div class="mt-4 flex flex-wrap gap-2">
-                    <button
-                        v-if="canAcknowledge(row.status)"
-                        type="button"
-                        class="min-h-11 rounded-lg bg-amber-500 px-4 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50"
-                        :disabled="actionLoading"
-                        @click="acknowledge(row.id)"
-                    >
-                        Acknowledge
-                    </button>
-                    <button
-                        v-if="canSubmit(row.status)"
-                        type="button"
-                        class="min-h-11 rounded-lg border border-slate-200 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                        @click="expandedId = expandedId === row.id ? null : row.id"
-                    >
-                        {{ expandedId === row.id ? 'Hide upload' : 'Submit proof' }}
-                    </button>
-                </div>
-
-                <div v-if="expandedId === row.id && auth.user?.municipality_id && auth.user?.barangay_id" class="mt-4">
-                    <EvidenceUpload
-                        :municipality-id="auth.user.municipality_id"
-                        :barangay-id="auth.user.barangay_id"
-                        :loading="actionLoading"
-                        @submit="(payload) => handleSubmit(row.id, payload)"
-                    />
-                </div>
-            </article>
-
-            <p v-if="assignments.length === 0" class="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
                 No tasks assigned to your barangay yet.
             </p>
+
+            <article
+                v-for="(row, index) in assignments"
+                :key="row.id"
+                class="gl-ledger-row pl-5"
+                :style="{ animationDelay: `${Math.min(index, 8) * 40}ms` }"
+            >
+                <span
+                    class="gl-rail"
+                    :class="{
+                        'gl-rail-ok': statusToVariant(row.status) === 'approved',
+                        'gl-rail-danger': statusToVariant(row.status) === 'overdue',
+                        'gl-rail-warn': statusToVariant(row.status) === 'pending',
+                    }"
+                    aria-hidden="true"
+                />
+
+                <div class="sm:col-span-3">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                            <StatusBadge :status="statusToVariant(row.status)" :label="statusLabel(row.status)" />
+                            <h2 class="mt-2 font-display text-lg font-semibold text-ink">{{ row.task.title }}</h2>
+                            <p class="mt-1 text-sm text-ink-muted">{{ row.task.description }}</p>
+                            <p class="mt-2 text-xs text-ink-muted">
+                                Due {{ formatDueDate(row.task.dueDate) }} ·
+                                {{ daysRemaining(row.task.dueDate) }} days remaining
+                            </p>
+                            <p class="mt-1 text-xs text-ink-muted">{{ row.task.legalBasis }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <button
+                            v-if="canAcknowledge(row.status)"
+                            type="button"
+                            class="gl-btn-warn disabled:opacity-50"
+                            :disabled="actionLoading"
+                            @click="acknowledge(row.id)"
+                        >
+                            Acknowledge
+                        </button>
+                        <button
+                            v-if="canSubmit(row.status)"
+                            type="button"
+                            class="gl-btn-secondary"
+                            @click="expandedId = expandedId === row.id ? null : row.id"
+                        >
+                            {{ expandedId === row.id ? 'Hide upload' : 'Submit proof' }}
+                        </button>
+                    </div>
+
+                    <div v-if="expandedId === row.id && auth.token" class="mt-4">
+                        <EvidenceUpload
+                            :token="auth.token"
+                            :loading="actionLoading"
+                            @submit="(payload) => handleSubmit(row.id, payload)"
+                        />
+                    </div>
+                </div>
+            </article>
         </div>
     </AppShell>
 </template>

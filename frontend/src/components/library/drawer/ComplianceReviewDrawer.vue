@@ -1,41 +1,54 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { X } from 'lucide-vue-next';
-import type { TaskAssignment } from '@/types';
-import { daysRemaining, formatDueDate, statusLabel, statusToVariant } from '@/utils/assignment-status';
+import type { ComplianceInstance } from '@/types';
+import { daysRemaining, formatDueDate } from '@/utils/assignment-status';
+import {
+    complianceStatusLabel,
+    complianceStatusToVariant,
+} from '@/utils/compliance-status';
 import StatusBadge from '@/components/library/badges/StatusBadge.vue';
 
 const props = defineProps<{
-    assignment: TaskAssignment | null;
+    instance: ComplianceInstance | null;
     open: boolean;
     loading?: boolean;
 }>();
 
 const emit = defineEmits<{
     close: [];
-    review: [payload: { decision: 'ACCEPTED' | 'RETURNED'; comment: string }];
+    review: [payload: { decision: 'ACCEPTED' | 'RETURNED'; returnReason?: string; comment: string }];
 }>();
 
 const comment = ref('');
 const decision = ref<'ACCEPTED' | 'RETURNED'>('ACCEPTED');
 
-const latestSubmission = computed(() => props.assignment?.evidenceSubmissions[0] ?? null);
+const canReview = computed(
+    () => props.instance?.status === 'SUBMITTED' || props.instance?.status === 'UNDER_REVIEW',
+);
 
-const canReview = computed(() => props.assignment?.status === 'SUBMITTED' && latestSubmission.value);
+watch(
+    () => props.open,
+    (open) => {
+        if (open) {
+            comment.value = '';
+            decision.value = 'ACCEPTED';
+        }
+    },
+);
 
 function submitReview() {
-    if (!canReview.value || !latestSubmission.value) {
+    if (!canReview.value) {
         return;
     }
     emit('review', {
         decision: decision.value,
+        returnReason: decision.value === 'RETURNED' ? comment.value.trim() : undefined,
         comment: comment.value.trim(),
     });
 }
 
 function handleClose() {
-    comment.value = '';
-    decision.value = 'ACCEPTED';
     emit('close');
 }
 </script>
@@ -50,7 +63,7 @@ function handleClose() {
                 aria-modal="true"
             >
                 <div class="flex items-center justify-between border-b border-rule bg-brand-soft/30 px-4 py-4">
-                    <h2 class="font-display text-lg font-semibold text-ink">Review submission</h2>
+                    <h2 class="font-display text-lg font-semibold text-ink">Review compliance</h2>
                     <button
                         type="button"
                         class="inline-flex min-h-11 min-w-11 items-center justify-center text-ink-muted hover:bg-brand-soft/50 hover:text-ink"
@@ -62,37 +75,19 @@ function handleClose() {
                     </button>
                 </div>
 
-                <div v-if="assignment" class="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+                <div v-if="instance" class="flex-1 space-y-4 overflow-y-auto px-4 py-4">
                     <div>
                         <StatusBadge
-                            :status="statusToVariant(assignment.status)"
-                            :label="statusLabel(assignment.status)"
+                            :status="complianceStatusToVariant(instance.status)"
+                            :label="complianceStatusLabel(instance.status)"
                         />
                         <h3 class="mt-2 font-display text-base font-semibold text-ink">
-                            {{ assignment.task.title }}
+                            {{ instance.requirement.code }} — {{ instance.requirement.title }}
                         </h3>
-                        <p class="text-sm text-ink-muted">{{ assignment.barangay.name }}</p>
+                        <p class="text-sm text-ink-muted">{{ instance.barangay.name }}</p>
                         <p class="mt-1 text-sm text-ink-muted">
-                            Due {{ formatDueDate(assignment.task.dueDate) }}
-                            ({{ daysRemaining(assignment.task.dueDate) }} days)
-                        </p>
-                    </div>
-
-                    <div class="border border-rule bg-paper p-3 text-sm text-ink-muted" style="border-radius: 2px">
-                        <p class="font-medium text-ink">Legal basis</p>
-                        <p class="mt-1">{{ assignment.task.legalBasis }}</p>
-                    </div>
-
-                    <div
-                        v-if="latestSubmission"
-                        class="border border-rule bg-paper p-3"
-                        style="border-radius: 2px"
-                    >
-                        <p class="text-sm font-medium text-ink">Latest submission</p>
-                        <p class="text-sm text-ink-muted">{{ latestSubmission.fileName }}</p>
-                        <p class="text-xs text-ink-muted">
-                            {{ Math.round(latestSubmission.fileSizeBytes / 1024) }} KB ·
-                            {{ latestSubmission.mimeType }}
+                            Period {{ instance.periodLabel }} · Due {{ formatDueDate(instance.dueDate) }}
+                            ({{ daysRemaining(instance.dueDate) }}d)
                         </p>
                     </div>
 
@@ -130,23 +125,28 @@ function handleClose() {
                         </div>
 
                         <div>
-                            <label for="review-comment" class="mb-2 block text-sm font-medium text-ink">
-                                Comment
+                            <label for="compliance-review-comment" class="mb-2 block text-sm font-medium text-ink">
+                                {{ decision === 'RETURNED' ? 'Return reason (required)' : 'Comment' }}
                             </label>
                             <textarea
-                                id="review-comment"
+                                id="compliance-review-comment"
                                 v-model="comment"
                                 rows="3"
                                 class="w-full border border-rule bg-paper px-3 py-2 text-sm text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
                                 style="border-radius: 2px"
-                                placeholder="Optional feedback for the barangay"
+                                :placeholder="
+                                    decision === 'RETURNED'
+                                        ? 'Explain what the barangay must correct'
+                                        : 'Optional feedback'
+                                "
+                                :required="decision === 'RETURNED'"
                             />
                         </div>
 
                         <button
                             type="button"
                             class="gl-btn-primary w-full disabled:opacity-50"
-                            :disabled="loading"
+                            :disabled="loading || (decision === 'RETURNED' && comment.trim().length < 3)"
                             @click="submitReview"
                         >
                             Submit review

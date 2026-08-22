@@ -76,6 +76,11 @@ enum ComplianceStatus {
   OVERDUE
 }
 
+enum ExportFormat {
+  PDF
+  XLSX
+}
+
 model Municipality {
   id        String   @id @default(uuid())
   name      String
@@ -90,6 +95,7 @@ model Municipality {
   supervisoryTasks     SupervisoryTask[]
   taskAssignments      TaskAssignment[]
   complianceInstances  ComplianceInstance[]
+  exportDocuments      ExportDocument[]
   auditLogs            AuditLog[]
 
   @@map("municipalities")
@@ -108,6 +114,7 @@ model Barangay {
   users                User[]
   taskAssignments      TaskAssignment[]
   complianceInstances  ComplianceInstance[]
+  exportDocuments      ExportDocument[]
   auditLogs            AuditLog[]
 
   @@unique([municipalityId, psgcCode])
@@ -131,11 +138,13 @@ model User {
   municipality Municipality @relation(fields: [municipalityId], references: [id])
   barangay     Barangay?    @relation(fields: [barangayId], references: [id])
 
-  assignedTasks       SupervisoryTask[]     @relation("AssignedBy")
-  acknowledgedTasks   TaskAssignment[]      @relation("AcknowledgedBy")
-  reviews             MunicipalReview[]
-  complianceReviews   ComplianceInstance[]  @relation("ComplianceReviewedBy")
-  auditLogs           AuditLog[]
+  assignedTasks         SupervisoryTask[]     @relation("AssignedBy")
+  acknowledgedTasks     TaskAssignment[]      @relation("AcknowledgedBy")
+  reviews               MunicipalReview[]
+  complianceSubmissions ComplianceInstance[]  @relation("ComplianceSubmittedBy")
+  complianceReviews     ComplianceInstance[]  @relation("ComplianceReviewedBy")
+  exportDocuments       ExportDocument[]
+  auditLogs             AuditLog[]
 
   @@index([municipalityId, barangayId])
   @@map("users")
@@ -183,15 +192,18 @@ model ComplianceInstance {
   dueDate        DateTime         @map("due_date") @db.Date
   status         ComplianceStatus @default(NOT_STARTED)
   submittedAt    DateTime?        @map("submitted_at")
+  submittedById  String?          @map("submitted_by_id")
   reviewedAt     DateTime?        @map("reviewed_at")
   reviewedById   String?          @map("reviewed_by_id")
+  returnReason   String?          @map("return_reason")
   createdAt      DateTime         @default(now()) @map("created_at")
   updatedAt      DateTime         @updatedAt @map("updated_at")
 
-  municipality Municipality         @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
-  barangay     Barangay             @relation(fields: [barangayId], references: [id], onDelete: Cascade)
+  municipality Municipality           @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  barangay     Barangay               @relation(fields: [barangayId], references: [id], onDelete: Cascade)
   requirement  ComplianceRequirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
-  reviewedBy   User?                @relation("ComplianceReviewedBy", fields: [reviewedById], references: [id])
+  submittedBy  User?                  @relation("ComplianceSubmittedBy", fields: [submittedById], references: [id])
+  reviewedBy   User?                  @relation("ComplianceReviewedBy", fields: [reviewedById], references: [id])
 
   @@unique([barangayId, requirementId, periodLabel])
   @@index([municipalityId, barangayId, status])
@@ -306,4 +318,29 @@ model AuditLog {
   @@index([municipalityId, createdAt])
   @@index([entityType, entityId])
   @@map("audit_logs")
+}
+
+model ExportDocument {
+  id             String       @id @default(uuid())
+  documentToken  String       @unique @map("document_token")
+  contentHash    String       @map("content_hash")
+  reportType     String       @map("report_type")
+  format         ExportFormat
+  municipalityId String       @map("municipality_id")
+  barangayId     String?      @map("barangay_id")
+  generatedById  String       @map("generated_by_id")
+  generatedAt    DateTime     @default(now()) @map("generated_at")
+  revokedAt      DateTime?    @map("revoked_at")
+  revokeReason   String?      @map("revoke_reason")
+  periodLabel    String?      @map("period_label")
+
+  municipality Municipality @relation(fields: [municipalityId], references: [id], onDelete: Restrict)
+  barangay     Barangay?    @relation(fields: [barangayId], references: [id], onDelete: Restrict)
+  generatedBy  User         @relation(fields: [generatedById], references: [id], onDelete: Restrict)
+
+  @@index([municipalityId, generatedAt])
+  @@index([municipalityId, reportType, periodLabel])
+  @@index([municipalityId, barangayId])
+  @@index([contentHash])
+  @@map("export_documents")
 }

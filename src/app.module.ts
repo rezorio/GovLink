@@ -7,6 +7,8 @@ import { CommonModule } from './modules/common/common.module';
 import { BarangaysModule } from './modules/barangays/barangays.module';
 import { ComplianceModule } from './modules/compliance/compliance.module';
 import { DirectivesModule } from './modules/directives/directives.module';
+import { ExportsModule } from './modules/exports/exports.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
 import { RolesGuard } from './modules/common/guards/roles.guard';
 import { HealthModule } from './modules/health/health.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
@@ -22,6 +24,8 @@ import { PrismaModule } from './modules/prisma/prisma.module';
         DirectivesModule,
         BarangaysModule,
         ComplianceModule,
+        ExportsModule,
+        UploadsModule,
         AssignmentsModule,
     ],
     providers: [

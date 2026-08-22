@@ -180,6 +180,136 @@ describe('Tenant boundary (e2e)', () => {
                 .expect(403);
         });
 
+        it('compliance start → submit → review lifecycle', async () => {
+            const list = await request(app.getHttpServer())
+                .get('/api/compliance/instances')
+                .set(authHeader(captainAToken))
+                .expect(200);
+
+            const target = list.body.find(
+                (row: { status: string }) => row.status === 'NOT_STARTED',
+            );
+            expect(target).toBeDefined();
+
+            await request(app.getHttpServer())
+                .post(`/api/compliance/instances/${target.id}/start`)
+                .set(authHeader(captainAToken))
+                .expect(201);
+
+            const submitted = await request(app.getHttpServer())
+                .post(`/api/compliance/instances/${target.id}/submit`)
+                .set(authHeader(captainAToken))
+                .expect(201);
+            expect(submitted.body.status).toBe('SUBMITTED');
+
+            await request(app.getHttpServer())
+                .post(`/api/compliance/instances/${target.id}/review`)
+                .set(authHeader(captainBToken))
+                .send({ decision: 'ACCEPTED' })
+                .expect(403);
+
+            const accepted = await request(app.getHttpServer())
+                .post(`/api/compliance/instances/${target.id}/review`)
+                .set(authHeader(mayorToken))
+                .send({ decision: 'ACCEPTED' })
+                .expect(201);
+            expect(accepted.body.status).toBe('ACCEPTED');
+
+            const queue = await request(app.getHttpServer())
+                .get('/api/compliance/review-queue')
+                .set(authHeader(mayorToken))
+                .expect(200);
+            const queuedIds = queue.body.map((row: { id: string }) => row.id);
+            expect(queuedIds).not.toContain(target.id);
+        });
+
+        it('exports compliance scorecard PDF/Excel with verifiable QR token', async () => {
+            const pdf = await request(app.getHttpServer())
+                .get('/api/exports/compliance-scorecard.pdf')
+                .set(authHeader(mayorToken))
+                .expect(200);
+
+            expect(pdf.headers['content-type']).toContain('application/pdf');
+            expect(pdf.headers['x-export-document-id']).toBeDefined();
+            expect(Buffer.isBuffer(pdf.body) || pdf.body.length > 100).toBeTruthy();
+
+            const documentId = pdf.headers['x-export-document-id'] as string;
+            const exportDoc = await prisma.exportDocument.findUniqueOrThrow({
+                where: { id: documentId },
+            });
+
+            const verified = await request(app.getHttpServer())
+                .get(`/api/verify/documents/${exportDoc.documentToken}`)
+                .expect(200);
+            expect(verified.body.status).toBe('valid');
+            expect(verified.body.report_type).toBe('compliance_scorecard');
+            expect(verified.body.content_hash).toBe(exportDoc.contentHash);
+
+            await request(app.getHttpServer())
+                .get('/api/exports/compliance-scorecard.xlsx')
+                .set(authHeader(mayorToken))
+                .expect(200)
+                .expect('Content-Type', /spreadsheetml/);
+
+            await request(app.getHttpServer())
+                .get('/api/exports/compliance-scorecard.pdf')
+                .set(authHeader(captainAToken))
+                .expect(403);
+        });
+
+        it('presign → PUT → confirm evidence upload for barangay captain', async () => {
+            await request(app.getHttpServer())
+                .post('/api/uploads/presign')
+                .set(authHeader(mayorToken))
+                .send({
+                    filename: 'proof.pdf',
+                    contentType: 'application/pdf',
+                    contentLength: 12,
+                    entityType: 'submissions',
+                })
+                .expect(403);
+
+            const pdfBytes = Buffer.from('%PDF-1.4 demo');
+            const presign = await request(app.getHttpServer())
+                .post('/api/uploads/presign')
+                .set(authHeader(captainAToken))
+                .send({
+                    filename: 'proof.pdf',
+                    contentType: 'application/pdf',
+                    contentLength: pdfBytes.length,
+                    entityType: 'submissions',
+                })
+                .expect(201);
+
+            expect(presign.body.uploadUrl).toContain('http');
+            expect(presign.body.fileKey).toContain(`${fixture.municipalityId}/${fixture.barangayAId}/submissions/`);
+
+            const put = await fetch(presign.body.uploadUrl as string, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/pdf' },
+                body: pdfBytes,
+            });
+            expect(put.ok).toBe(true);
+
+            const confirmed = await request(app.getHttpServer())
+                .post('/api/uploads/confirm')
+                .set(authHeader(captainAToken))
+                .send({ fileKey: presign.body.fileKey })
+                .expect(201);
+            expect(confirmed.body.fileKey).toBe(presign.body.fileKey);
+
+            await request(app.getHttpServer())
+                .post(`/api/assignments/${fixture.assignmentForBarangayBId}/submissions`)
+                .set(authHeader(captainAToken))
+                .send({
+                    fileKey: presign.body.fileKey,
+                    fileName: 'proof.pdf',
+                    mimeType: 'application/pdf',
+                    fileSizeBytes: pdfBytes.length,
+                })
+                .expect(403);
+        });
+
         it('POST /directives/tasks with assignToAllBarangays creates all assignments', async () => {
             const response = await request(app.getHttpServer())
                 .post('/api/directives/tasks')

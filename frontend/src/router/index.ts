@@ -23,6 +23,12 @@ const router = createRouter({
             component: () => import('@/views/BarangayInboxView.vue'),
             meta: { barangay: true },
         },
+        {
+            path: '/barangay/compliance',
+            name: 'barangay-compliance',
+            component: () => import('@/views/BarangayComplianceView.vue'),
+            meta: { barangay: true },
+        },
     ],
 });
 

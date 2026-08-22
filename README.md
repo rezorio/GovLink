@@ -17,6 +17,7 @@ B2G SaaS for Philippine municipal governance — auditable task tracking and doc
 | [.cursor/MISSION-BOARD.md](.cursor/MISSION-BOARD.md) | **Active missions, tasks, and blockers** |
 | [.cursor/PROJECT-OVERVIEW.md](.cursor/PROJECT-OVERVIEW.md) | Stack, tenancy rules, pilot data |
 | [.cursor/context/FEATURES.md](.cursor/context/FEATURES.md) | Feature build status tracker |
+| [.cursor/context/DESIGN-SYSTEM.md](.cursor/context/DESIGN-SYSTEM.md) | **Locked civic UI** (type, color, ledger patterns) |
 
 Domain reference (RA 7160, compliance catalog, DILG rules): `.cursor/skills/ph-lgu-governance/`
 

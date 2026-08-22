@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+    BadRequestException,
+    ForbiddenException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
 import {
     ComplianceScope,
     ComplianceStatus,
@@ -9,6 +14,7 @@ import { AuditLogService } from '../common/services/audit-log.service';
 import { TenantScopeService } from '../common/services/tenant-scope.service';
 import { PrismaService } from '../prisma/prisma.module';
 import { OpenPeriodDto } from './dto/open-period.dto';
+import { ReviewComplianceInstanceDto } from './dto/review-instance.dto';
 import {
     currentPeriodForFrequency,
     effectiveComplianceStatus,
@@ -204,6 +210,196 @@ export class ComplianceService {
         });
 
         return { created, skipped };
+    }
+
+    async findOne(ctx: TenantContext, instanceId: string) {
+        const row = await this.prisma.complianceInstance.findFirst({
+            where: {
+                id: instanceId,
+                municipalityId: ctx.municipality_id,
+            },
+            include: instanceInclude,
+        });
+
+        if (!row) {
+            throw new NotFoundException('Compliance instance not found');
+        }
+
+        if (ctx.barangay_id && row.barangayId !== ctx.barangay_id) {
+            throw new ForbiddenException('Access denied for this barangay compliance item');
+        }
+
+        return this.withEffectiveStatus(row);
+    }
+
+    async reviewQueue(ctx: TenantContext) {
+        this.tenantScope.assertMunicipalScope(ctx);
+
+        const rows = await this.prisma.complianceInstance.findMany({
+            where: {
+                municipalityId: ctx.municipality_id,
+                status: {
+                    in: [
+                        ComplianceStatus.SUBMITTED,
+                        ComplianceStatus.UNDER_REVIEW,
+                        ComplianceStatus.RETURNED,
+                    ],
+                },
+            },
+            include: instanceInclude,
+            orderBy: [{ dueDate: 'asc' }, { updatedAt: 'desc' }],
+        });
+
+        return rows.map((row) => this.withEffectiveStatus(row));
+    }
+
+    async start(ctx: TenantContext, instanceId: string) {
+        this.tenantScope.assertBarangayScope(ctx);
+        const stored = await this.loadStored(instanceId, ctx);
+
+        if (
+            stored.status !== ComplianceStatus.NOT_STARTED &&
+            stored.status !== ComplianceStatus.RETURNED
+        ) {
+            throw new BadRequestException('Compliance item cannot be started from current status');
+        }
+
+        const before = { status: stored.status };
+        const updated = await this.prisma.complianceInstance.update({
+            where: { id: stored.id },
+            data: {
+                status: ComplianceStatus.IN_PROGRESS,
+                returnReason: null,
+            },
+            include: instanceInclude,
+        });
+
+        await this.auditLog.record({
+            ctx,
+            action: 'COMPLIANCE_STARTED',
+            entityType: 'ComplianceInstance',
+            entityId: updated.id,
+            barangayId: updated.barangayId,
+            before,
+            after: { status: updated.status },
+        });
+
+        return this.withEffectiveStatus(updated);
+    }
+
+    async submit(ctx: TenantContext, instanceId: string) {
+        this.tenantScope.assertBarangayScope(ctx);
+        const stored = await this.loadStored(instanceId, ctx);
+
+        if (ctx.barangay_id && stored.barangayId !== ctx.barangay_id) {
+            throw new ForbiddenException('Access denied for this barangay compliance item');
+        }
+
+        const submittable: ComplianceStatus[] = [
+            ComplianceStatus.IN_PROGRESS,
+            ComplianceStatus.RETURNED,
+        ];
+        if (!submittable.includes(stored.status)) {
+            throw new BadRequestException('Compliance item is not ready to submit');
+        }
+
+        const before = { status: stored.status };
+        const updated = await this.prisma.complianceInstance.update({
+            where: { id: stored.id },
+            data: {
+                status: ComplianceStatus.SUBMITTED,
+                submittedAt: new Date(),
+                submittedById: ctx.user_id,
+                returnReason: null,
+                reviewedAt: null,
+                reviewedById: null,
+            },
+            include: instanceInclude,
+        });
+
+        await this.auditLog.record({
+            ctx,
+            action: 'COMPLIANCE_SUBMITTED',
+            entityType: 'ComplianceInstance',
+            entityId: updated.id,
+            barangayId: updated.barangayId,
+            before,
+            after: { status: updated.status, submittedAt: updated.submittedAt },
+        });
+
+        return this.withEffectiveStatus(updated);
+    }
+
+    async review(ctx: TenantContext, instanceId: string, dto: ReviewComplianceInstanceDto) {
+        this.tenantScope.assertMunicipalScope(ctx);
+        const stored = await this.loadStored(instanceId, ctx);
+
+        const reviewable: ComplianceStatus[] = [
+            ComplianceStatus.SUBMITTED,
+            ComplianceStatus.UNDER_REVIEW,
+        ];
+        if (!reviewable.includes(stored.status)) {
+            throw new BadRequestException('Compliance item has no submission pending review');
+        }
+
+        if (dto.decision === 'RETURNED' && !dto.returnReason?.trim()) {
+            throw new BadRequestException('returnReason is required when returning an item');
+        }
+
+        const nextStatus =
+            dto.decision === 'ACCEPTED'
+                ? ComplianceStatus.ACCEPTED
+                : ComplianceStatus.RETURNED;
+
+        const before = { status: stored.status };
+        const updated = await this.prisma.complianceInstance.update({
+            where: { id: stored.id },
+            data: {
+                status: nextStatus,
+                reviewedAt: new Date(),
+                reviewedById: ctx.user_id,
+                returnReason:
+                    dto.decision === 'RETURNED'
+                        ? (dto.returnReason ?? dto.comment ?? null)
+                        : null,
+            },
+            include: instanceInclude,
+        });
+
+        await this.auditLog.record({
+            ctx,
+            action:
+                dto.decision === 'ACCEPTED'
+                    ? 'COMPLIANCE_ACCEPTED'
+                    : 'COMPLIANCE_RETURNED',
+            entityType: 'ComplianceInstance',
+            entityId: updated.id,
+            barangayId: updated.barangayId,
+            before,
+            after: {
+                status: updated.status,
+                returnReason: updated.returnReason,
+                comment: dto.comment ?? null,
+            },
+        });
+
+        return this.withEffectiveStatus(updated);
+    }
+
+    private async loadStored(instanceId: string, ctx: TenantContext) {
+        const row = await this.prisma.complianceInstance.findFirst({
+            where: {
+                id: instanceId,
+                municipalityId: ctx.municipality_id,
+                ...(ctx.barangay_id ? { barangayId: ctx.barangay_id } : {}),
+            },
+        });
+
+        if (!row) {
+            throw new NotFoundException('Compliance instance not found');
+        }
+
+        return row;
     }
 
     private tenantFilter(ctx: TenantContext) {
