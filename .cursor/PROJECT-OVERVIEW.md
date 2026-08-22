@@ -194,7 +194,7 @@ AI development assets already in place. **Do not add more skills until the MVP s
 
 **Phase 7 complete.** Missions 1–7 delivered MVP spine, CI, and full compliance catalog.
 
-**Recommended next:** Bulk assign to all barangays, then ComplianceInstance period tracking.
+**Recommended next:** ComplianceInstance period tracking (per-barangay due status).
 
 ---
 
