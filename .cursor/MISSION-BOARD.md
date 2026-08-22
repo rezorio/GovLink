@@ -1,8 +1,8 @@
 # GovLink — Mission Board
 
 > **Last updated:** 2026-08-22  
-> **Current mission:** MVP spine complete — pick next from "Missing / not yet scoped"  
-> **Phase:** Post-MVP planning
+> **Current mission:** Mission 6 — CI pipeline  
+> **Phase:** Post-MVP hardening
 
 **Source of truth for active work.** Update this file at end-of-session or when a mission completes.  
 For stable reference (stack, tenancy, pilot data): [PROJECT-OVERVIEW.md](PROJECT-OVERVIEW.md).  
@@ -19,6 +19,7 @@ For long-term feature catalog: [context/FEATURES.md](context/FEATURES.md).
 | 3 | Directive flow API | ✅ Done |
 | 4 | Tenant boundary test | ✅ Done |
 | 5 | Vue inbox + dashboard | ✅ Done |
+| 6 | CI pipeline | ✅ Done |
 
 **MVP flow we're building toward:**
 
@@ -140,6 +141,26 @@ DirectiveTemplate → SupervisoryTask → TaskAssignment → EvidenceSubmission 
 
 ---
 
+## Mission 6 — CI pipeline ✅
+
+**Goal:** Automated checks on every push — lint, typecheck, migrate deploy, e2e, frontend build.
+
+**Exit criteria:** GitHub Actions workflow passes on `master`; local `npm run ci:backend` succeeds with PostgreSQL running.
+
+**References:** `.github/workflows/ci.yml`
+
+### Tasks
+
+- [x] ESLint + TypeScript lint for `src/` and `test/`
+- [x] npm scripts: `lint`, `typecheck`, `validate`, `ci:backend`
+- [x] GitHub Actions: Postgres service + `prisma migrate deploy`
+- [x] GitHub Actions: backend lint, typecheck, build, `test:e2e`
+- [x] GitHub Actions: frontend `npm ci` + `npm run build`
+
+**Completed:** 2026-08-22
+
+---
+
 ## Missing / not yet scoped
 
 Items tracked here so they don't clutter mission task lists. Promote to a mission when actively scheduled.
@@ -147,7 +168,7 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 | Item | Notes | Target |
 |------|-------|--------|
 | Barangay list API | Done | `GET /barangays` for mayor assign picker |
-| CI pipeline | lint, test, migrate check | Post-MVP |
+| CI pipeline | Done | `.github/workflows/ci.yml` |
 | Bulk assign to all barangays | Convenience after single-assign | Post–Mission 3 |
 | Full compliance catalog seed | ADM / SOC / SK codes | Phase 4 |
 | DILG PDF / Excel exports | Letterhead + QR verification | Phase 5 |
@@ -182,6 +203,6 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 
 _Completed mission details stay in sections above with ✅. Add dated notes here for major milestones._
 
-- **2026-08-22** — Mission 5 complete. Vue 3 frontend shell (login, mayor dashboard, barangay inbox, review drawer).
+- **2026-08-22** — Mission 6 complete. GitHub Actions CI (lint, migrate, e2e, frontend build).
 - **2026-08-22** — Mission 4 complete. Supertest tenant boundary suite (`npm run test:e2e`).
 - **2026-08-22** — Mission 3 complete. Directive flow API + audit log + security hardening.

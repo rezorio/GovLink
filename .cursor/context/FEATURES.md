@@ -100,7 +100,7 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| CI (lint, test, migrate) | Planned | `test:e2e` ready; CI pipeline pending |
+| CI (lint, test, migrate) | Done | GitHub Actions on push/PR |
 | `.env.example` | Done | |
 | RA 10173 PII field masking | Deferred | |
 | Offline upload queue | Deferred | |
@@ -110,7 +110,7 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 
 ## Current mission
 
-**MVP spine complete (Missions 1–5).** Next candidates:
+**Mission 6 complete.** Next candidates:
 
-- CI pipeline (`lint`, `test:e2e`, migrate check)
 - Full compliance catalog seed (ADM/SOC/SK)
+- Bulk assign to all barangays

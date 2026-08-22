@@ -192,9 +192,9 @@ AI development assets already in place. **Do not add more skills until the MVP s
 
 > **Live status:** See [MISSION-BOARD.md](MISSION-BOARD.md) for current mission, task checkboxes, and blockers.
 
-**Phase 5 complete.** Missions 1–5 delivered the full MVP spine: DB + seed, auth, directive API, tenant e2e tests, and Vue frontend shell.
+**Phase 6 complete.** Missions 1–6 delivered MVP spine + CI. GitHub Actions runs on every push.
 
-**Recommended next:** Barangay list API (mayor assign UX), then CI pipeline.
+**Recommended next:** Full compliance catalog seed (ADM/SOC/SK), then bulk assign.
 
 ---
 
@@ -219,6 +219,7 @@ Execute in order. Full task lists and exit criteria: [MISSION-BOARD.md](MISSION-
 3. ~~Directive flow API~~ — done
 4. ~~Tenant boundary test~~ — done
 5. ~~Vue inbox + dashboard~~ — done
+6. ~~CI pipeline~~ — done
 
 ---
 
@@ -264,10 +265,10 @@ Directive templates seeded from DILG MC references (BDRRMP, FDPP, BADAC).
 | **2** | Auth + API bootstrap | Done |
 | **3** | Directive flow API | Done |
 | **4** | Tenant boundary test | Done |
-| **5** | Vue frontend shell | Done |
-| **6** | Compliance catalog | Full ADM/SOC/SK requirements seeded |
-| **7** | Audit exports | PDF scorecard + QR verification |
-| **8** | Procurement | APP, contracts, SVP thresholds |
+| **6** | CI pipeline | Done |
+| **7** | Compliance catalog | Full ADM/SOC/SK requirements seeded |
+| **8** | Audit exports | PDF scorecard + QR verification |
+| **9** | Procurement | APP, contracts, SVP thresholds |
 
 ---
 

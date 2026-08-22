@@ -1,0 +1,87 @@
+name: CI
+
+on:
+    push:
+        branches: [master, main]
+    pull_request:
+
+jobs:
+    backend:
+        runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                image: postgres:16-alpine
+                env:
+                    POSTGRES_USER: govlink
+                    POSTGRES_PASSWORD: govlink
+                    POSTGRES_DB: govlink
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U govlink -d govlink"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+        env:
+            DATABASE_URL: postgresql://govlink:govlink@localhost:5432/govlink?schema=public
+            JWT_SECRET: ci-test-jwt-secret-do-not-use-in-production
+            JWT_EXPIRES_IN_HOURS: 8
+            NODE_ENV: test
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Validate Prisma schema
+              run: npm run validate
+
+            - name: Generate Prisma client
+              run: npx prisma generate
+
+            - name: Apply migrations
+              run: npx prisma migrate deploy
+
+            - name: Lint
+              run: npm run lint
+
+            - name: Typecheck
+              run: npm run typecheck
+
+            - name: Build
+              run: npm run build
+
+            - name: E2E tests
+              run: npm run test:e2e
+
+    frontend:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: npm
+                  cache-dependency-path: frontend/package-lock.json
+
+            - name: Install dependencies
+              working-directory: frontend
+              run: npm ci
+
+            - name: Build
+              working-directory: frontend
+              run: npm run build

@@ -155,6 +155,24 @@ Tests verify cross-barangay isolation (403 when Barangay A accesses Barangay B a
 
 ---
 
+## CI (GitHub Actions)
+
+On every push to `master` / `main` and on pull requests, [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs:
+
+| Job | Steps |
+|-----|-------|
+| **backend** | Postgres service → `prisma validate` → `migrate deploy` → lint → typecheck → build → `test:e2e` |
+| **frontend** | `npm ci` + `npm run build` in `frontend/` |
+
+Run backend checks locally (requires PostgreSQL):
+
+```powershell
+npm run ci:backend
+npm run test:e2e
+```
+
+---
+
 ## npm scripts
 
 | Script | Command | Description |
@@ -162,6 +180,10 @@ Tests verify cross-barangay isolation (403 when Barangay A accesses Barangay B a
 | `start:dev` | `nest start --watch` | Run API with hot reload |
 | `build` | `nest build` | Compile TypeScript to `dist/` |
 | `test:e2e` | `jest --config ./test/jest-e2e.json` | Tenant boundary Supertest suite |
+| `lint` | `eslint` | Lint backend `src/` and `test/` |
+| `typecheck` | `tsc --noEmit` | Typecheck backend without emit |
+| `validate` | `prisma validate` | Validate Prisma schema |
+| `ci:backend` | validate + lint + typecheck + build | Local pre-push backend checks |
 | `db:generate` | `prisma generate` | Regenerate Prisma Client after schema changes |
 | `db:migrate` | `prisma migrate dev` | Create/apply migrations in development |
 | `db:migrate:deploy` | `prisma migrate deploy` | Apply migrations in production/CI |

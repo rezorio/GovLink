@@ -58,6 +58,7 @@ npm run dev         # http://localhost:5173
 | 3 | Directive flow API | Done |
 | 4 | Tenant boundary tests | Done |
 | 5 | Vue frontend shell | Done |
+| 6 | CI pipeline | Done |
 
 See [.cursor/MISSION-BOARD.md](.cursor/MISSION-BOARD.md) for the active mission and task checklist.
 

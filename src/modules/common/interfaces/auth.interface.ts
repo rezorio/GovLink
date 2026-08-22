@@ -16,4 +16,4 @@ export interface TenantContext {
     roles: import('@prisma/client').AppRole[];
 }
 
-export interface AuthenticatedUser extends JwtPayload {}
+export type AuthenticatedUser = JwtPayload;
