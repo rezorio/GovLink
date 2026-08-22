@@ -130,6 +130,27 @@ describe('Tenant boundary (e2e)', () => {
             expect(codes).toContain('ADM-001');
             expect(codes).toContain('SK-002');
         });
+
+        it('POST /directives/tasks with assignToAllBarangays creates all assignments', async () => {
+            const response = await request(app.getHttpServer())
+                .post('/api/directives/tasks')
+                .set(authHeader(mayorToken))
+                .send({
+                    title: 'Municipality-wide directive',
+                    description: 'Bulk assign to all barangays',
+                    legalBasis: 'RA 7160 Sec. 32',
+                    dueDate: '2026-12-31',
+                    assignToAllBarangays: true,
+                });
+
+            expect([200, 201]).toContain(response.status);
+            expect(response.body.assignments).toHaveLength(2);
+            const barangayIds = response.body.assignments.map(
+                (row: { barangayId: string }) => row.barangayId,
+            );
+            expect(barangayIds).toContain(fixture.barangayAId);
+            expect(barangayIds).toContain(fixture.barangayBId);
+        });
     });
 
     describe('Barangay municipal-only endpoints', () => {

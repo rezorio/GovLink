@@ -35,6 +35,18 @@ All protected routes require `Authorization: Bearer <access_token>`.
 }
 ```
 
+Or assign to **all active barangays** in the municipality:
+
+```json
+{
+  "title": "Submit semestral report",
+  "description": "All barangays must upload H1 2026 report",
+  "legalBasis": "RA 7160 Sec. 397(b)",
+  "dueDate": "2026-12-31",
+  "assignToAllBarangays": true
+}
+```
+
 ---
 
 ## Barangays

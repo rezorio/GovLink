@@ -26,20 +26,10 @@ export class DirectivesService {
     async createTask(ctx: TenantContext, dto: CreateTaskDto) {
         this.tenantScope.assertMunicipalScope(ctx);
 
-        const uniqueBarangayIds = [...new Set(dto.barangayIds)];
+        const uniqueBarangayIds = await this.resolveBarangayIds(ctx, dto);
 
-        const barangays = await this.prisma.barangay.findMany({
-            where: {
-                id: { in: uniqueBarangayIds },
-                municipalityId: ctx.municipality_id,
-                isActive: true,
-            },
-        });
-
-        if (barangays.length !== uniqueBarangayIds.length) {
-            throw new BadRequestException(
-                'One or more barangays are invalid or outside your municipality',
-            );
+        if (uniqueBarangayIds.length === 0) {
+            throw new BadRequestException('No active barangays found in your municipality');
         }
 
         if (dto.directiveTemplateId) {
@@ -93,6 +83,7 @@ export class DirectivesService {
                 title: result.task.title,
                 barangayIds: uniqueBarangayIds,
                 assignmentCount: result.assignments.length,
+                assignToAllBarangays: dto.assignToAllBarangays ?? false,
             },
         });
 
@@ -111,5 +102,45 @@ export class DirectivesService {
             task: result.task,
             assignments: result.assignments,
         };
+    }
+
+    private async resolveBarangayIds(
+        ctx: TenantContext,
+        dto: CreateTaskDto,
+    ): Promise<string[]> {
+        if (dto.assignToAllBarangays) {
+            const barangays = await this.prisma.barangay.findMany({
+                where: {
+                    municipalityId: ctx.municipality_id,
+                    isActive: true,
+                },
+                select: { id: true },
+                orderBy: { name: 'asc' },
+            });
+            return barangays.map((brgy) => brgy.id);
+        }
+
+        const uniqueBarangayIds = [...new Set(dto.barangayIds ?? [])];
+        if (uniqueBarangayIds.length === 0) {
+            throw new BadRequestException(
+                'Provide barangayIds or set assignToAllBarangays to true',
+            );
+        }
+
+        const barangays = await this.prisma.barangay.findMany({
+            where: {
+                id: { in: uniqueBarangayIds },
+                municipalityId: ctx.municipality_id,
+                isActive: true,
+            },
+        });
+
+        if (barangays.length !== uniqueBarangayIds.length) {
+            throw new BadRequestException(
+                'One or more barangays are invalid or outside your municipality',
+            );
+        }
+
+        return uniqueBarangayIds;
     }
 }

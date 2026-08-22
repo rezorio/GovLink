@@ -1,11 +1,13 @@
 import {
     ArrayMinSize,
     IsArray,
+    IsBoolean,
     IsDateString,
     IsOptional,
     IsString,
     IsUUID,
     MinLength,
+    ValidateIf,
 } from 'class-validator';
 
 export class CreateTaskDto {
@@ -28,8 +30,13 @@ export class CreateTaskDto {
     @IsDateString()
     dueDate!: string;
 
+    @IsOptional()
+    @IsBoolean()
+    assignToAllBarangays?: boolean;
+
+    @ValidateIf((dto: CreateTaskDto) => !dto.assignToAllBarangays)
     @IsArray()
     @ArrayMinSize(1)
     @IsUUID('4', { each: true })
-    barangayIds!: string[];
+    barangayIds?: string[];
 }

@@ -34,6 +34,7 @@ const assignForm = ref({
     legalBasis: '',
     dueDate: '',
     barangayId: '',
+    assignToAll: false,
 });
 
 const statusCounts = computed(() => {
@@ -108,7 +109,10 @@ function onTemplateChange() {
 }
 
 async function submitAssign() {
-    if (!auth.token || !assignForm.value.barangayId) {
+    if (!auth.token) {
+        return;
+    }
+    if (!assignForm.value.assignToAll && !assignForm.value.barangayId) {
         return;
     }
     actionLoading.value = true;
@@ -120,7 +124,10 @@ async function submitAssign() {
             description: assignForm.value.description,
             legalBasis: assignForm.value.legalBasis,
             dueDate: assignForm.value.dueDate,
-            barangayIds: [assignForm.value.barangayId],
+            assignToAllBarangays: assignForm.value.assignToAll || undefined,
+            barangayIds: assignForm.value.assignToAll
+                ? undefined
+                : [assignForm.value.barangayId],
         });
         showAssignForm.value = false;
         assignForm.value = {
@@ -130,6 +137,7 @@ async function submitAssign() {
             legalBasis: '',
             dueDate: '',
             barangayId: '',
+            assignToAll: false,
         };
         await loadData();
     } catch (err) {
@@ -196,8 +204,9 @@ onMounted(loadData);
                     <label class="mb-1 block text-sm font-medium text-slate-700">Barangay</label>
                     <select
                         v-model="assignForm.barangayId"
-                        required
-                        class="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"
+                        :required="!assignForm.assignToAll"
+                        :disabled="assignForm.assignToAll"
+                        class="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm disabled:bg-slate-100 disabled:text-slate-500"
                     >
                         <option value="" disabled>Select barangay</option>
                         <option v-for="brgy in barangays" :key="brgy.id" :value="brgy.id">
@@ -213,6 +222,17 @@ onMounted(loadData);
                         required
                         class="min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm"
                     />
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-slate-700">
+                        <input
+                            v-model="assignForm.assignToAll"
+                            type="checkbox"
+                            class="size-4 rounded border-slate-300"
+                            @change="assignForm.barangayId = ''"
+                        />
+                        Assign to all barangays ({{ barangays.length }})
+                    </label>
                 </div>
                 <div class="sm:col-span-2">
                     <label class="mb-1 block text-sm font-medium text-slate-700">Title</label>
@@ -232,7 +252,7 @@ onMounted(loadData);
                 class="min-h-11 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
                 :disabled="actionLoading"
             >
-                Assign to barangay
+                {{ assignForm.assignToAll ? 'Assign to all barangays' : 'Assign to barangay' }}
             </button>
         </form>
 

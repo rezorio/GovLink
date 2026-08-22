@@ -49,7 +49,7 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 | Mayor assigns task to barangay(s) | Done | `POST /api/directives/tasks` |
 | List barangays (municipal picker) | Done | `GET /api/barangays` |
 | List compliance requirements | Done | `GET /api/compliance/requirements` |
-| Bulk assign to all barangays | Deferred | After single-assign works |
+| Bulk assign to all barangays | Done | `assignToAllBarangays` flag + mayor UI checkbox |
 | Barangay acknowledge task | Done | `POST /api/assignments/:id/acknowledge` |
 | Evidence upload (presigned S3) | Done | Metadata stub; fileKey tenant-prefix validated |
 | Municipal accept / return | Done | `POST /api/assignments/:id/review` |
@@ -111,7 +111,6 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 
 ## Current mission
 
-**Mission 7 complete.** Next candidates:
+**Mission 7 complete.** Next candidate:
 
-- Bulk assign to all barangays
 - ComplianceInstance tracking (per-barangay periods)

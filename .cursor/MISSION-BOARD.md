@@ -190,7 +190,7 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 |------|-------|--------|
 | Barangay list API | Done | `GET /barangays` for mayor assign picker |
 | CI pipeline | Done | `.github/workflows/ci.yml` |
-| Bulk assign to all barangays | Convenience after single-assign | Post–Mission 3 |
+| Bulk assign to all barangays | Done | `assignToAllBarangays: true` on POST /directives/tasks |
 | Full compliance catalog seed | Done | 24 ADM/SOC/SK/MAY codes |
 | DILG PDF / Excel exports | Letterhead + QR verification | Phase 5 |
 | Procurement module | RA 9184 / RA 12009 | Phase 6 |

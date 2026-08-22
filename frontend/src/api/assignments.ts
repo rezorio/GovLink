@@ -21,7 +21,8 @@ export function assignTask(
         description: string;
         legalBasis: string;
         dueDate: string;
-        barangayIds: string[];
+        assignToAllBarangays?: boolean;
+        barangayIds?: string[];
     },
 ) {
     return apiRequest('/directives/tasks', { method: 'POST', body: JSON.stringify(body) }, token);
