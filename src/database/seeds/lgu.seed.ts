@@ -1,6 +1,7 @@
 import { PrismaClient, DirectiveCategory } from '@prisma/client';
 import { barangays, provinces } from 'psgc';
 import { seedComplianceCatalog } from './compliance-catalog.seed';
+import { seedComplianceInstances } from './compliance-instances.seed';
 import { seedDemoUsers } from './users.seed';
 
 const prisma = new PrismaClient();
@@ -145,6 +146,9 @@ async function main() {
 
     console.log('\nSeeding compliance catalog...');
     await seedComplianceCatalog(prisma);
+
+    console.log('\nSeeding compliance instances (current periods)...');
+    await seedComplianceInstances(prisma);
 
     console.log('\nSeeding demo users...');
     await seedDemoUsers(prisma);

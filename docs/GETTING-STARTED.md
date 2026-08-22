@@ -28,13 +28,17 @@ npm install
 Copy-Item .env.example .env
 ```
 
-Edit `.env` if your PostgreSQL connection differs from the Docker defaults.
+Edit `.env` only if you must override defaults.
+
+**Postgres host port is fixed at `5433`** for this project (Docker maps `5433 → container 5432`). That way other projects can keep using `5432` without fighting GovLink.
 
 Default `DATABASE_URL`:
 
 ```
-postgresql://govlink:govlink@localhost:5432/govlink?schema=public
+postgresql://govlink:govlink@localhost:5433/govlink?schema=public
 ```
+
+If `5433` is also taken, set both `GOVLINK_PG_PORT` and the port in `DATABASE_URL` to the same free port — do not change them independently.
 
 **Never commit `.env`.** Only `.env.example` belongs in git.
 
@@ -187,8 +191,9 @@ npm run test:e2e
 | `db:generate` | `prisma generate` | Regenerate Prisma Client after schema changes |
 | `db:migrate` | `prisma migrate dev` | Create/apply migrations in development |
 | `db:migrate:deploy` | `prisma migrate deploy` | Apply migrations in production/CI |
-| `db:seed` | `prisma db seed` | Seed pilot LGUs, templates, compliance catalog, demo users |
+| `db:seed` | `prisma db seed` | Seed pilot LGUs, templates, compliance catalog, instances, demo users |
 | `db:seed:compliance` | `tsx compliance-catalog.seed.ts` | Seed ADM/SOC/SK/MAY catalog only |
+| `db:seed:compliance-instances` | `tsx compliance-instances.seed.ts` | Open current periods for all barangays |
 | `db:reset` | `prisma migrate reset` | Drop DB, re-migrate, re-seed |
 | `db:studio` | `prisma studio` | Visual database browser |
 

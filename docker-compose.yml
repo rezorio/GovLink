@@ -8,7 +8,9 @@ services:
       POSTGRES_PASSWORD: govlink
       POSTGRES_DB: govlink
     ports:
-      - "5432:5432"
+      # Fixed GovLink host port (default 5433). Avoids clashes with other apps on 5432.
+      # Override only via .env: GOVLINK_PG_PORT=xxxx — keep DATABASE_URL in sync.
+      - "${GOVLINK_PG_PORT:-5433}:5432"
     volumes:
       - govlink_pgdata:/var/lib/postgresql/data
     healthcheck:

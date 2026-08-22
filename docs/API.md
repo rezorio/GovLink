@@ -63,7 +63,21 @@ Or assign to **all active barangays** in the municipality:
 |--------|------|-------|-------------|
 | `GET` | `/compliance/requirements` | Any authenticated | List ADM/SOC/SK/MAY requirement templates |
 
-Optional query: `?scope=BARANGAY` or `?scope=MUNICIPAL`
+Optional query on requirements: `?scope=BARANGAY` or `?scope=MUNICIPAL`
+
+| `GET` | `/compliance/instances` | Any authenticated | List period instances (tenant-scoped) |
+| `GET` | `/compliance/matrix` | `MAYOR`, `DEPT_HEAD` | Heatmap cells + status counts for municipality |
+| `POST` | `/compliance/periods/open` | `MAYOR`, `DEPT_HEAD` | Create current-period instances for all barangays |
+
+Optional query on list/matrix: `?periodLabel=2026-H2`
+
+Optional body on open:
+
+```json
+{ "periodLabel": "2026-H2" }
+```
+
+Omit `periodLabel` to open every current period derived from requirement frequency (Asia/Manila).
 
 ---
 

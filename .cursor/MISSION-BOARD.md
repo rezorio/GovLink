@@ -1,7 +1,7 @@
 # GovLink — Mission Board
 
-> **Last updated:** 2026-08-22  
-> **Current mission:** Mission 7 complete — bulk assign or ComplianceInstance next  
+> **Last updated:** 2026-08-23  
+> **Current mission:** Mission 8 — ComplianceInstance period tracking  
 > **Phase:** Post-MVP features
 
 **Source of truth for active work.** Update this file at end-of-session or when a mission completes.  
@@ -21,6 +21,7 @@ For long-term feature catalog: [context/FEATURES.md](context/FEATURES.md).
 | 5 | Vue inbox + dashboard | ✅ Done |
 | 6 | CI pipeline | ✅ Done |
 | 7 | Compliance catalog seed | ✅ Done |
+| 8 | ComplianceInstance periods | 🔄 In progress |
 
 **MVP flow we're building toward:**
 
@@ -179,6 +180,26 @@ DirectiveTemplate → SupervisoryTask → TaskAssignment → EvidenceSubmission 
 - [x] E2e test for catalog list
 
 **Completed:** 2026-08-22
+
+---
+
+## Mission 8 — ComplianceInstance period tracking 🔄
+
+**Goal:** Track per-barangay due status against the ADM/SOC/SK catalog for current reporting periods.
+
+**Exit criteria:** Seed opens current periods; mayor can load `/compliance/matrix`; barangay list is tenant-scoped; e2e covers open + matrix RBAC.
+
+**References:** `.cursor/skills/ph-lgu-governance/data-model.md`
+
+### Tasks
+
+- [x] `ComplianceInstance` model + migration + `ComplianceStatus` enum
+- [x] Period helpers (Asia/Manila labels by frequency)
+- [x] Seed current periods for all active barangays
+- [x] `GET /compliance/instances`, `GET /compliance/matrix`, `POST /compliance/periods/open`
+- [x] Mayor dashboard heatmap wired to matrix API
+- [x] E2E coverage for open + tenant isolation
+- [ ] Docs / mission board closeout (after local migrate + e2e green)
 
 ---
 

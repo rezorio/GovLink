@@ -1,7 +1,7 @@
 # GovLink — Project Overview
 
-> **Last updated:** 2026-08-22  
-> **Phase:** Phase 2 complete (auth spine) — Mission 3 (directive API) is next  
+> **Last updated:** 2026-08-23  
+> **Phase:** Mission 8 in progress — ComplianceInstance period tracking  
 > **Audience:** Developers, AI agents, and future contributors
 
 ---
@@ -192,9 +192,9 @@ AI development assets already in place. **Do not add more skills until the MVP s
 
 > **Live status:** See [MISSION-BOARD.md](MISSION-BOARD.md) for current mission, task checkboxes, and blockers.
 
-**Phase 7 complete.** Missions 1–7 delivered MVP spine, CI, and full compliance catalog.
+**Mission 8 in progress.** ComplianceInstance schema, seed, matrix API, and mayor heatmap shipped; e2e/docs closing out.
 
-**Recommended next:** ComplianceInstance period tracking (per-barangay due status).
+**Recommended next:** Close Mission 8 (e2e green), then Phase 8 audit exports (PDF scorecard + QR).
 
 ---
 
@@ -221,6 +221,7 @@ Execute in order. Full task lists and exit criteria: [MISSION-BOARD.md](MISSION-
 5. ~~Vue inbox + dashboard~~ — done
 6. ~~CI pipeline~~ — done
 7. ~~Compliance catalog seed~~ — done
+8. ComplianceInstance periods — in progress
 
 ---
 

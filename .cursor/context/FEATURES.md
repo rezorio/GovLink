@@ -2,7 +2,7 @@
 
 Living tracker for GovLink features. Update this file when behavior ships or scope changes.
 
-**Last updated:** 2026-08-22
+**Last updated:** 2026-08-23
 
 ---
 
@@ -77,6 +77,7 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Compliance catalog seed (ADM/SOC/SK) | Done | 24 requirements via `GET /compliance/requirements` |
+| ComplianceInstance period tracking | In progress | Matrix API + mayor heatmap |
 | Semestral barangay assembly tracking | Deferred | |
 | BDP / AIP submission tracker | Deferred | |
 | SGLG-aligned scoring | Deferred | |
@@ -111,6 +112,4 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 
 ## Current mission
 
-**Mission 7 complete.** Next candidate:
-
-- ComplianceInstance tracking (per-barangay periods)
+**Mission 8 in progress.** ComplianceInstance tracking (per-barangay periods) — schema, seed, matrix API, mayor heatmap.

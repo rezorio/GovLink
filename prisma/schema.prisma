@@ -66,6 +66,16 @@ enum ComplianceCategory {
   MUNICIPAL_SUPERVISION
 }
 
+enum ComplianceStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  RETURNED
+  OVERDUE
+}
+
 model Municipality {
   id        String   @id @default(uuid())
   name      String
@@ -75,11 +85,12 @@ model Municipality {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  barangays        Barangay[]
-  users            User[]
-  supervisoryTasks SupervisoryTask[]
-  taskAssignments  TaskAssignment[]
-  auditLogs        AuditLog[]
+  barangays            Barangay[]
+  users                User[]
+  supervisoryTasks     SupervisoryTask[]
+  taskAssignments      TaskAssignment[]
+  complianceInstances  ComplianceInstance[]
+  auditLogs            AuditLog[]
 
   @@map("municipalities")
 }
@@ -93,10 +104,11 @@ model Barangay {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  municipality    Municipality     @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
-  users           User[]
-  taskAssignments TaskAssignment[]
-  auditLogs       AuditLog[]
+  municipality         Municipality         @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  users                User[]
+  taskAssignments      TaskAssignment[]
+  complianceInstances  ComplianceInstance[]
+  auditLogs            AuditLog[]
 
   @@unique([municipalityId, psgcCode])
   @@index([municipalityId])
@@ -119,10 +131,11 @@ model User {
   municipality Municipality @relation(fields: [municipalityId], references: [id])
   barangay     Barangay?    @relation(fields: [barangayId], references: [id])
 
-  assignedTasks     SupervisoryTask[] @relation("AssignedBy")
-  acknowledgedTasks TaskAssignment[]  @relation("AcknowledgedBy")
-  reviews           MunicipalReview[]
-  auditLogs         AuditLog[]
+  assignedTasks       SupervisoryTask[]     @relation("AssignedBy")
+  acknowledgedTasks   TaskAssignment[]      @relation("AcknowledgedBy")
+  reviews             MunicipalReview[]
+  complianceReviews   ComplianceInstance[]  @relation("ComplianceReviewedBy")
+  auditLogs           AuditLog[]
 
   @@index([municipalityId, barangayId])
   @@map("users")
@@ -155,8 +168,36 @@ model ComplianceRequirement {
   createdAt     DateTime             @default(now()) @map("created_at")
   updatedAt     DateTime             @updatedAt @map("updated_at")
 
+  instances ComplianceInstance[]
+
   @@index([category, scope])
   @@map("compliance_requirements")
+}
+
+model ComplianceInstance {
+  id             String           @id @default(uuid())
+  municipalityId String           @map("municipality_id")
+  barangayId     String           @map("barangay_id")
+  requirementId  String           @map("requirement_id")
+  periodLabel    String           @map("period_label")
+  dueDate        DateTime         @map("due_date") @db.Date
+  status         ComplianceStatus @default(NOT_STARTED)
+  submittedAt    DateTime?        @map("submitted_at")
+  reviewedAt     DateTime?        @map("reviewed_at")
+  reviewedById   String?          @map("reviewed_by_id")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  municipality Municipality         @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  barangay     Barangay             @relation(fields: [barangayId], references: [id], onDelete: Cascade)
+  requirement  ComplianceRequirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  reviewedBy   User?                @relation("ComplianceReviewedBy", fields: [reviewedById], references: [id])
+
+  @@unique([barangayId, requirementId, periodLabel])
+  @@index([municipalityId, barangayId, status])
+  @@index([municipalityId, periodLabel])
+  @@index([barangayId, status, dueDate])
+  @@map("compliance_instances")
 }
 
 model SupervisoryTask {

@@ -77,3 +77,43 @@ export interface DirectiveTemplate {
     dilgMcNumber: string;
     description: string;
 }
+
+export type ComplianceStatus =
+    | 'NOT_STARTED'
+    | 'IN_PROGRESS'
+    | 'SUBMITTED'
+    | 'UNDER_REVIEW'
+    | 'ACCEPTED'
+    | 'RETURNED'
+    | 'OVERDUE';
+
+export interface ComplianceRequirementSummary {
+    id: string;
+    code: string;
+    title: string;
+    frequency: string;
+    category: string;
+}
+
+export interface ComplianceMatrixCell {
+    id: string;
+    barangayId: string;
+    requirementId: string;
+    periodLabel: string;
+    dueDate: string;
+    status: ComplianceStatus;
+}
+
+export interface ComplianceMatrix {
+    barangays: BarangaySummary[];
+    requirements: ComplianceRequirementSummary[];
+    cells: ComplianceMatrixCell[];
+    statusCounts: {
+        notStarted: number;
+        inProgress: number;
+        submitted: number;
+        accepted: number;
+        overdue: number;
+        returned: number;
+    };
+}

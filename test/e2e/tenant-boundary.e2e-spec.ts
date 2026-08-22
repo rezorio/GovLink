@@ -131,6 +131,55 @@ describe('Tenant boundary (e2e)', () => {
             expect(codes).toContain('SK-002');
         });
 
+        it('POST /compliance/periods/open creates barangay instances', async () => {
+            const response = await request(app.getHttpServer())
+                .post('/api/compliance/periods/open')
+                .set(authHeader(mayorToken))
+                .send({})
+                .expect(201);
+
+            expect(response.body.created).toBeGreaterThan(0);
+
+            const matrix = await request(app.getHttpServer())
+                .get('/api/compliance/matrix')
+                .set(authHeader(mayorToken))
+                .expect(200);
+
+            expect(matrix.body.barangays.length).toBe(2);
+            expect(matrix.body.cells.length).toBeGreaterThan(0);
+            expect(matrix.body.statusCounts).toBeDefined();
+        });
+
+        it('GET /compliance/instances is tenant-scoped for barangay captain', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/compliance/instances')
+                .set(authHeader(captainAToken))
+                .expect(200);
+
+            expect(Array.isArray(response.body)).toBe(true);
+            expect(response.body.length).toBeGreaterThan(0);
+            const barangayIds = response.body.map(
+                (row: { barangayId: string }) => row.barangayId,
+            );
+            expect(barangayIds.every((id: string) => id === fixture.barangayAId)).toBe(true);
+            expect(barangayIds).not.toContain(fixture.barangayBId);
+        });
+
+        it('GET /compliance/matrix returns 403 for barangay captain', async () => {
+            await request(app.getHttpServer())
+                .get('/api/compliance/matrix')
+                .set(authHeader(captainAToken))
+                .expect(403);
+        });
+
+        it('POST /compliance/periods/open returns 403 for barangay captain', async () => {
+            await request(app.getHttpServer())
+                .post('/api/compliance/periods/open')
+                .set(authHeader(captainAToken))
+                .send({})
+                .expect(403);
+        });
+
         it('POST /directives/tasks with assignToAllBarangays creates all assignments', async () => {
             const response = await request(app.getHttpServer())
                 .post('/api/directives/tasks')

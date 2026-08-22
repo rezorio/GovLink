@@ -10,15 +10,29 @@ import {
     reviewAssignment,
 } from '@/api/assignments';
 import { fetchBarangays } from '@/api/barangays';
+import { fetchComplianceMatrix, openCompliancePeriods } from '@/api/compliance';
 import { useAuthStore } from '@/stores/auth';
-import type { BarangaySummary, DirectiveTemplate, TaskAssignment } from '@/types';
+import type {
+    BarangaySummary,
+    ComplianceMatrix,
+    ComplianceMatrixCell,
+    ComplianceStatus,
+    DirectiveTemplate,
+    TaskAssignment,
+} from '@/types';
 import { daysRemaining, formatDueDate, statusLabel, statusToVariant } from '@/utils/assignment-status';
+import {
+    cellTint,
+    complianceStatusLabel,
+    complianceStatusToVariant,
+} from '@/utils/compliance-status';
 
 const auth = useAuthStore();
 
 const assignments = ref<TaskAssignment[]>([]);
 const templates = ref<DirectiveTemplate[]>([]);
 const barangays = ref<BarangaySummary[]>([]);
+const matrix = ref<ComplianceMatrix | null>(null);
 const loading = ref(true);
 const actionLoading = ref(false);
 const error = ref<string | null>(null);
@@ -46,6 +60,18 @@ const statusCounts = computed(() => {
     return counts;
 });
 
+const matrixCellMap = computed(() => {
+    const map = new Map<string, ComplianceMatrixCell>();
+    for (const cell of matrix.value?.cells ?? []) {
+        map.set(`${cell.barangayId}:${cell.requirementId}`, cell);
+    }
+    return map;
+});
+
+function cellFor(barangayId: string, requirementId: string) {
+    return matrixCellMap.value.get(`${barangayId}:${requirementId}`);
+}
+
 async function loadData() {
     if (!auth.token) {
         return;
@@ -53,14 +79,16 @@ async function loadData() {
     loading.value = true;
     error.value = null;
     try {
-        const [rows, tpls, brgys] = await Promise.all([
+        const [rows, tpls, brgys, mx] = await Promise.all([
             fetchAssignments(auth.token),
             fetchDirectiveTemplates(auth.token),
             fetchBarangays(auth.token),
+            fetchComplianceMatrix(auth.token),
         ]);
         assignments.value = rows;
         templates.value = tpls;
         barangays.value = brgys;
+        matrix.value = mx;
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to load dashboard';
     } finally {
@@ -147,6 +175,25 @@ async function submitAssign() {
     }
 }
 
+async function handleOpenPeriods() {
+    if (!auth.token) {
+        return;
+    }
+    actionLoading.value = true;
+    error.value = null;
+    try {
+        const result = await openCompliancePeriods(auth.token);
+        if (result.created === 0 && result.skipped > 0) {
+            error.value = `Period already open (${result.skipped} existing instances).`;
+        }
+        await loadData();
+    } catch (err) {
+        error.value = err instanceof Error ? err.message : 'Failed to open periods';
+    } finally {
+        actionLoading.value = false;
+    }
+}
+
 onMounted(loadData);
 </script>
 
@@ -155,23 +202,97 @@ onMounted(loadData);
         title="Municipal supervision dashboard"
         :subtitle="auth.user?.municipality?.name ?? 'Municipality'"
     >
-        <div class="mb-6 grid grid-cols-3 gap-3">
+        <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <p class="text-xs font-semibold uppercase text-amber-800">Pending</p>
-                <p class="text-2xl font-bold text-amber-900">{{ statusCounts.pending }}</p>
+                <p class="text-xs font-semibold uppercase text-amber-800">Catalog pending</p>
+                <p class="text-2xl font-bold text-amber-900">
+                    {{ (matrix?.statusCounts.notStarted ?? 0) + (matrix?.statusCounts.inProgress ?? 0) }}
+                </p>
+            </div>
+            <div class="rounded-xl border border-sky-200 bg-sky-50 p-4">
+                <p class="text-xs font-semibold uppercase text-sky-800">Submitted</p>
+                <p class="text-2xl font-bold text-sky-900">{{ matrix?.statusCounts.submitted ?? 0 }}</p>
             </div>
             <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                <p class="text-xs font-semibold uppercase text-emerald-800">Approved</p>
-                <p class="text-2xl font-bold text-emerald-900">{{ statusCounts.approved }}</p>
+                <p class="text-xs font-semibold uppercase text-emerald-800">Accepted</p>
+                <p class="text-2xl font-bold text-emerald-900">{{ matrix?.statusCounts.accepted ?? 0 }}</p>
             </div>
             <div class="rounded-xl border border-rose-200 bg-rose-50 p-4">
-                <p class="text-xs font-semibold uppercase text-rose-800">Action needed</p>
-                <p class="text-2xl font-bold text-rose-900">{{ statusCounts.overdue }}</p>
+                <p class="text-xs font-semibold uppercase text-rose-800">Overdue / returned</p>
+                <p class="text-2xl font-bold text-rose-900">
+                    {{ (matrix?.statusCounts.overdue ?? 0) + (matrix?.statusCounts.returned ?? 0) }}
+                </p>
             </div>
         </div>
 
         <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-base font-semibold text-slate-900">Barangay compliance matrix</h2>
+            <div>
+                <h2 class="text-base font-semibold text-slate-900">Compliance period matrix</h2>
+                <p class="text-sm text-slate-500">
+                    Per-barangay due status for current ADM/SOC/SK periods
+                </p>
+            </div>
+            <button
+                type="button"
+                class="min-h-11 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+                :disabled="actionLoading"
+                @click="handleOpenPeriods"
+            >
+                Open current periods
+            </button>
+        </div>
+
+        <p v-if="loading" class="mb-6 text-sm text-slate-500">Loading compliance matrix…</p>
+        <div
+            v-else-if="matrix && matrix.cells.length > 0"
+            class="mb-8 overflow-x-auto rounded-xl border border-slate-200 bg-white"
+        >
+            <table class="min-w-full border-collapse text-left text-xs">
+                <thead class="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
+                    <tr>
+                        <th class="sticky left-0 z-10 bg-slate-50 px-3 py-3">Barangay</th>
+                        <th
+                            v-for="req in matrix.requirements"
+                            :key="req.id"
+                            class="min-w-[5.5rem] px-2 py-3 text-center"
+                            :title="req.title"
+                        >
+                            {{ req.code }}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr
+                        v-for="brgy in matrix.barangays"
+                        :key="brgy.id"
+                        class="border-t border-slate-100"
+                    >
+                        <td class="sticky left-0 z-10 bg-white px-3 py-2 font-medium text-slate-900">
+                            {{ brgy.name }}
+                        </td>
+                        <td
+                            v-for="req in matrix.requirements"
+                            :key="`${brgy.id}-${req.id}`"
+                            class="px-1 py-1 text-center"
+                            :class="cellFor(brgy.id, req.id) ? cellTint(cellFor(brgy.id, req.id)!.status) : 'bg-slate-50'"
+                        >
+                            <StatusBadge
+                                v-if="cellFor(brgy.id, req.id)"
+                                :status="complianceStatusToVariant(cellFor(brgy.id, req.id)!.status as ComplianceStatus)"
+                                :label="complianceStatusLabel(cellFor(brgy.id, req.id)!.status as ComplianceStatus)"
+                            />
+                            <span v-else class="text-slate-300">—</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p v-else class="mb-8 text-sm text-slate-500">
+            No compliance instances yet. Click “Open current periods” to generate them for all barangays.
+        </p>
+
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-base font-semibold text-slate-900">Directive assignments</h2>
             <button
                 type="button"
                 class="min-h-11 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800"
@@ -179,6 +300,21 @@ onMounted(loadData);
             >
                 {{ showAssignForm ? 'Cancel assign' : 'Assign directive' }}
             </button>
+        </div>
+
+        <div class="mb-4 grid grid-cols-3 gap-3">
+            <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <p class="text-xs font-semibold uppercase text-amber-800">Directive pending</p>
+                <p class="text-xl font-bold text-amber-900">{{ statusCounts.pending }}</p>
+            </div>
+            <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                <p class="text-xs font-semibold uppercase text-emerald-800">Directive approved</p>
+                <p class="text-xl font-bold text-emerald-900">{{ statusCounts.approved }}</p>
+            </div>
+            <div class="rounded-xl border border-rose-200 bg-rose-50 p-3">
+                <p class="text-xs font-semibold uppercase text-rose-800">Directive action</p>
+                <p class="text-xl font-bold text-rose-900">{{ statusCounts.overdue }}</p>
+            </div>
         </div>
 
         <form

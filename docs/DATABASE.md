@@ -13,6 +13,7 @@ PostgreSQL schema managed by Prisma. Source of truth: `prisma/schema.prisma`.
 | `User` | `municipalityId` + optional `barangayId` | Staff accounts + `AppRole[]` |
 | `DirectiveTemplate` | Global | DILG MC templates (not per-tenant) |
 | `ComplianceRequirement` | Global | ADM/SOC/SK/MAY obligation catalog |
+| `ComplianceInstance` | Yes | Per-barangay period tracking against catalog |
 | `SupervisoryTask` | `municipalityId` | Mayor-assigned directive instance |
 | `TaskAssignment` | `municipalityId` + `barangayId` | Per-barangay task inbox row |
 | `EvidenceSubmission` | `municipalityId` + `barangayId` | Uploaded proof metadata |
@@ -33,6 +34,7 @@ PostgreSQL schema managed by Prisma. Source of truth: `prisma/schema.prisma`.
 | `ComplianceFrequency` | `SEMESTRAL`, `ANNUAL`, `TERM`, `ONGOING`, `AD_HOC`, `MONTHLY` |
 | `ComplianceScope` | `BARANGAY`, `MUNICIPAL` |
 | `ComplianceCategory` | `ADMINISTRATIVE`, `SOCIAL`, `YOUTH`, `MUNICIPAL_SUPERVISION` |
+| `ComplianceStatus` | `NOT_STARTED`, `IN_PROGRESS`, `SUBMITTED`, `UNDER_REVIEW`, `ACCEPTED`, `RETURNED`, `OVERDUE` |
 
 ---
 
@@ -51,6 +53,7 @@ PostgreSQL schema managed by Prisma. Source of truth: `prisma/schema.prisma`.
 |-----------|-------------|
 | `20260822170000_init` | Initial MVP schema |
 | `20260822190000_compliance_catalog` | Compliance requirement catalog table |
+| `20260823053000_compliance_instances` | Per-barangay compliance period instances |
 
 Apply with:
 
@@ -123,7 +126,6 @@ npm run db:seed
 
 These appear in domain docs but are deferred post-MVP:
 
-- `ComplianceInstance` (per-barangay period tracking)
 - `ProcurementPlan` / `Contract`
 - `Document` (typed ordinances, BDP, AIP)
 - Tenant config (seal images, income class for SVP thresholds)

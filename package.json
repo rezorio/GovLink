@@ -16,6 +16,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:seed:compliance": "tsx src/database/seeds/compliance-catalog.seed.ts",
+    "db:seed:compliance-instances": "tsx src/database/seeds/compliance-instances.seed.ts",
     "db:reset": "prisma migrate reset",
     "db:studio": "prisma studio",
     "test:e2e": "jest --config ./test/jest-e2e.json --runInBand"
