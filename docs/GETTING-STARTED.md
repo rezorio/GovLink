@@ -187,7 +187,8 @@ npm run test:e2e
 | `db:generate` | `prisma generate` | Regenerate Prisma Client after schema changes |
 | `db:migrate` | `prisma migrate dev` | Create/apply migrations in development |
 | `db:migrate:deploy` | `prisma migrate deploy` | Apply migrations in production/CI |
-| `db:seed` | `prisma db seed` | Seed pilot LGUs and directive templates |
+| `db:seed` | `prisma db seed` | Seed pilot LGUs, templates, compliance catalog, demo users |
+| `db:seed:compliance` | `tsx compliance-catalog.seed.ts` | Seed ADM/SOC/SK/MAY catalog only |
 | `db:reset` | `prisma migrate reset` | Drop DB, re-migrate, re-seed |
 | `db:studio` | `prisma studio` | Visual database browser |
 

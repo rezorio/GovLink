@@ -1,8 +1,8 @@
 # GovLink — Mission Board
 
 > **Last updated:** 2026-08-22  
-> **Current mission:** Mission 6 — CI pipeline  
-> **Phase:** Post-MVP hardening
+> **Current mission:** Mission 7 complete — bulk assign or ComplianceInstance next  
+> **Phase:** Post-MVP features
 
 **Source of truth for active work.** Update this file at end-of-session or when a mission completes.  
 For stable reference (stack, tenancy, pilot data): [PROJECT-OVERVIEW.md](PROJECT-OVERVIEW.md).  
@@ -20,6 +20,7 @@ For long-term feature catalog: [context/FEATURES.md](context/FEATURES.md).
 | 4 | Tenant boundary test | ✅ Done |
 | 5 | Vue inbox + dashboard | ✅ Done |
 | 6 | CI pipeline | ✅ Done |
+| 7 | Compliance catalog seed | ✅ Done |
 
 **MVP flow we're building toward:**
 
@@ -161,6 +162,26 @@ DirectiveTemplate → SupervisoryTask → TaskAssignment → EvidenceSubmission 
 
 ---
 
+## Mission 7 — Compliance catalog seed ✅
+
+**Goal:** Seed full ADM/SOC/SK/MAY obligation catalog and expose via read API.
+
+**Exit criteria:** `npm run db:seed` loads 24 requirements; `GET /api/compliance/requirements` returns catalog; CI seeds catalog before e2e.
+
+**References:** `.cursor/skills/ph-lgu-governance/compliance-catalog.md`
+
+### Tasks
+
+- [x] `ComplianceRequirement` model + migration
+- [x] Seed script (`compliance-catalog.seed.ts`) — 24 codes
+- [x] `GET /compliance/requirements` with optional `?scope=` filter
+- [x] CI seeds catalog after migrate deploy
+- [x] E2e test for catalog list
+
+**Completed:** 2026-08-22
+
+---
+
 ## Missing / not yet scoped
 
 Items tracked here so they don't clutter mission task lists. Promote to a mission when actively scheduled.
@@ -170,7 +191,7 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 | Barangay list API | Done | `GET /barangays` for mayor assign picker |
 | CI pipeline | Done | `.github/workflows/ci.yml` |
 | Bulk assign to all barangays | Convenience after single-assign | Post–Mission 3 |
-| Full compliance catalog seed | ADM / SOC / SK codes | Phase 4 |
+| Full compliance catalog seed | Done | 24 ADM/SOC/SK/MAY codes |
 | DILG PDF / Excel exports | Letterhead + QR verification | Phase 5 |
 | Procurement module | RA 9184 / RA 12009 | Phase 6 |
 | Geotagged photo submissions | Field worker metadata | Post-MVP |
@@ -203,6 +224,6 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 
 _Completed mission details stay in sections above with ✅. Add dated notes here for major milestones._
 
-- **2026-08-22** — Mission 6 complete. GitHub Actions CI (lint, migrate, e2e, frontend build).
+- **2026-08-22** — Mission 7 complete. Compliance catalog schema, seed, and list API.
 - **2026-08-22** — Mission 4 complete. Supertest tenant boundary suite (`npm run test:e2e`).
 - **2026-08-22** — Mission 3 complete. Directive flow API + audit log + security hardening.

@@ -52,6 +52,9 @@ jobs:
             - name: Apply migrations
               run: npx prisma migrate deploy
 
+            - name: Seed compliance catalog
+              run: npm run db:seed:compliance
+
             - name: Lint
               run: npm run lint
 

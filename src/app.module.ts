@@ -5,6 +5,7 @@ import { AssignmentsModule } from './modules/assignments/assignments.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CommonModule } from './modules/common/common.module';
 import { BarangaysModule } from './modules/barangays/barangays.module';
+import { ComplianceModule } from './modules/compliance/compliance.module';
 import { DirectivesModule } from './modules/directives/directives.module';
 import { RolesGuard } from './modules/common/guards/roles.guard';
 import { HealthModule } from './modules/health/health.module';
@@ -20,6 +21,7 @@ import { PrismaModule } from './modules/prisma/prisma.module';
         HealthModule,
         DirectivesModule,
         BarangaysModule,
+        ComplianceModule,
         AssignmentsModule,
     ],
     providers: [

@@ -45,6 +45,27 @@ enum ReviewDecision {
   RETURNED
 }
 
+enum ComplianceFrequency {
+  SEMESTRAL
+  ANNUAL
+  TERM
+  ONGOING
+  AD_HOC
+  MONTHLY
+}
+
+enum ComplianceScope {
+  BARANGAY
+  MUNICIPAL
+}
+
+enum ComplianceCategory {
+  ADMINISTRATIVE
+  SOCIAL
+  YOUTH
+  MUNICIPAL_SUPERVISION
+}
+
 model Municipality {
   id        String   @id @default(uuid())
   name      String
@@ -119,6 +140,23 @@ model DirectiveTemplate {
   supervisoryTasks SupervisoryTask[]
 
   @@map("directive_templates")
+}
+
+model ComplianceRequirement {
+  id            String               @id @default(uuid())
+  code          String               @unique
+  title         String
+  legalBasis    String               @map("legal_basis")
+  category      ComplianceCategory
+  frequency     ComplianceFrequency
+  evidenceTypes String[]             @map("evidence_types")
+  weight        Int                  @default(1)
+  scope         ComplianceScope      @default(BARANGAY)
+  createdAt     DateTime             @default(now()) @map("created_at")
+  updatedAt     DateTime             @updatedAt @map("updated_at")
+
+  @@index([category, scope])
+  @@map("compliance_requirements")
 }
 
 model SupervisoryTask {

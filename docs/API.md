@@ -45,6 +45,16 @@ All protected routes require `Authorization: Bearer <access_token>`.
 
 ---
 
+## Compliance catalog
+
+| Method | Path | Roles | Description |
+|--------|------|-------|-------------|
+| `GET` | `/compliance/requirements` | Any authenticated | List ADM/SOC/SK/MAY requirement templates |
+
+Optional query: `?scope=BARANGAY` or `?scope=MUNICIPAL`
+
+---
+
 ## Assignments
 
 | Method | Path | Roles | Description |

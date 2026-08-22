@@ -118,6 +118,18 @@ describe('Tenant boundary (e2e)', () => {
             expect(ids).toContain(fixture.barangayAId);
             expect(ids).toContain(fixture.barangayBId);
         });
+
+        it('GET /compliance/requirements lists seeded catalog', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/compliance/requirements')
+                .set(authHeader(mayorToken))
+                .expect(200);
+
+            expect(response.body.length).toBeGreaterThanOrEqual(24);
+            const codes = response.body.map((row: { code: string }) => row.code);
+            expect(codes).toContain('ADM-001');
+            expect(codes).toContain('SK-002');
+        });
     });
 
     describe('Barangay municipal-only endpoints', () => {

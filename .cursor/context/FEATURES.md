@@ -48,6 +48,7 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 | List directive templates | Done | `GET /api/directives/templates` |
 | Mayor assigns task to barangay(s) | Done | `POST /api/directives/tasks` |
 | List barangays (municipal picker) | Done | `GET /api/barangays` |
+| List compliance requirements | Done | `GET /api/compliance/requirements` |
 | Bulk assign to all barangays | Deferred | After single-assign works |
 | Barangay acknowledge task | Done | `POST /api/assignments/:id/acknowledge` |
 | Evidence upload (presigned S3) | Done | Metadata stub; fileKey tenant-prefix validated |
@@ -75,7 +76,7 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Compliance catalog seed (ADM/SOC/SK) | Deferred | Phase 4 — catalog in skills |
+| Compliance catalog seed (ADM/SOC/SK) | Done | 24 requirements via `GET /compliance/requirements` |
 | Semestral barangay assembly tracking | Deferred | |
 | BDP / AIP submission tracker | Deferred | |
 | SGLG-aligned scoring | Deferred | |
@@ -110,7 +111,7 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 
 ## Current mission
 
-**Mission 6 complete.** Next candidates:
+**Mission 7 complete.** Next candidates:
 
-- Full compliance catalog seed (ADM/SOC/SK)
 - Bulk assign to all barangays
+- ComplianceInstance tracking (per-barangay periods)

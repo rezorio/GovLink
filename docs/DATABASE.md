@@ -12,6 +12,7 @@ PostgreSQL schema managed by Prisma. Source of truth: `prisma/schema.prisma`.
 | `Barangay` | Via `municipalityId` | Constituent barangay (PSGC code) |
 | `User` | `municipalityId` + optional `barangayId` | Staff accounts + `AppRole[]` |
 | `DirectiveTemplate` | Global | DILG MC templates (not per-tenant) |
+| `ComplianceRequirement` | Global | ADM/SOC/SK/MAY obligation catalog |
 | `SupervisoryTask` | `municipalityId` | Mayor-assigned directive instance |
 | `TaskAssignment` | `municipalityId` + `barangayId` | Per-barangay task inbox row |
 | `EvidenceSubmission` | `municipalityId` + `barangayId` | Uploaded proof metadata |
@@ -29,6 +30,9 @@ PostgreSQL schema managed by Prisma. Source of truth: `prisma/schema.prisma`.
 | `TaskAssignmentStatus` | `PENDING_ACK` → `ACKNOWLEDGED` → `IN_PROGRESS` → `SUBMITTED` → `ACCEPTED` / `RETURNED` / `OVERDUE` |
 | `EvidenceSubmissionStatus` | `DRAFT`, `SUBMITTED`, `UNDER_REVIEW`, `ACCEPTED`, `RETURNED` |
 | `ReviewDecision` | `ACCEPTED`, `RETURNED` |
+| `ComplianceFrequency` | `SEMESTRAL`, `ANNUAL`, `TERM`, `ONGOING`, `AD_HOC`, `MONTHLY` |
+| `ComplianceScope` | `BARANGAY`, `MUNICIPAL` |
+| `ComplianceCategory` | `ADMINISTRATIVE`, `SOCIAL`, `YOUTH`, `MUNICIPAL_SUPERVISION` |
 
 ---
 
@@ -46,6 +50,7 @@ PostgreSQL schema managed by Prisma. Source of truth: `prisma/schema.prisma`.
 | Migration | Description |
 |-----------|-------------|
 | `20260822170000_init` | Initial MVP schema |
+| `20260822190000_compliance_catalog` | Compliance requirement catalog table |
 
 Apply with:
 
@@ -79,6 +84,23 @@ Barangays are resolved from the `psgc` npm package by matching the first 6 digit
 
 All seed operations use **upserts** — safe to re-run.
 
+### Compliance catalog
+
+24 global requirements from `.cursor/skills/ph-lgu-governance/compliance-catalog.md`:
+
+| Prefix | Count | Scope |
+|--------|-------|-------|
+| ADM | 13 | Barangay obligations |
+| MAY | 5 | Municipal supervisory actions |
+| SOC | 4 | Social governance |
+| SK | 2 | Sangguniang Kabataan |
+
+Seed only catalog (without LGU/users):
+
+```powershell
+npm run db:seed:compliance
+```
+
 Run:
 
 ```powershell
@@ -101,7 +123,7 @@ npm run db:seed
 
 These appear in domain docs but are deferred post-MVP:
 
-- `ComplianceRequirement` / `ComplianceInstance`
+- `ComplianceInstance` (per-barangay period tracking)
 - `ProcurementPlan` / `Contract`
 - `Document` (typed ordinances, BDP, AIP)
 - Tenant config (seal images, income class for SVP thresholds)

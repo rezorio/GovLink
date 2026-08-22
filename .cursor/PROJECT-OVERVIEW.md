@@ -192,9 +192,9 @@ AI development assets already in place. **Do not add more skills until the MVP s
 
 > **Live status:** See [MISSION-BOARD.md](MISSION-BOARD.md) for current mission, task checkboxes, and blockers.
 
-**Phase 6 complete.** Missions 1–6 delivered MVP spine + CI. GitHub Actions runs on every push.
+**Phase 7 complete.** Missions 1–7 delivered MVP spine, CI, and full compliance catalog.
 
-**Recommended next:** Full compliance catalog seed (ADM/SOC/SK), then bulk assign.
+**Recommended next:** Bulk assign to all barangays, then ComplianceInstance period tracking.
 
 ---
 
@@ -220,6 +220,7 @@ Execute in order. Full task lists and exit criteria: [MISSION-BOARD.md](MISSION-
 4. ~~Tenant boundary test~~ — done
 5. ~~Vue inbox + dashboard~~ — done
 6. ~~CI pipeline~~ — done
+7. ~~Compliance catalog seed~~ — done
 
 ---
 
