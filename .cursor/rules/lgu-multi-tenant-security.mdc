@@ -1,0 +1,59 @@
+---
+description: Enforces strict multi-tenant isolation and RBAC checks on all backend endpoints to prevent cross-barangay data leaks.
+globs: src/**/*.ts, apps/**/*.ts
+alwaysApply: false
+---
+
+# LGU Multi-Tenant Security
+
+## Tenant filters (required)
+
+All NestJS services querying TypeORM/Prisma MUST explicitly include `municipality_id` and `barangay_id` tenant filters.
+
+- Derive tenant scope from JWT `TenantContext` — never from request body or query params.
+- Municipal users: filter by `municipality_id` only.
+- Barangay users: filter by `municipality_id` AND `barangay_id`.
+- On create/update: stamp tenant columns from context, not from DTO.
+
+```typescript
+// ❌ BAD — no tenant filter
+return this.repo.find({ where: { id } });
+
+// ✅ GOOD
+return this.repo.find({
+  where: {
+    id,
+    municipality_id: ctx.municipality_id,
+    ...(ctx.barangay_id ? { barangay_id: ctx.barangay_id } : {}),
+  },
+});
+```
+
+## RBAC on mutations (required)
+
+Endpoints that mutate data MUST evaluate RBAC roles (`MAYOR`, `DEPT_HEAD`, `BARANGAY_CAPTAIN`, `BARANGAY_SECRETARY`).
+
+```typescript
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(AppRole.BARANGAY_CAPTAIN, AppRole.BARANGAY_SECRETARY)
+@Post()
+create(@TenantCtx() ctx: TenantContext, @Body() dto: CreateDto) { ... }
+```
+
+- Apply `@Roles()` on every `POST`, `PUT`, `PATCH`, and `DELETE` handler.
+- Guard order: `JwtAuthGuard` → `RolesGuard` → tenant validation on resolved entities.
+
+## Secrets (required)
+
+Disallow hardcoded secrets; enforce reading environment variables from `.env`.
+
+```typescript
+// ❌ BAD
+const secret = 'my-jwt-secret-key';
+
+// ✅ GOOD — via ConfigService or process.env loaded from .env
+const secret = this.configService.getOrThrow<string>('JWT_SECRET');
+```
+
+- Never commit `.env`; use `.env.example` for documented keys only.
+- No API keys, DB passwords, or JWT secrets in source code.

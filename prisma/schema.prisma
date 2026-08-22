@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AppRole {
+  MAYOR
+  DEPT_HEAD
+  BARANGAY_CAPTAIN
+  BARANGAY_SECRETARY
+}
+
+enum DirectiveCategory {
+  DISASTER_PREPAREDNESS
+  FINANCIAL_ADMINISTRATION
+  PEACE_AND_ORDER
+  SOCIAL_PROTECTION
+  ADMINISTRATIVE_GOVERNANCE
+}
+
+enum TaskAssignmentStatus {
+  PENDING_ACK
+  ACKNOWLEDGED
+  IN_PROGRESS
+  SUBMITTED
+  ACCEPTED
+  RETURNED
+  OVERDUE
+}
+
+enum EvidenceSubmissionStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  ACCEPTED
+  RETURNED
+}
+
+enum ReviewDecision {
+  ACCEPTED
+  RETURNED
+}
+
+model Municipality {
+  id        String   @id @default(uuid())
+  name      String
+  province  String
+  region    String
+  psgcCode  String   @unique @map("psgc_code")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  barangays        Barangay[]
+  users            User[]
+  supervisoryTasks SupervisoryTask[]
+  taskAssignments  TaskAssignment[]
+  auditLogs        AuditLog[]
+
+  @@map("municipalities")
+}
+
+model Barangay {
+  id             String   @id @default(uuid())
+  municipalityId String   @map("municipality_id")
+  name           String
+  psgcCode       String   @map("psgc_code")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  municipality    Municipality     @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  users           User[]
+  taskAssignments TaskAssignment[]
+  auditLogs       AuditLog[]
+
+  @@unique([municipalityId, psgcCode])
+  @@index([municipalityId])
+  @@map("barangays")
+}
+
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  passwordHash   String    @map("password_hash")
+  fullName       String    @map("full_name")
+  municipalityId String    @map("municipality_id")
+  barangayId     String?   @map("barangay_id")
+  roles          AppRole[]
+  isActive       Boolean   @default(true) @map("is_active")
+  deletedAt      DateTime? @map("deleted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  municipality Municipality @relation(fields: [municipalityId], references: [id])
+  barangay     Barangay?    @relation(fields: [barangayId], references: [id])
+
+  assignedTasks     SupervisoryTask[] @relation("AssignedBy")
+  acknowledgedTasks TaskAssignment[]  @relation("AcknowledgedBy")
+  reviews           MunicipalReview[]
+  auditLogs         AuditLog[]
+
+  @@index([municipalityId, barangayId])
+  @@map("users")
+}
+
+model DirectiveTemplate {
+  id           String            @id @default(uuid())
+  title        String
+  category     DirectiveCategory
+  dilgMcNumber String            @unique @map("dilg_mc_number")
+  description  String
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  supervisoryTasks SupervisoryTask[]
+
+  @@map("directive_templates")
+}
+
+model SupervisoryTask {
+  id                  String    @id @default(uuid())
+  municipalityId      String    @map("municipality_id")
+  directiveTemplateId String?   @map("directive_template_id")
+  title               String
+  description         String
+  legalBasis          String    @map("legal_basis")
+  assignedById        String    @map("assigned_by_id")
+  dueDate             DateTime  @map("due_date") @db.Date
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  deletedAt           DateTime? @map("deleted_at")
+
+  municipality      Municipality       @relation(fields: [municipalityId], references: [id])
+  directiveTemplate DirectiveTemplate? @relation(fields: [directiveTemplateId], references: [id])
+  assignedBy        User               @relation("AssignedBy", fields: [assignedById], references: [id])
+  assignments       TaskAssignment[]
+
+  @@index([municipalityId, dueDate])
+  @@map("supervisory_tasks")
+}
+
+model TaskAssignment {
+  id               String               @id @default(uuid())
+  municipalityId   String               @map("municipality_id")
+  barangayId       String               @map("barangay_id")
+  taskId           String               @map("task_id")
+  status           TaskAssignmentStatus @default(PENDING_ACK)
+  acknowledgedAt   DateTime?            @map("acknowledged_at")
+  acknowledgedById String?              @map("acknowledged_by_id")
+  createdAt        DateTime             @default(now()) @map("created_at")
+  updatedAt        DateTime             @updatedAt @map("updated_at")
+
+  municipality        Municipality         @relation(fields: [municipalityId], references: [id])
+  task                SupervisoryTask      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  barangay            Barangay             @relation(fields: [barangayId], references: [id])
+  acknowledgedBy      User?                @relation("AcknowledgedBy", fields: [acknowledgedById], references: [id])
+  evidenceSubmissions EvidenceSubmission[]
+  reviews             MunicipalReview[]
+
+  @@unique([taskId, barangayId])
+  @@index([municipalityId, barangayId, status])
+  @@index([barangayId, status])
+  @@map("task_assignments")
+}
+
+model EvidenceSubmission {
+  id            String                   @id @default(uuid())
+  municipalityId String                  @map("municipality_id")
+  barangayId    String                   @map("barangay_id")
+  assignmentId  String                   @map("assignment_id")
+  fileKey       String                   @map("file_key")
+  fileName      String                   @map("file_name")
+  mimeType      String                   @map("mime_type")
+  fileSizeBytes Int                      @map("file_size_bytes")
+  status        EvidenceSubmissionStatus @default(DRAFT)
+  submittedAt   DateTime?                @map("submitted_at")
+  createdAt     DateTime                 @default(now()) @map("created_at")
+  updatedAt     DateTime                 @updatedAt @map("updated_at")
+
+  assignment TaskAssignment    @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  reviews    MunicipalReview[]
+
+  @@index([municipalityId, barangayId])
+  @@index([assignmentId])
+  @@map("evidence_submissions")
+}
+
+model MunicipalReview {
+  id             String         @id @default(uuid())
+  municipalityId String         @map("municipality_id")
+  assignmentId   String         @map("assignment_id")
+  submissionId   String?        @map("submission_id")
+  reviewerId     String         @map("reviewer_id")
+  decision       ReviewDecision
+  comment        String?
+  reviewedAt     DateTime       @default(now()) @map("reviewed_at")
+
+  assignment TaskAssignment      @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  submission EvidenceSubmission? @relation(fields: [submissionId], references: [id])
+  reviewer   User                @relation(fields: [reviewerId], references: [id])
+
+  @@index([municipalityId, assignmentId])
+  @@map("municipal_reviews")
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  municipalityId String   @map("municipality_id")
+  barangayId     String?  @map("barangay_id")
+  actorUserId    String?  @map("actor_user_id")
+  action         String
+  entityType     String   @map("entity_type")
+  entityId       String   @map("entity_id")
+  before         Json?
+  after          Json?
+  ipAddress      String?  @map("ip_address")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  municipality Municipality @relation(fields: [municipalityId], references: [id])
+  barangay     Barangay?    @relation(fields: [barangayId], references: [id])
+  actor        User?        @relation(fields: [actorUserId], references: [id])
+
+  @@index([municipalityId, createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
