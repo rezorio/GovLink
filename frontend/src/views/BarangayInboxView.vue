@@ -5,6 +5,8 @@ import StatusBadge from '@/components/library/badges/StatusBadge.vue';
 import EvidenceUpload from '@/components/library/uploads/EvidenceUpload.vue';
 import OfflineUploadBanner from '@/components/library/uploads/OfflineUploadBanner.vue';
 import { acknowledgeAssignment, fetchAssignments, submitEvidence } from '@/api/assignments';
+import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
 import type { TaskAssignment } from '@/types';
@@ -20,14 +22,28 @@ const error = ref<string | null>(null);
 const expandedId = ref<string | null>(null);
 const offlineBannerRef = ref<InstanceType<typeof OfflineUploadBanner> | null>(null);
 
-async function loadInbox() {
+async function loadInbox(useCache = true) {
     if (!auth.token) {
         return;
+    }
+    const key = buildCacheKey({
+        scope: 'barangay-inbox',
+        barangayId: auth.user?.barangay?.id,
+    });
+    if (useCache) {
+        const cached = readListCache<TaskAssignment[]>(key);
+        if (cached) {
+            assignments.value = cached;
+            loading.value = false;
+            return;
+        }
     }
     loading.value = true;
     error.value = null;
     try {
-        assignments.value = await fetchAssignments(auth.token);
+        const rows = await fetchAssignments(auth.token);
+        assignments.value = rows;
+        writeListCache(key, rows);
     } catch (err) {
         error.value = err instanceof Error ? err.message : t('inbox.loadFailed');
     } finally {
@@ -42,7 +58,8 @@ async function acknowledge(id: string) {
     actionLoading.value = true;
     try {
         await acknowledgeAssignment(auth.token, id);
-        await loadInbox();
+        invalidateListCache('scope=barangay-inbox');
+        await loadInbox(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : t('inbox.acknowledgeFailed');
     } finally {
@@ -66,7 +83,8 @@ async function handleSubmit(
     try {
         await submitEvidence(auth.token, id, payload);
         expandedId.value = null;
-        await loadInbox();
+        invalidateListCache('scope=barangay-inbox');
+        await loadInbox(false);
         await offlineBannerRef.value?.refreshCount?.();
     } catch (err) {
         error.value = err instanceof Error ? err.message : t('inbox.submitFailed');
@@ -99,11 +117,11 @@ onMounted(loadInbox);
             v-if="auth.token"
             ref="offlineBannerRef"
             :token="auth.token"
-            @synced="loadInbox"
+            @synced="() => loadInbox(false)"
         />
 
         <p v-if="error" class="mb-4 text-sm text-status-danger">{{ error }}</p>
-        <p v-if="loading" class="text-sm text-ink-muted">{{ t('inbox.loadingTasks') }}</p>
+        <LedgerSkeleton v-if="loading && assignments.length === 0" :rows="5" />
 
         <div v-else class="gl-panel overflow-hidden">
             <p

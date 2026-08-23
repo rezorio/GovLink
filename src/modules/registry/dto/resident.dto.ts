@@ -3,11 +3,19 @@ import {
     IsInt,
     IsOptional,
     IsString,
+    IsUUID,
     Max,
     Min,
     MinLength,
 } from 'class-validator';
 import { ResidentRecordType } from '@prisma/client';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
+
+export class ListResidentsQueryDto extends PaginationQueryDto {
+    @IsOptional()
+    @IsUUID()
+    barangayId?: string;
+}
 
 export class CreateResidentDto {
     @IsString()

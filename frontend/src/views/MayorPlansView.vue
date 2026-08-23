@@ -2,13 +2,20 @@
 import { computed, onMounted, ref } from 'vue';
 import AppShell from '@/components/library/layout/AppShell.vue';
 import StatusBadge from '@/components/library/badges/StatusBadge.vue';
+import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import PaginationBar from '@/components/library/feedback/PaginationBar.vue';
+import LoadingSpinner from '@/components/library/feedback/LoadingSpinner.vue';
 import { fetchPlanMatrix, openPlanPeriods, reviewPlan } from '@/api/plans';
+import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import { useAuthStore } from '@/stores/auth';
 import type { PlanMatrix, PlanSubmissionStatus, PlanType } from '@/types';
 
 const auth = useAuthStore();
 const matrix = ref<PlanMatrix | null>(null);
 const filterType = ref<PlanType | ''>('');
+const searchQuery = ref('');
+const page = ref(1);
+const pageSize = ref(15);
 const loading = ref(true);
 const actionLoading = ref(false);
 const error = ref<string | null>(null);
@@ -29,12 +36,41 @@ const submittedCells = computed(() =>
     (matrix.value?.cells ?? []).filter((c) => c.status === 'SUBMITTED'),
 );
 
-async function load() {
+function cacheKey() {
+    return buildCacheKey({
+        scope: 'mayor-plans-matrix',
+        planType: filterType.value || undefined,
+        page: page.value,
+        pageSize: pageSize.value,
+        q: searchQuery.value.trim(),
+    });
+}
+
+async function load(useCache = true) {
     if (!auth.token) return;
+
+    const key = cacheKey();
+    if (useCache) {
+        const cached = readListCache<PlanMatrix>(key);
+        if (cached) {
+            matrix.value = cached;
+            loading.value = false;
+            return;
+        }
+    }
+
     loading.value = true;
     error.value = null;
     try {
-        matrix.value = await fetchPlanMatrix(auth.token, filterType.value || undefined);
+        const result = await fetchPlanMatrix(auth.token, {
+            planType: filterType.value || undefined,
+            page: page.value,
+            pageSize: pageSize.value,
+            q: searchQuery.value.trim() || undefined,
+        });
+        matrix.value = result;
+        page.value = result.pagination.page;
+        writeListCache(key, result);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to load plan matrix';
     } finally {
@@ -47,7 +83,8 @@ async function openPeriods() {
     actionLoading.value = true;
     try {
         await openPlanPeriods(auth.token);
-        await load();
+        invalidateListCache('scope=mayor-plans-matrix');
+        await load(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Open periods failed';
     } finally {
@@ -70,7 +107,8 @@ async function decide(id: string, decision: 'ACCEPTED' | 'RETURNED') {
         });
         reviewId.value = null;
         returnReason.value = '';
-        await load();
+        invalidateListCache('scope=mayor-plans-matrix');
+        await load(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Review failed';
     } finally {
@@ -82,7 +120,24 @@ function cellFor(barangayId: string, planType: PlanType) {
     return matrix.value?.cells.find((c) => c.barangayId === barangayId && c.planType === planType);
 }
 
-onMounted(load);
+function onPageChange(next: number) {
+    page.value = next;
+    void load(false);
+}
+
+function onFilterChange() {
+    page.value = 1;
+    invalidateListCache('scope=mayor-plans-matrix');
+    void load(false);
+}
+
+function onSearch() {
+    page.value = 1;
+    invalidateListCache('scope=mayor-plans-matrix');
+    void load(false);
+}
+
+onMounted(() => load());
 </script>
 
 <template>
@@ -97,13 +152,23 @@ onMounted(load);
                 v-model="filterType"
                 class="border border-rule bg-surface px-3 py-2 text-sm text-ink"
                 style="border-radius: 2px"
-                @change="load"
+                @change="onFilterChange"
             >
                 <option value="">All plan types</option>
                 <option value="BDP">BDP only</option>
                 <option value="AIP">AIP only</option>
             </select>
-            <button type="button" class="gl-btn-secondary" :disabled="actionLoading" @click="openPeriods">
+            <input
+                v-model="searchQuery"
+                type="search"
+                placeholder="Search barangay"
+                class="min-w-[12rem] border border-rule bg-surface px-3 py-2 text-sm text-ink"
+                style="border-radius: 2px"
+                @keydown.enter.prevent="onSearch"
+            />
+            <button type="button" class="gl-btn-secondary" @click="onSearch">Search</button>
+            <button type="button" class="gl-btn-secondary inline-flex items-center gap-2" :disabled="actionLoading" @click="openPeriods">
+                <LoadingSpinner v-if="actionLoading" size="sm" />
                 Open current periods
             </button>
         </div>
@@ -120,7 +185,7 @@ onMounted(load);
         </div>
 
         <p v-if="error" class="mb-4 text-sm text-status-danger">{{ error }}</p>
-        <p v-if="loading" class="text-sm text-ink-muted">Loading matrix…</p>
+        <LedgerSkeleton v-if="loading && !matrix" :rows="8" />
 
         <div v-else-if="matrix" class="gl-panel overflow-x-auto">
             <table class="min-w-full text-left text-sm">
@@ -160,6 +225,14 @@ onMounted(load);
                     </tr>
                 </tbody>
             </table>
+            <PaginationBar
+                :page="matrix.pagination.page"
+                :total-pages="matrix.pagination.totalPages"
+                :total="matrix.pagination.total"
+                :page-size="matrix.pagination.pageSize"
+                :loading="loading"
+                @update:page="onPageChange"
+            />
         </div>
 
         <section v-if="submittedCells.length" class="mt-10">

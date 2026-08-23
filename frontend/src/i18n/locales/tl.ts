@@ -15,6 +15,7 @@ export const tl: MessageTree = {
         registry: 'Registry',
         notifications: 'Mga abiso',
         plans: 'BDP / AIP',
+        assemblies: 'Asamblea',
     },
     common: {
         loading: 'Naglo-load…',
@@ -137,6 +138,7 @@ export const tl: MessageTree = {
         recordType: 'Uri ng tala',
         addRecord: 'Magdagdag ng tala',
         saveRecord: 'I-save ang tala',
+        searchPlaceholder: 'Hanapin ayon sa pangalan',
         loadFailed: 'Hindi ma-load ang registry',
         saveFailed: 'Hindi ma-save ang tala',
     },

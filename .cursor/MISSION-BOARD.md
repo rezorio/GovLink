@@ -1,8 +1,8 @@
 # GovLink — Mission Board
 
-> **Last updated:** 2026-08-23  
-> **Current mission:** Mission 20 — BDP / AIP submission tracker ✅  
-> **Phase:** Post-MVP features · civic UI locked
+> **Last updated:** 2026-08-24  
+> **Current mission:** Mission 23 — List performance ✅  
+> **Phase:** Pilot-ready · pagination + skeleton loaders
 
 **Source of truth for active work.** Update this file at end-of-session or when a mission completes.  
 For stable reference (stack, tenancy, pilot data): [PROJECT-OVERVIEW.md](PROJECT-OVERVIEW.md).  
@@ -34,6 +34,9 @@ For long-term feature catalog: [context/FEATURES.md](context/FEATURES.md).
 | 18 | RA 10173 PII field masking | ✅ Done |
 | 19 | In-app notifications | ✅ Done |
 | 20 | BDP / AIP submission tracker | ✅ Done |
+| 21 | Semestral barangay assembly tracker | ✅ Done |
+| 22 | Production hardening + SPA fallbacks | ✅ Done |
+| 23 | List performance (skeletons + pagination) | ✅ Done |
 
 **MVP flow we're building toward:**
 
@@ -444,10 +447,6 @@ DirectiveTemplate → SupervisoryTask → TaskAssignment → EvidenceSubmission 
 
 ---
 
-**Completed:** 2026-08-23
-
----
-
 ## Mission 20 — BDP / AIP submission tracker ✅
 
 **Goal:** Municipal matrix of barangay BDP (term) and AIP (annual) submissions with LDC-style accept/return.
@@ -462,6 +461,63 @@ DirectiveTemplate → SupervisoryTask → TaskAssignment → EvidenceSubmission 
 - [x] Notifications for plan submit/review
 - [x] `/mayor/plans` + `/barangay/plans` civic UI
 - [x] E2E + docs / mission board closeout
+- [x] QA fix: `PlansService.findOne` returns **403** (not 404) on same-municipality cross-barangay access
+
+**Completed:** 2026-08-24
+
+---
+
+## Mission 21 — Semestral barangay assembly tracker ✅
+
+**Goal:** Municipal matrix of 1st/2nd semester barangay assemblies (RA 7160 Sec. 397(b); Proc. 260) with accept/return.
+
+**Exit criteria:** `AssemblySubmission` model; open H1/H2 periods + matrix + barangay submit/review; FE mayor/barangay views; e2e (incl. cross-barangay **403**); notifications on submit/review.
+
+### Tasks
+
+- [x] Schema + migration (`AssemblySemester`, `AssemblySubmission`)
+- [x] Period helpers + seed current H1/H2 rows
+- [x] Assemblies APIs (list/matrix/open/update/submit/review)
+- [x] Notifications for assembly submit/review
+- [x] `/mayor/assemblies` + `/barangay/assemblies` civic UI
+- [x] E2E + docs / mission board closeout
+
+**Completed:** 2026-08-24
+
+---
+
+## Mission 22 — Production hardening + SPA fallbacks ✅
+
+**Goal:** Safer pilot hosting defaults + clear frontend 404/error pages.
+
+**Exit criteria:** Production boot gates; CORS/origins; sanitised errors; rate limits on login/verify; seed blocked in prod; FE 404 + error fallbacks; `docs/PILOT-DEPLOY.md`.
+
+### Tasks
+
+- [x] `assertProductionEnv` + multi-origin CORS
+- [x] Security headers + HTTP exception sanitiser
+- [x] Throttler (login 20/min, verify 60/min, global 200/min)
+- [x] Refuse `db:seed` in production unless opted in
+- [x] Vue **404** catch-all + **/error** page (`onErrorCaptured` / router `onError`)
+- [x] Docs: `docs/PILOT-DEPLOY.md` + `.env.example` notes
+
+**Completed:** 2026-08-24
+
+---
+
+## Mission 23 — List performance (skeletons + pagination) ✅
+
+**Goal:** Keep large barangay/municipal lists responsive with paginated APIs, skeleton loaders, and short client cache.
+
+**Exit criteria:** Paginated registry + plans matrix; shared skeleton/spinner/pagination UI; 30s list cache; e2e pagination assertions.
+
+### Tasks
+
+- [x] `PaginationQueryDto` + registry paginated response
+- [x] Plans matrix barangay pagination + name search
+- [x] `LedgerSkeleton`, `LoadingSpinner`, `PaginationBar`
+- [x] Registry + mayor plans UI wired with cache
+- [x] E2E + docs
 
 **Completed:** 2026-08-24
 
@@ -485,6 +541,7 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 | Offline upload queue | Done | Mission 16 — IndexedDB + sync banner |
 | Tagalog UI labels | Done | Mission 17 — barangay EN/FIL toggle |
 | RA 10173 PII field masking | Done | Mission 18 — registry + municipal mask |
+| Semestral barangay assembly tracker | Done | Mission 21 — H1/H2 matrix + submit/review |
 
 ---
 
@@ -512,7 +569,10 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 
 _Completed mission details stay in sections above with ✅. Add dated notes here for major milestones._
 
-- **2026-08-24** — Mission 20 complete. BDP/AIP submission tracker (municipal matrix + barangay submit). Handoff: semestral assembly tracker or email/SMS.
+- **2026-08-24** — Mission 22 complete. Production hardening (boot gates, CORS, headers, rate limits, seed lock) + SPA 404/error fallbacks. See `docs/PILOT-DEPLOY.md`.
+- **2026-08-24** — Mission 21 complete. Semestral barangay assembly tracker (H1/H2 matrix + submit/review). Handoff: email/SMS notifications or production hardening.
+- **2026-08-24** — QA on Missions 17–20: live API smoke + `ci:backend` + FE build green. Fixed `PlansService.findOne` (cross-barangay **403** not **404**); e2e **30/30**. Earlier same day: ledger row overlap (`.gl-rail` child of `.gl-ledger-row`). Handoff: Mission 21 semestral assembly tracker.
+- **2026-08-24** — Mission 20 complete. BDP/AIP submission tracker (municipal matrix + barangay submit).
 - **2026-08-23** — Mission 16 complete (initial). Geotagged photo evidence + IndexedDB offline upload queue. Handoff: Tagalog UI or PII masking.
 - **2026-08-23** — Mission 15 complete. BAC roster (5–7 + chair gate) + delivery/acceptance → COMPLETED. Handoff: geotagged photos or offline queue.
 - **2026-08-23** — Mission 14 complete. RFQ/award document chain (3 quotes, AWARD_RECOMMENDED, void-not-delete). Handoff: BAC roster or delivery/acceptance.

@@ -3,6 +3,8 @@ import { onMounted, ref } from 'vue';
 import AppShell from '@/components/library/layout/AppShell.vue';
 import StatusBadge from '@/components/library/badges/StatusBadge.vue';
 import { fetchPlans, submitPlan, updatePlanDraft } from '@/api/plans';
+import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import { useAuthStore } from '@/stores/auth';
 import type { PlanSubmission, PlanSubmissionStatus } from '@/types';
 import { formatDueDate, daysRemaining } from '@/utils/assignment-status';
@@ -29,12 +31,26 @@ function canSubmit(status: PlanSubmissionStatus) {
     return status === 'NOT_STARTED' || status === 'DRAFT' || status === 'RETURNED';
 }
 
-async function load() {
+async function load(useCache = true) {
     if (!auth.token) return;
+    const key = buildCacheKey({
+        scope: 'barangay-plans',
+        barangayId: auth.user?.barangay?.id,
+    });
+    if (useCache) {
+        const cached = readListCache<PlanSubmission[]>(key);
+        if (cached) {
+            plans.value = cached;
+            loading.value = false;
+            return;
+        }
+    }
     loading.value = true;
     error.value = null;
     try {
-        plans.value = await fetchPlans(auth.token);
+        const rows = await fetchPlans(auth.token);
+        plans.value = rows;
+        writeListCache(key, rows);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to load plans';
     } finally {
@@ -48,7 +64,8 @@ async function saveDraft(id: string) {
     try {
         await updatePlanDraft(auth.token, id, { notes: notes.value });
         editingId.value = null;
-        await load();
+        invalidateListCache('scope=barangay-plans');
+        await load(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Save failed';
     } finally {
@@ -65,7 +82,8 @@ async function submit(id: string) {
         }
         await submitPlan(auth.token, id);
         editingId.value = null;
-        await load();
+        invalidateListCache('scope=barangay-plans');
+        await load(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Submit failed';
     } finally {
@@ -92,7 +110,7 @@ onMounted(load);
         </p>
 
         <p v-if="error" class="mb-4 text-sm text-status-danger">{{ error }}</p>
-        <p v-if="loading" class="text-sm text-ink-muted">Loading plans…</p>
+        <LedgerSkeleton v-if="loading && plans.length === 0" :rows="4" />
 
         <div v-else class="gl-panel overflow-hidden">
             <p v-if="plans.length === 0" class="px-4 py-10 text-center text-sm text-ink-muted">

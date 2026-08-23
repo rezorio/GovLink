@@ -1,9 +1,25 @@
 import { apiRequest } from '@/api/client';
-import type { BarangayResident, ResidentRecordType } from '@/types';
+import type { BarangayResident, PaginatedResult, ResidentRecordType } from '@/types';
 
-export function fetchResidents(token: string, barangayId?: string) {
-    const query = barangayId ? `?barangayId=${encodeURIComponent(barangayId)}` : '';
-    return apiRequest<BarangayResident[]>(`/registry/residents${query}`, {}, token);
+export type FetchResidentsParams = {
+    barangayId?: string;
+    page?: number;
+    pageSize?: number;
+    q?: string;
+};
+
+export function fetchResidents(token: string, params: FetchResidentsParams = {}) {
+    const search = new URLSearchParams();
+    if (params.barangayId) search.set('barangayId', params.barangayId);
+    if (params.page) search.set('page', String(params.page));
+    if (params.pageSize) search.set('pageSize', String(params.pageSize));
+    if (params.q?.trim()) search.set('q', params.q.trim());
+    const query = search.toString();
+    return apiRequest<PaginatedResult<BarangayResident>>(
+        `/registry/residents${query ? `?${query}` : ''}`,
+        {},
+        token,
+    );
 }
 
 export function createResident(

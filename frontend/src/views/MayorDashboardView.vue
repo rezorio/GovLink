@@ -22,6 +22,9 @@ import {
     downloadComplianceScorecardExcel,
     downloadComplianceScorecardPdf,
 } from '@/api/exports';
+import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import LoadingSpinner from '@/components/library/feedback/LoadingSpinner.vue';
+import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import { useAuthStore } from '@/stores/auth';
 import type {
     BarangaySummary,
@@ -87,10 +90,37 @@ function cellFor(barangayId: string, requirementId: string) {
     return matrixCellMap.value.get(`${barangayId}:${requirementId}`);
 }
 
-async function loadData() {
+async function loadData(useCache = true) {
     if (!auth.token) {
         return;
     }
+
+    const key = buildCacheKey({
+        scope: 'mayor-dashboard',
+        municipalityId: auth.user?.municipality?.id,
+    });
+
+    type DashboardPayload = {
+        assignments: TaskAssignment[];
+        templates: DirectiveTemplate[];
+        barangays: BarangaySummary[];
+        matrix: ComplianceMatrix | null;
+        reviewQueue: ComplianceInstance[];
+    };
+
+    if (useCache) {
+        const cached = readListCache<DashboardPayload>(key);
+        if (cached) {
+            assignments.value = cached.assignments;
+            templates.value = cached.templates;
+            barangays.value = cached.barangays;
+            matrix.value = cached.matrix;
+            reviewQueue.value = cached.reviewQueue;
+            loading.value = false;
+            return;
+        }
+    }
+
     loading.value = true;
     error.value = null;
     try {
@@ -106,11 +136,22 @@ async function loadData() {
         barangays.value = brgys;
         matrix.value = mx;
         reviewQueue.value = queue;
+        writeListCache(key, {
+            assignments: rows,
+            templates: tpls,
+            barangays: brgys,
+            matrix: mx,
+            reviewQueue: queue,
+        });
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to load dashboard';
     } finally {
         loading.value = false;
     }
+}
+
+function bustDashboardCache() {
+    invalidateListCache('scope=mayor-dashboard');
 }
 
 function openReview(row: TaskAssignment) {
@@ -155,7 +196,8 @@ async function handleReview(payload: { decision: 'ACCEPTED' | 'RETURNED'; commen
         });
         drawerOpen.value = false;
         selectedAssignment.value = null;
-        await loadData();
+        bustDashboardCache();
+        await loadData(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Review failed';
     } finally {
@@ -204,7 +246,8 @@ async function submitAssign() {
             barangayId: '',
             assignToAll: false,
         };
-        await loadData();
+        bustDashboardCache();
+        await loadData(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Assign failed';
     } finally {
@@ -223,7 +266,8 @@ async function handleOpenPeriods() {
         if (result.created === 0 && result.skipped > 0) {
             error.value = `Period already open (${result.skipped} existing instances).`;
         }
-        await loadData();
+        bustDashboardCache();
+        await loadData(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to open periods';
     } finally {
@@ -253,7 +297,8 @@ async function handleComplianceReview(payload: {
         });
         complianceDrawerOpen.value = false;
         selectedCompliance.value = null;
-        await loadData();
+        bustDashboardCache();
+        await loadData(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Compliance review failed';
     } finally {
@@ -396,9 +441,22 @@ onMounted(loadData);
             </ul>
         </div>
 
-        <p v-if="loading" class="mb-6 text-sm text-ink-muted">Loading compliance matrix…</p>
+        <p v-if="error" class="mb-4 text-sm text-status-danger">{{ error }}</p>
+
+        <div v-if="loading && !matrix && assignments.length === 0" class="mb-10 space-y-6">
+            <LedgerSkeleton :rows="4" />
+            <LedgerSkeleton :rows="6" />
+        </div>
         <div
-            v-else-if="matrix && matrix.cells.length > 0"
+            v-else-if="loading"
+            class="mb-4 flex items-center gap-2 text-sm text-ink-muted"
+        >
+            <LoadingSpinner size="sm" />
+            Refreshing dashboard…
+        </div>
+
+        <div
+            v-if="matrix && matrix.cells.length > 0"
             class="gl-panel mb-10 overflow-x-auto"
         >
             <table class="min-w-full border-collapse text-left text-xs">
@@ -441,7 +499,7 @@ onMounted(loadData);
                 </tbody>
             </table>
         </div>
-        <p v-else class="mb-10 text-sm text-ink-muted">
+        <p v-else-if="!loading" class="mb-10 text-sm text-ink-muted">
             No compliance instances yet. Click “Open current periods” to generate them for all barangays.
         </p>
 
@@ -561,7 +619,7 @@ onMounted(loadData);
         </form>
 
         <p v-if="error" class="mb-4 text-sm text-status-danger">{{ error }}</p>
-        <p v-if="loading" class="text-sm text-ink-muted">Loading assignments…</p>
+        <LedgerSkeleton v-if="loading && assignments.length === 0" :rows="5" />
 
         <div v-else class="gl-panel overflow-x-auto">
             <table class="min-w-full text-left text-sm">

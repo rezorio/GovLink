@@ -168,6 +168,9 @@ enum NotificationKind {
   PLAN_SUBMITTED
   PLAN_ACCEPTED
   PLAN_RETURNED
+  ASSEMBLY_SUBMITTED
+  ASSEMBLY_ACCEPTED
+  ASSEMBLY_RETURNED
 }
 
 enum PlanType {
@@ -176,6 +179,19 @@ enum PlanType {
 }
 
 enum PlanSubmissionStatus {
+  NOT_STARTED
+  DRAFT
+  SUBMITTED
+  ACCEPTED
+  RETURNED
+}
+
+enum AssemblySemester {
+  H1
+  H2
+}
+
+enum AssemblySubmissionStatus {
   NOT_STARTED
   DRAFT
   SUBMITTED
@@ -206,8 +222,9 @@ model Municipality {
   procurementDocuments ProcurementDocument[]
   bacMembers           BacMember[]
   barangayResidents    BarangayResident[]
-  notifications        Notification[]
-  planSubmissions      PlanSubmission[]
+  notifications         Notification[]
+  planSubmissions       PlanSubmission[]
+  assemblySubmissions   AssemblySubmission[]
 
   @@map("municipalities")
 }
@@ -232,8 +249,9 @@ model Barangay {
   procurementDocuments ProcurementDocument[]
   bacMembers           BacMember[]
   barangayResidents    BarangayResident[]
-  notifications        Notification[]
-  planSubmissions      PlanSubmission[]
+  notifications         Notification[]
+  planSubmissions       PlanSubmission[]
+  assemblySubmissions   AssemblySubmission[]
 
   @@unique([municipalityId, psgcCode])
   @@index([municipalityId])
@@ -271,6 +289,8 @@ model User {
   notifications                Notification[]
   planSubmissionsSubmitted     PlanSubmission[]      @relation("PlanSubmittedBy")
   planSubmissionsReviewed      PlanSubmission[]      @relation("PlanReviewedBy")
+  assemblySubmissionsSubmitted AssemblySubmission[]  @relation("AssemblySubmittedBy")
+  assemblySubmissionsReviewed  AssemblySubmission[]  @relation("AssemblyReviewedBy")
 
   @@index([municipalityId, barangayId])
   @@map("users")
@@ -681,4 +701,39 @@ model PlanSubmission {
   @@index([municipalityId, planType, periodLabel])
   @@index([barangayId, status])
   @@map("plan_submissions")
+}
+
+/// Semestral barangay assembly + report tracker (RA 7160 Sec. 397(b); Proc. 260).
+model AssemblySubmission {
+  id              String                   @id @default(uuid())
+  municipalityId  String                   @map("municipality_id")
+  barangayId      String                   @map("barangay_id")
+  semester        AssemblySemester
+  periodLabel     String                   @map("period_label")
+  dueDate         DateTime                 @map("due_date") @db.Date
+  status          AssemblySubmissionStatus @default(NOT_STARTED)
+  title           String?
+  notes           String?
+  heldAt          DateTime?                @map("held_at") @db.Date
+  venue           String?
+  attendanceCount Int?                     @map("attendance_count")
+  fileKey         String?                  @map("file_key")
+  fileName        String?                  @map("file_name")
+  submittedAt     DateTime?                @map("submitted_at")
+  submittedById   String?                  @map("submitted_by_id")
+  reviewedAt      DateTime?                @map("reviewed_at")
+  reviewedById    String?                  @map("reviewed_by_id")
+  returnReason    String?                  @map("return_reason")
+  createdAt       DateTime                 @default(now()) @map("created_at")
+  updatedAt       DateTime                 @updatedAt @map("updated_at")
+
+  municipality Municipality @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  barangay     Barangay     @relation(fields: [barangayId], references: [id], onDelete: Cascade)
+  submittedBy  User?        @relation("AssemblySubmittedBy", fields: [submittedById], references: [id])
+  reviewedBy   User?        @relation("AssemblyReviewedBy", fields: [reviewedById], references: [id])
+
+  @@unique([barangayId, periodLabel])
+  @@index([municipalityId, periodLabel])
+  @@index([barangayId, status])
+  @@map("assembly_submissions")
 }

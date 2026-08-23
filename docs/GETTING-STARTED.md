@@ -228,3 +228,4 @@ This should not happen with the current upsert-based seed. Run `npm run db:reset
 1. Start API (`npm run start:dev`) and frontend (`cd frontend && npm run dev`)
 2. Log in as mayor or Punong Barangay and walk the assign → acknowledge → submit → review flow
 3. Run `npm run test:e2e` to verify tenant isolation
+4. For hosting a municipal pilot, follow [PILOT-DEPLOY.md](PILOT-DEPLOY.md)

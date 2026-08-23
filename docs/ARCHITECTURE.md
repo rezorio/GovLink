@@ -99,6 +99,7 @@ Municipality (tenant root)
 3. Municipal users filter by `municipality_id` only.
 4. Barangay users filter by `municipality_id` **and** `barangay_id`.
 5. Guard order: `JwtAuthGuard` → `RolesGuard` → entity tenant validation.
+6. Same-municipality cross-barangay detail/mutate → **403**; missing id or wrong municipality → **404**. Do not apply `barangay_id` in the Prisma `where` before the ownership check (that collapses 403 into 404).
 
 Enforced in code via `.cursor/rules/lgu-multi-tenant-security.mdc`.
 

@@ -31,6 +31,7 @@ const navLinks = computed(() => {
             { to: '/mayor/procurement', label: t('nav.procurement') },
             { to: '/mayor/registry', label: t('nav.registry') },
             { to: '/mayor/plans', label: t('nav.plans') },
+            { to: '/mayor/assemblies', label: t('nav.assemblies') },
         ];
     }
     if (auth.isBarangay) {
@@ -40,6 +41,7 @@ const navLinks = computed(() => {
             { to: '/barangay/procurement', label: t('nav.procurement') },
             { to: '/barangay/registry', label: t('nav.registry') },
             { to: '/barangay/plans', label: t('nav.plans') },
+            { to: '/barangay/assemblies', label: t('nav.assemblies') },
         ];
     }
     return [];

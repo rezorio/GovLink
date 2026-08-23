@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import StatusBadge from '@/components/library/badges/StatusBadge.vue';
+import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
 import { createBacMember, deactivateBacMember, fetchBacMembers } from '@/api/procurement';
+import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import type { BacDesignation, BacMember } from '@/types';
 
 const props = defineProps<{
@@ -27,11 +29,22 @@ const rosterReady = computed(() => {
     return active.length >= 5 && active.some((m) => m.designation === 'CHAIR');
 });
 
-async function load() {
+async function load(useCache = true) {
+    const key = buildCacheKey({ scope: 'bac-roster' });
+    if (useCache) {
+        const cached = readListCache<BacMember[]>(key);
+        if (cached) {
+            members.value = cached;
+            loading.value = false;
+            return;
+        }
+    }
     loading.value = true;
     error.value = null;
     try {
-        members.value = await fetchBacMembers(props.token);
+        const rows = await fetchBacMembers(props.token);
+        members.value = rows;
+        writeListCache(key, rows);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to load BAC roster';
     } finally {
@@ -47,7 +60,8 @@ async function submit() {
         showForm.value = false;
         form.value.displayName = '';
         form.value.designation = 'MEMBER';
-        await load();
+        invalidateListCache('scope=bac-roster');
+        await load(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Create failed';
     } finally {
@@ -60,7 +74,8 @@ async function deactivate(id: string) {
     error.value = null;
     try {
         await deactivateBacMember(props.token, id);
-        await load();
+        invalidateListCache('scope=bac-roster');
+        await load(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Deactivate failed';
     } finally {
@@ -95,7 +110,7 @@ onMounted(load);
             {{ error }}
         </div>
 
-        <div v-if="loading" class="text-sm text-ink-muted">Loading BAC roster…</div>
+        <LedgerSkeleton v-if="loading && members.length === 0" :rows="3" />
         <div v-else class="gl-panel overflow-hidden">
             <div
                 v-if="members.length === 0"

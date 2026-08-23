@@ -79,6 +79,9 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = null;
         user.value = null;
         localStorage.removeItem(TOKEN_KEY);
+        void import('@/composables/useListCache').then(({ invalidateListCache }) => {
+            invalidateListCache();
+        });
     }
 
     return {

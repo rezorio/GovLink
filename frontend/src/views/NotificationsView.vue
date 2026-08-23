@@ -7,6 +7,8 @@ import {
     markAllNotificationsRead,
     markNotificationRead,
 } from '@/api/notifications';
+import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import { useAuthStore } from '@/stores/auth';
 import type { AppNotification } from '@/types';
 
@@ -17,14 +19,28 @@ const items = ref<AppNotification[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
-async function load() {
+async function load(useCache = true) {
     if (!auth.token) {
         return;
+    }
+    const key = buildCacheKey({
+        scope: 'notifications',
+        userId: auth.user?.id,
+    });
+    if (useCache) {
+        const cached = readListCache<AppNotification[]>(key);
+        if (cached) {
+            items.value = cached;
+            loading.value = false;
+            return;
+        }
     }
     loading.value = true;
     error.value = null;
     try {
-        items.value = await fetchNotifications(auth.token);
+        const rows = await fetchNotifications(auth.token);
+        items.value = rows;
+        writeListCache(key, rows);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to load notifications';
     } finally {
@@ -54,7 +70,8 @@ async function markAll() {
         return;
     }
     await markAllNotificationsRead(auth.token);
-    await load();
+    invalidateListCache('scope=notifications');
+    await load(false);
 }
 
 function formatWhen(iso: string) {
@@ -75,7 +92,7 @@ onMounted(load);
         </div>
 
         <p v-if="error" class="mb-4 text-sm text-status-danger">{{ error }}</p>
-        <p v-if="loading" class="text-sm text-ink-muted">Loading notifications…</p>
+        <LedgerSkeleton v-if="loading && items.length === 0" :rows="5" />
 
         <div v-else class="gl-panel overflow-hidden">
             <p v-if="items.length === 0" class="px-4 py-10 text-center text-sm text-ink-muted">

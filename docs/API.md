@@ -126,7 +126,7 @@ Omit `periodLabel` to open every current period derived from requirement frequen
 
 | Method | Path | Roles | Description |
 |--------|------|-------|-------------|
-| `GET` | `/registry/residents` | All authenticated | List residents; barangay scope implicit; mayor requires `?barangayId=` |
+| `GET` | `/registry/residents` | All authenticated | Paginated list (`page`, `pageSize`, `q`); mayor requires `?barangayId=` → `{ items, page, pageSize, total, totalPages }` |
 | `GET` | `/registry/residents/:id` | All authenticated | Single record (403 cross-barangay) |
 | `POST` | `/registry/residents` | Barangay roles | Create household / kasambahay record |
 | `PATCH` | `/registry/residents/:id` | Barangay roles | Update record in own barangay |
@@ -142,19 +142,33 @@ Municipal viewers receive **masked** `addressLine` and `phone` with `piiMasked: 
 | `POST` | `/notifications/:id/read` | All authenticated | Mark one notification read |
 | `POST` | `/notifications/read-all` | All authenticated | Mark all unread as read |
 
-Emitted on: task assign → barangay; evidence/compliance/plan submit → municipal; review accept/return → barangay. Email/SMS deferred.
+Emitted on: task assign → barangay; evidence/compliance/plan/assembly submit → municipal; review accept/return → barangay. Email/SMS deferred.
 
 ### Plans (BDP / AIP)
 
 | Method | Path | Roles | Description |
 |--------|------|-------|-------------|
 | `GET` | `/plans` | All authenticated | Tenant-scoped plan submissions (`?planType=BDP\|AIP`) |
-| `GET` | `/plans/matrix` | `MAYOR`, `DEPT_HEAD` | Municipal matrix by barangay × plan type |
+| `GET` | `/plans/matrix` | `MAYOR`, `DEPT_HEAD` | Municipal matrix by barangay × plan type; paginated barangay rows (`page`, `pageSize`, `q`) + global `statusCounts` |
 | `POST` | `/plans/periods/open` | `MAYOR`, `DEPT_HEAD` | Open current BDP term + AIP FY rows for all barangays |
-| `GET` | `/plans/:id` | All authenticated | Detail (403 cross-barangay) |
-| `PATCH` | `/plans/:id` | Barangay roles | Update draft notes / title / file |
-| `POST` | `/plans/:id/submit` | Barangay roles | Submit to municipal LDC |
+| `GET` | `/plans/:id` | All authenticated | Detail — **403** if another barangay in the same municipality (404 only when id missing / wrong municipality) |
+| `PATCH` | `/plans/:id` | Barangay roles | Update draft notes / title / file (same 403 rule) |
+| `POST` | `/plans/:id/submit` | Barangay roles | Submit to municipal LDC (same 403 rule) |
 | `POST` | `/plans/:id/review` | `MAYOR`, `DEPT_HEAD` | Accept or return with reason |
+
+### Assemblies (semestral — RA 7160 Sec. 397(b))
+
+| Method | Path | Roles | Description |
+|--------|------|-------|-------------|
+| `GET` | `/assemblies` | All authenticated | Tenant-scoped rows (`?semester=H1\|H2`) |
+| `GET` | `/assemblies/matrix` | `MAYOR`, `DEPT_HEAD` | Municipal matrix by barangay × semester |
+| `POST` | `/assemblies/periods/open` | `MAYOR`, `DEPT_HEAD` | Open current-year H1 + H2 rows for all barangays |
+| `GET` | `/assemblies/:id` | All authenticated | Detail — **403** cross-barangay (404 if missing / wrong municipality) |
+| `PATCH` | `/assemblies/:id` | Barangay roles | Draft: notes, heldAt, venue, attendanceCount, file (same 403 rule) |
+| `POST` | `/assemblies/:id/submit` | Barangay roles | Submit to municipality |
+| `POST` | `/assemblies/:id/review` | `MAYOR`, `DEPT_HEAD` | Accept or return with reason |
+
+Period labels: `{year}-H1` (due Mar 31), `{year}-H2` (due Sep 30). Notifications: `ASSEMBLY_SUBMITTED` / `ACCEPTED` / `RETURNED`.
 
 Amounts are **integer centavos**. SVP ceilings come from `ProcurementThreshold` (never hardcoded). Same supplier + category + fiscal year over SVP max sets `splittingFlagged`; award is blocked until municipal acknowledge.
 

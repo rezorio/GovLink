@@ -7,6 +7,7 @@ import { seedProcurementDemo } from './procurement-demo.seed';
 import { seedProcurementThresholds } from './procurement-thresholds.seed';
 import { seedResidentRegistry } from './resident-registry.seed';
 import { seedPlanSubmissions } from './plan-submissions.seed';
+import { seedAssemblySubmissions } from './assembly-submissions.seed';
 import { seedDemoUsers } from './users.seed';
 
 const prisma = new PrismaClient();
@@ -145,6 +146,15 @@ async function seedDirectiveTemplates() {
 }
 
 async function main() {
+    if (
+        process.env.NODE_ENV === 'production' &&
+        process.env.ALLOW_SEED_IN_PRODUCTION !== 'true'
+    ) {
+        throw new Error(
+            'Refusing to seed while NODE_ENV=production. Set ALLOW_SEED_IN_PRODUCTION=true only for controlled pilot resets.',
+        );
+    }
+
     console.log('Seeding pilot LGU data (PSGC-driven)...\n');
 
     for (const pilot of PILOT_MUNICIPALITIES) {
@@ -176,6 +186,9 @@ async function main() {
 
     console.log('\nSeeding BDP/AIP plan submissions...');
     await seedPlanSubmissions(prisma);
+
+    console.log('\nSeeding barangay assembly submissions...');
+    await seedAssemblySubmissions(prisma);
 
     console.log('\nSeed completed successfully.');
 }

@@ -7,6 +7,8 @@ import {
     startComplianceInstance,
     submitComplianceInstance,
 } from '@/api/compliance';
+import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
 import type { ComplianceInstance, ComplianceStatus } from '@/types';
@@ -51,14 +53,28 @@ function railClass(status: ComplianceStatus) {
     return 'gl-rail-warn';
 }
 
-async function load() {
+async function load(useCache = true) {
     if (!auth.token) {
         return;
+    }
+    const key = buildCacheKey({
+        scope: 'barangay-compliance',
+        barangayId: auth.user?.barangay?.id,
+    });
+    if (useCache) {
+        const cached = readListCache<ComplianceInstance[]>(key);
+        if (cached) {
+            instances.value = cached;
+            loading.value = false;
+            return;
+        }
     }
     loading.value = true;
     error.value = null;
     try {
-        instances.value = await fetchComplianceInstances(auth.token);
+        const rows = await fetchComplianceInstances(auth.token);
+        instances.value = rows;
+        writeListCache(key, rows);
     } catch (err) {
         error.value = err instanceof Error ? err.message : t('compliance.loadFailed');
     } finally {
@@ -73,7 +89,8 @@ async function start(id: string) {
     actionLoading.value = true;
     try {
         await startComplianceInstance(auth.token, id);
-        await load();
+        invalidateListCache('scope=barangay-compliance');
+        await load(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : t('compliance.startFailed');
     } finally {
@@ -88,7 +105,8 @@ async function submit(id: string) {
     actionLoading.value = true;
     try {
         await submitComplianceInstance(auth.token, id);
-        await load();
+        invalidateListCache('scope=barangay-compliance');
+        await load(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : t('compliance.submitFailed');
     } finally {
@@ -130,7 +148,7 @@ onMounted(load);
         </div>
 
         <p v-if="error" class="mb-4 text-sm text-status-danger">{{ error }}</p>
-        <p v-if="loading" class="text-sm text-ink-muted">{{ t('compliance.loading') }}</p>
+        <LedgerSkeleton v-if="loading && instances.length === 0" :rows="6" />
 
         <div v-else class="gl-panel overflow-hidden">
             <p

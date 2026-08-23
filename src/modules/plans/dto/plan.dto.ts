@@ -1,5 +1,17 @@
 import { IsEnum, IsIn, IsOptional, IsString, MinLength, ValidateIf } from 'class-validator';
 import { PlanType } from '@prisma/client';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
+
+export class PlanMatrixQueryDto extends PaginationQueryDto {
+    @IsOptional()
+    @IsEnum(PlanType)
+    planType?: PlanType;
+
+    @IsOptional()
+    @IsString()
+    @MinLength(2)
+    periodLabel?: string;
+}
 
 export class OpenPlanPeriodsDto {
     @IsOptional()

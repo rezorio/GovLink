@@ -3,7 +3,10 @@ import { computed, onMounted, ref } from 'vue';
 import AppShell from '@/components/library/layout/AppShell.vue';
 import StatusBadge from '@/components/library/badges/StatusBadge.vue';
 import BarangayRankingToolbar from '@/components/library/sglg/BarangayRankingToolbar.vue';
+import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import LoadingSpinner from '@/components/library/feedback/LoadingSpinner.vue';
 import { fetchSglgScores } from '@/api/sglg';
+import { buildCacheKey, readListCache, writeListCache } from '@/composables/useListCache';
 import { useAuthStore } from '@/stores/auth';
 import type { SglgPillarScore, SglgScoresResponse } from '@/types';
 import {
@@ -55,14 +58,32 @@ function badgeText(row: SglgPillarScore) {
     return formatSglgScore(row.score);
 }
 
-async function load() {
+async function load(useCache = true) {
     if (!auth.token) {
         return;
     }
+
+    const key = buildCacheKey({
+        scope: 'mayor-sglg',
+        municipalityId: auth.user?.municipality?.id,
+        periodLabel: 'current',
+    });
+
+    if (useCache) {
+        const cached = readListCache<SglgScoresResponse>(key);
+        if (cached) {
+            data.value = cached;
+            loading.value = false;
+            return;
+        }
+    }
+
     loading.value = true;
     error.value = null;
     try {
-        data.value = await fetchSglgScores(auth.token);
+        const result = await fetchSglgScores(auth.token);
+        data.value = result;
+        writeListCache(key, result);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to load SGLG scores';
     } finally {
@@ -70,7 +91,7 @@ async function load() {
     }
 }
 
-onMounted(load);
+onMounted(() => load());
 </script>
 
 <template>
@@ -85,15 +106,34 @@ onMounted(load);
             }}
         </p>
 
-        <div v-if="loading" class="text-sm text-ink-muted">Loading pillar scores…</div>
         <div
-            v-else-if="error"
-            class="border border-status-danger/40 bg-status-danger/5 px-4 py-3 text-sm text-status-danger"
+            v-if="error"
+            class="mb-4 border border-status-danger/40 bg-status-danger/5 px-4 py-3 text-sm text-status-danger"
             style="border-radius: 2px"
         >
             {{ error }}
         </div>
+
+        <template v-if="loading && !data">
+            <section class="mb-10">
+                <h2 class="mb-3 font-display text-lg font-semibold text-ink">Governance pillars</h2>
+                <LedgerSkeleton :rows="6" />
+            </section>
+            <section>
+                <h2 class="mb-3 font-display text-lg font-semibold text-ink">Barangay ranking</h2>
+                <LedgerSkeleton :rows="8" />
+            </section>
+        </template>
+
         <template v-else-if="data">
+            <div
+                v-if="loading"
+                class="mb-4 flex items-center gap-2 text-sm text-ink-muted"
+            >
+                <LoadingSpinner size="sm" />
+                Refreshing scores…
+            </div>
+
             <section class="mb-10">
                 <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
                     <div>

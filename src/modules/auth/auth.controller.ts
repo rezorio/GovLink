@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, UseGuards, HttpCode } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { Public } from '../common/decorators/public.decorator';
 import { TenantCtx } from '../common/decorators/tenant-context.decorator';
 import { TenantContext } from '../common/interfaces/auth.interface';
@@ -11,6 +12,7 @@ export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
     @Public()
+    @Throttle({ default: { limit: 20, ttl: 60_000 } })
     @Post('login')
     @HttpCode(200)
     login(@Body() dto: LoginDto) {

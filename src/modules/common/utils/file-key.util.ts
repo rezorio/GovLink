@@ -2,7 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 import { TenantContext } from '../interfaces/auth.interface';
 
 /** Allowed upload entity path segments under `{muni}/{brgy}/{entity}/...`. */
-const ALLOWED_ENTITIES = new Set(['submissions', 'procurement', 'plans']);
+const ALLOWED_ENTITIES = new Set(['submissions', 'procurement', 'plans', 'assemblies']);
 
 export function assertEvidenceFileKey(ctx: TenantContext, fileKey: string): void {
     assertTenantFileKey(ctx, fileKey, 'submissions');

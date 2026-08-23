@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import AppShell from '@/components/library/layout/AppShell.vue';
+import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import PaginationBar from '@/components/library/feedback/PaginationBar.vue';
+import LoadingSpinner from '@/components/library/feedback/LoadingSpinner.vue';
 import { createResident, fetchResidents } from '@/api/registry';
+import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
 import type { BarangayResident, ResidentRecordType } from '@/types';
@@ -10,6 +14,11 @@ const auth = useAuthStore();
 const { t } = useI18n();
 
 const residents = ref<BarangayResident[]>([]);
+const page = ref(1);
+const pageSize = ref(25);
+const total = ref(0);
+const totalPages = ref(1);
+const searchQuery = ref('');
 const loading = ref(true);
 const actionLoading = ref(false);
 const error = ref<string | null>(null);
@@ -23,14 +32,53 @@ const form = ref({
     recordType: 'RESIDENT' as ResidentRecordType,
 });
 
-async function load() {
+function cacheKey() {
+    return buildCacheKey({
+        scope: 'barangay-registry',
+        page: page.value,
+        pageSize: pageSize.value,
+        q: searchQuery.value.trim(),
+    });
+}
+
+async function load(useCache = true) {
     if (!auth.token) {
         return;
     }
+
+    const key = cacheKey();
+    if (useCache) {
+        const cached = readListCache<{
+            items: BarangayResident[];
+            total: number;
+            totalPages: number;
+        }>(key);
+        if (cached) {
+            residents.value = cached.items;
+            total.value = cached.total;
+            totalPages.value = cached.totalPages;
+            loading.value = false;
+            return;
+        }
+    }
+
     loading.value = true;
     error.value = null;
     try {
-        residents.value = await fetchResidents(auth.token);
+        const result = await fetchResidents(auth.token, {
+            page: page.value,
+            pageSize: pageSize.value,
+            q: searchQuery.value.trim() || undefined,
+        });
+        residents.value = result.items;
+        total.value = result.total;
+        totalPages.value = result.totalPages;
+        page.value = result.page;
+        writeListCache(key, {
+            items: result.items,
+            total: result.total,
+            totalPages: result.totalPages,
+        });
     } catch (err) {
         error.value = err instanceof Error ? err.message : t('registry.loadFailed');
     } finally {
@@ -50,7 +98,8 @@ async function submit() {
         form.value.fullName = '';
         form.value.addressLine = '';
         form.value.phone = '';
-        await load();
+        invalidateListCache('scope=barangay-registry');
+        await load(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : t('registry.saveFailed');
     } finally {
@@ -58,7 +107,18 @@ async function submit() {
     }
 }
 
-onMounted(load);
+function onPageChange(next: number) {
+    page.value = next;
+    void load(false);
+}
+
+function onSearch() {
+    page.value = 1;
+    invalidateListCache('scope=barangay-registry');
+    void load(false);
+}
+
+onMounted(() => load());
 </script>
 
 <template>
@@ -74,6 +134,17 @@ onMounted(load);
             <button type="button" class="gl-btn-secondary" @click="showForm = !showForm">
                 {{ showForm ? t('common.cancel') : t('registry.addRecord') }}
             </button>
+            <div class="flex flex-wrap items-end gap-2">
+                <input
+                    v-model="searchQuery"
+                    type="search"
+                    :placeholder="t('registry.searchPlaceholder')"
+                    class="min-w-[12rem] border border-rule bg-surface px-3 py-2 text-sm text-ink"
+                    style="border-radius: 2px"
+                    @keydown.enter.prevent="onSearch"
+                />
+                <button type="button" class="gl-btn-secondary" @click="onSearch">Search</button>
+            </div>
         </div>
 
         <form
@@ -106,11 +177,14 @@ onMounted(load);
                     </select>
                 </label>
             </div>
-            <button type="submit" class="gl-btn-primary" :disabled="actionLoading">{{ t('registry.saveRecord') }}</button>
+            <button type="submit" class="gl-btn-primary inline-flex items-center gap-2" :disabled="actionLoading">
+                <LoadingSpinner v-if="actionLoading" size="sm" />
+                {{ t('registry.saveRecord') }}
+            </button>
         </form>
 
         <p v-if="error" class="mb-4 text-sm text-status-danger">{{ error }}</p>
-        <p v-if="loading" class="text-sm text-ink-muted">{{ t('registry.loading') }}</p>
+        <LedgerSkeleton v-if="loading && residents.length === 0" :rows="5" />
 
         <div v-else class="gl-panel overflow-hidden">
             <p v-if="residents.length === 0" class="px-4 py-10 text-center text-sm text-ink-muted">
@@ -129,6 +203,14 @@ onMounted(load);
                     <p class="mt-1 text-sm text-ink-muted">{{ row.phone }}</p>
                 </div>
             </article>
+            <PaginationBar
+                :page="page"
+                :total-pages="totalPages"
+                :total="total"
+                :page-size="pageSize"
+                :loading="loading"
+                @update:page="onPageChange"
+            />
         </div>
     </AppShell>
 </template>

@@ -329,6 +329,14 @@ export interface BarangayResident {
     updatedAt: string;
 }
 
+export interface PaginatedResult<T> {
+    items: T[];
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+}
+
 export type NotificationKind =
     | 'TASK_ASSIGNED'
     | 'EVIDENCE_SUBMITTED'
@@ -389,6 +397,64 @@ export interface PlanMatrix {
         dueDate: string;
         status: PlanSubmissionStatus;
         title: string | null;
+        submittedAt: string | null;
+        returnReason: string | null;
+    }>;
+    statusCounts: {
+        notStarted: number;
+        draft: number;
+        submitted: number;
+        accepted: number;
+        returned: number;
+    };
+    pagination: {
+        page: number;
+        pageSize: number;
+        total: number;
+        totalPages: number;
+    };
+}
+
+export type AssemblySemester = 'H1' | 'H2';
+export type AssemblySubmissionStatus =
+    | 'NOT_STARTED'
+    | 'DRAFT'
+    | 'SUBMITTED'
+    | 'ACCEPTED'
+    | 'RETURNED';
+
+export interface AssemblySubmission {
+    id: string;
+    municipalityId: string;
+    barangayId: string;
+    semester: AssemblySemester;
+    periodLabel: string;
+    dueDate: string;
+    status: AssemblySubmissionStatus;
+    title: string | null;
+    notes: string | null;
+    heldAt: string | null;
+    venue: string | null;
+    attendanceCount: number | null;
+    fileKey: string | null;
+    fileName: string | null;
+    submittedAt: string | null;
+    returnReason: string | null;
+    barangay?: BarangaySummary;
+}
+
+export interface AssemblyMatrix {
+    periods: Array<{ semester: AssemblySemester; periodLabel: string; label: string }>;
+    barangays: BarangaySummary[];
+    cells: Array<{
+        id: string;
+        barangayId: string;
+        semester: AssemblySemester;
+        periodLabel: string;
+        dueDate: string;
+        status: AssemblySubmissionStatus;
+        title: string | null;
+        heldAt: string | null;
         submittedAt: string | null;
         returnReason: string | null;
     }>;

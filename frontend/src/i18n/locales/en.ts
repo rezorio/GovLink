@@ -15,6 +15,7 @@ export const en: MessageTree = {
         registry: 'Registry',
         notifications: 'Notifications',
         plans: 'BDP / AIP',
+        assemblies: 'Assemblies',
     },
     common: {
         loading: 'Loading…',
@@ -137,6 +138,7 @@ export const en: MessageTree = {
         recordType: 'Record type',
         addRecord: 'Add record',
         saveRecord: 'Save record',
+        searchPlaceholder: 'Search by name',
         loadFailed: 'Failed to load registry',
         saveFailed: 'Failed to save record',
     },

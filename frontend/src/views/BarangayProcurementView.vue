@@ -11,6 +11,9 @@ import {
     fetchAppLines,
     fetchContracts,
 } from '@/api/procurement';
+import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import LoadingSpinner from '@/components/library/feedback/LoadingSpinner.vue';
+import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import { useAuthStore } from '@/stores/auth';
 import { useI18n } from '@/composables/useI18n';
 import type { AppLineItem, ContractStatus, ProcurementContract } from '@/types';
@@ -75,10 +78,29 @@ function variantForStatus(status: string) {
     return 'pending' as const;
 }
 
-async function load() {
+async function load(useCache = true) {
     if (!auth.token) {
         return;
     }
+    const key = buildCacheKey({
+        scope: 'barangay-procurement',
+        barangayId: auth.user?.barangay?.id,
+        fiscalYear,
+    });
+
+    if (useCache) {
+        const cached = readListCache<{
+            appLines: AppLineItem[];
+            contracts: ProcurementContract[];
+        }>(key);
+        if (cached) {
+            appLines.value = cached.appLines;
+            contracts.value = cached.contracts;
+            loading.value = false;
+            return;
+        }
+    }
+
     loading.value = true;
     error.value = null;
     try {
@@ -88,11 +110,16 @@ async function load() {
         ]);
         appLines.value = lines;
         contracts.value = ctrs;
+        writeListCache(key, { appLines: lines, contracts: ctrs });
     } catch (err) {
         error.value = err instanceof Error ? err.message : t('procurement.loadFailed');
     } finally {
         loading.value = false;
     }
+}
+
+function bustProcurementCache() {
+    invalidateListCache('scope=barangay-procurement');
 }
 
 async function submitAppLine() {
@@ -111,7 +138,8 @@ async function submitAppLine() {
         });
         showAppForm.value = false;
         appForm.value = { code: '', description: '', category: 'Goods', amountPesos: 0 };
-        await load();
+        bustProcurementCache();
+        await load(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : t('procurement.createAppFailed');
     } finally {
@@ -141,7 +169,8 @@ async function submitContract() {
             amountPesos: 0,
             mode: 'SVP',
         };
-        await load();
+        bustProcurementCache();
+        await load(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : t('procurement.createContractFailed');
     } finally {
@@ -161,7 +190,8 @@ async function advance(row: ProcurementContract) {
     error.value = null;
     try {
         await advanceContract(auth.token, row.id, next);
-        await load();
+        bustProcurementCache();
+        await load(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : t('procurement.advanceFailed');
     } finally {
@@ -186,7 +216,11 @@ onMounted(load);
             {{ error }}
         </div>
 
-        <div v-if="loading" class="text-sm text-ink-muted">{{ t('common.loading') }}</div>
+        <LedgerSkeleton v-if="loading && appLines.length === 0 && contracts.length === 0" :rows="6" />
+        <div v-else-if="loading" class="mb-4 flex items-center gap-2 text-sm text-ink-muted">
+            <LoadingSpinner size="sm" />
+            {{ t('common.loading') }}
+        </div>
         <template v-else>
             <section v-if="auth.token" class="mb-10">
                 <BacRosterPanel :token="auth.token" />

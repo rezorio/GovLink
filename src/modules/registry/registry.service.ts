@@ -4,10 +4,15 @@ import {
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { AuditLogService } from '../common/services/audit-log.service';
 import { TenantScopeService } from '../common/services/tenant-scope.service';
 import { TenantContext } from '../common/interfaces/auth.interface';
 import { toResidentResponse } from '../common/pii/resident.mapper';
+import {
+    normalizePagination,
+    paginatedResult,
+} from '../common/utils/pagination.util';
 import { PrismaService } from '../prisma/prisma.module';
 import { CreateResidentDto, UpdateResidentDto } from './dto/resident.dto';
 
@@ -19,7 +24,13 @@ export class RegistryService {
         private readonly auditLog: AuditLogService,
     ) {}
 
-    async list(ctx: TenantContext, barangayId?: string) {
+    async list(
+        ctx: TenantContext,
+        barangayId?: string,
+        page?: number,
+        pageSize?: number,
+        q?: string,
+    ) {
         const scopeBarangayId = ctx.barangay_id ?? barangayId;
         if (ctx.barangay_id) {
             this.tenantScope.assertBarangayScope(ctx);
@@ -34,15 +45,36 @@ export class RegistryService {
             await this.assertBarangayInMunicipality(ctx.municipality_id, scopeBarangayId);
         }
 
-        const rows = await this.prisma.barangayResident.findMany({
-            where: {
-                municipalityId: ctx.municipality_id,
-                barangayId: scopeBarangayId!,
-            },
-            orderBy: [{ fullName: 'asc' }],
-        });
+        const pagination = normalizePagination(page, pageSize);
+        const where: Prisma.BarangayResidentWhereInput = {
+            municipalityId: ctx.municipality_id,
+            barangayId: scopeBarangayId!,
+            ...(q?.trim()
+                ? {
+                      fullName: {
+                          contains: q.trim(),
+                          mode: 'insensitive' as const,
+                      },
+                  }
+                : {}),
+        };
 
-        return rows.map((row) => toResidentResponse(ctx, row));
+        const [total, rows] = await Promise.all([
+            this.prisma.barangayResident.count({ where }),
+            this.prisma.barangayResident.findMany({
+                where,
+                orderBy: [{ fullName: 'asc' }],
+                skip: pagination.skip,
+                take: pagination.take,
+            }),
+        ]);
+
+        return paginatedResult(
+            rows.map((row) => toResidentResponse(ctx, row)),
+            total,
+            pagination.page,
+            pagination.pageSize,
+        );
     }
 
     async findOne(ctx: TenantContext, id: string) {

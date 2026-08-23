@@ -8,6 +8,9 @@ import {
     fetchAppLines,
     fetchProcurementOversight,
 } from '@/api/procurement';
+import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import LoadingSpinner from '@/components/library/feedback/LoadingSpinner.vue';
+import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import { useAuthStore } from '@/stores/auth';
 import type { AppLineItem, ProcurementContract, ProcurementOversight } from '@/types';
 import { formatPhpCentavos } from '@/utils/money';
@@ -44,20 +47,40 @@ function statusVariant(row: ProcurementContract) {
     return 'pending' as const;
 }
 
-async function load() {
+async function load(useCache = true) {
     if (!auth.token) {
         return;
     }
+    const year = new Date().getFullYear();
+    const key = buildCacheKey({
+        scope: 'mayor-procurement',
+        municipalityId: auth.user?.municipality?.id,
+        fiscalYear: year,
+    });
+
+    if (useCache) {
+        const cached = readListCache<{
+            data: ProcurementOversight;
+            appLines: AppLineItem[];
+        }>(key);
+        if (cached) {
+            data.value = cached.data;
+            appLines.value = cached.appLines;
+            loading.value = false;
+            return;
+        }
+    }
+
     loading.value = true;
     error.value = null;
     try {
-        const year = new Date().getFullYear();
         const [oversight, lines] = await Promise.all([
             fetchProcurementOversight(auth.token),
             fetchAppLines(auth.token, year),
         ]);
         data.value = oversight;
         appLines.value = lines;
+        writeListCache(key, { data: oversight, appLines: lines });
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to load oversight';
     } finally {
@@ -73,7 +96,8 @@ async function approveLine(id: string) {
     error.value = null;
     try {
         await approveAppLine(auth.token, id);
-        await load();
+        invalidateListCache('scope=mayor-procurement');
+        await load(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Approve failed';
     } finally {
@@ -88,7 +112,8 @@ async function ack(id: string) {
     actionLoading.value = true;
     try {
         await acknowledgeSplit(auth.token, id);
-        await load();
+        invalidateListCache('scope=mayor-procurement');
+        await load(false);
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Acknowledge failed';
     } finally {
@@ -109,15 +134,22 @@ onMounted(load);
             Financial Administration — SVP ceilings are config-driven, not hardcoded.
         </p>
 
-        <div v-if="loading" class="text-sm text-ink-muted">Loading procurement…</div>
+        <LedgerSkeleton v-if="loading && !data" :rows="6" />
         <div
-            v-else-if="error"
+            v-else-if="loading"
+            class="mb-4 flex items-center gap-2 text-sm text-ink-muted"
+        >
+            <LoadingSpinner size="sm" />
+            Refreshing procurement…
+        </div>
+        <div
+            v-if="error"
             class="mb-4 border border-status-danger/40 bg-status-danger/5 px-4 py-3 text-sm text-status-danger"
             style="border-radius: 2px"
         >
             {{ error }}
         </div>
-        <template v-else-if="data">
+        <template v-if="data">
             <section class="mb-8">
                 <h2 class="mb-3 font-display text-lg font-semibold text-ink">Summary</h2>
                 <div class="gl-panel px-4 py-4 text-sm text-ink-muted sm:px-5">

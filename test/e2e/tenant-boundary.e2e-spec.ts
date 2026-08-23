@@ -777,11 +777,13 @@ describe('Tenant boundary (e2e)', () => {
                 .set(authHeader(captainBToken))
                 .expect(200);
 
-            const row = response.body.find((r: { id: string }) => r.id === fixture.residentForBarangayBId);
+            const row = response.body.items.find((r: { id: string }) => r.id === fixture.residentForBarangayBId);
             expect(row).toBeDefined();
             expect(row.piiMasked).toBe(false);
             expect(row.phone).toBe('09171234567');
             expect(row.addressLine).toContain('Purok 1');
+            expect(response.body.page).toBe(1);
+            expect(response.body.total).toBeGreaterThanOrEqual(1);
         });
 
         it('Municipal mayor sees masked contact fields', async () => {
@@ -791,12 +793,24 @@ describe('Tenant boundary (e2e)', () => {
                 .set(authHeader(mayorToken))
                 .expect(200);
 
-            const row = response.body.find((r: { id: string }) => r.id === fixture.residentForBarangayBId);
+            const row = response.body.items.find((r: { id: string }) => r.id === fixture.residentForBarangayBId);
             expect(row).toBeDefined();
             expect(row.piiMasked).toBe(true);
             expect(row.phone).not.toBe('09171234567');
             expect(row.phone).toContain('***');
             expect(row.addressLine).toContain('[address redacted]');
+        });
+
+        it('registry list supports pagination metadata', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/registry/residents')
+                .query({ barangayId: fixture.barangayBId, page: 1, pageSize: 1 })
+                .set(authHeader(mayorToken))
+                .expect(200);
+
+            expect(response.body.items).toHaveLength(1);
+            expect(response.body.pageSize).toBe(1);
+            expect(response.body.totalPages).toBeGreaterThanOrEqual(1);
         });
 
         it('GET /registry/residents/:id returns 403 across barangays', async () => {
@@ -911,6 +925,8 @@ describe('Tenant boundary (e2e)', () => {
                 .expect(200);
 
             expect(matrix.body.barangays.length).toBeGreaterThanOrEqual(2);
+            expect(matrix.body.pagination.page).toBe(1);
+            expect(matrix.body.pagination.total).toBeGreaterThanOrEqual(2);
             const cell = matrix.body.cells.find((c: { id: string }) => c.id === planId);
             expect(cell?.status).toBe('SUBMITTED');
 
@@ -932,6 +948,80 @@ describe('Tenant boundary (e2e)', () => {
         it('GET /plans/matrix returns 403 for barangay captain', async () => {
             await request(app.getHttpServer())
                 .get('/api/plans/matrix')
+                .set(authHeader(captainAToken))
+                .expect(403);
+        });
+    });
+
+    describe('Semestral barangay assembly tracker', () => {
+        it('opens periods, barangay submits, mayor reviews; cross-barangay 403', async () => {
+            await request(app.getHttpServer())
+                .post('/api/assemblies/periods/open')
+                .set(authHeader(mayorToken))
+                .send({})
+                .expect((res) => {
+                    expect([200, 201]).toContain(res.status);
+                });
+
+            const listA = await request(app.getHttpServer())
+                .get('/api/assemblies')
+                .query({ semester: 'H1' })
+                .set(authHeader(captainAToken))
+                .expect(200);
+
+            expect(listA.body.length).toBeGreaterThanOrEqual(1);
+            const assemblyId = listA.body[0].id as string;
+
+            await request(app.getHttpServer())
+                .patch(`/api/assemblies/${assemblyId}`)
+                .set(authHeader(captainAToken))
+                .send({
+                    notes: 'E2E assembly minutes summary',
+                    heldAt: '2026-03-15',
+                    venue: 'Barangay hall',
+                    attendanceCount: 42,
+                })
+                .expect(200);
+
+            await request(app.getHttpServer())
+                .post(`/api/assemblies/${assemblyId}/submit`)
+                .set(authHeader(captainAToken))
+                .expect((res) => {
+                    expect([200, 201]).toContain(res.status);
+                });
+
+            await request(app.getHttpServer())
+                .get(`/api/assemblies/${assemblyId}`)
+                .set(authHeader(captainBToken))
+                .expect(403);
+
+            const matrix = await request(app.getHttpServer())
+                .get('/api/assemblies/matrix')
+                .set(authHeader(mayorToken))
+                .expect(200);
+
+            expect(matrix.body.barangays.length).toBeGreaterThanOrEqual(2);
+            const cell = matrix.body.cells.find((c: { id: string }) => c.id === assemblyId);
+            expect(cell?.status).toBe('SUBMITTED');
+
+            await request(app.getHttpServer())
+                .post(`/api/assemblies/${assemblyId}/review`)
+                .set(authHeader(mayorToken))
+                .send({ decision: 'ACCEPTED' })
+                .expect((res) => {
+                    expect([200, 201]).toContain(res.status);
+                });
+
+            const after = await request(app.getHttpServer())
+                .get(`/api/assemblies/${assemblyId}`)
+                .set(authHeader(captainAToken))
+                .expect(200);
+            expect(after.body.status).toBe('ACCEPTED');
+        });
+
+        it('GET /assemblies/matrix returns 403 for barangay captain', async () => {
+            await request(app.getHttpServer())
+                .get('/api/assemblies/matrix')
                 .set(authHeader(captainAToken))
                 .expect(403);
         });

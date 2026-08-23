@@ -3,7 +3,7 @@ import { AppRole, PlanType } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { TenantCtx } from '../common/decorators/tenant-context.decorator';
 import { TenantContext } from '../common/interfaces/auth.interface';
-import { OpenPlanPeriodsDto, ReviewPlanDto, UpdatePlanDto } from './dto/plan.dto';
+import { OpenPlanPeriodsDto, PlanMatrixQueryDto, ReviewPlanDto, UpdatePlanDto } from './dto/plan.dto';
 import { PlansService } from './plans.service';
 
 @Controller('plans')
@@ -22,12 +22,15 @@ export class PlansController {
 
     @Roles(AppRole.MAYOR, AppRole.DEPT_HEAD)
     @Get('matrix')
-    matrix(
-        @TenantCtx() ctx: TenantContext,
-        @Query('planType') planType?: PlanType,
-        @Query('periodLabel') periodLabel?: string,
-    ) {
-        return this.plansService.matrix(ctx, planType, periodLabel);
+    matrix(@TenantCtx() ctx: TenantContext, @Query() query: PlanMatrixQueryDto) {
+        return this.plansService.matrix(
+            ctx,
+            query.planType,
+            query.periodLabel,
+            query.page,
+            query.pageSize,
+            query.q,
+        );
     }
 
     @Roles(AppRole.MAYOR, AppRole.DEPT_HEAD)

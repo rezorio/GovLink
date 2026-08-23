@@ -2,12 +2,14 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import EvidenceUpload from '@/components/library/uploads/EvidenceUpload.vue';
 import StatusBadge from '@/components/library/badges/StatusBadge.vue';
+import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
 import {
     createContractDocument,
     fetchContractChain,
     fetchContractDocuments,
     voidContractDocument,
 } from '@/api/procurement';
+import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import type {
     ContractStatus,
     ProcurementChain,
@@ -66,7 +68,23 @@ const DELIVERY_OPTIONS: Array<'CONTRACT_DOC' | 'DELIVERY_RECEIPT' | 'INSPECTION_
     'INSPECTION_ACCEPTANCE',
 ];
 
-async function load() {
+async function load(useCache = true) {
+    const key = buildCacheKey({
+        scope: 'contract-chain',
+        contractId: props.contractId,
+    });
+    if (useCache) {
+        const cached = readListCache<{
+            chain: ProcurementChain;
+            documents: ProcurementDocument[];
+        }>(key);
+        if (cached) {
+            chain.value = cached.chain;
+            documents.value = cached.documents;
+            loading.value = false;
+            return;
+        }
+    }
     loading.value = true;
     error.value = null;
     try {
@@ -76,11 +94,16 @@ async function load() {
         ]);
         chain.value = c;
         documents.value = docs;
+        writeListCache(key, { chain: c, documents: docs });
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Failed to load chain';
     } finally {
         loading.value = false;
     }
+}
+
+function bustChainCache() {
+    invalidateListCache('scope=contract-chain');
 }
 
 async function onFileUploaded(payload: {
@@ -102,7 +125,8 @@ async function onFileUploaded(payload: {
             fileSizeBytes: payload.fileSizeBytes,
         });
         docTitle.value = '';
-        await load();
+        bustChainCache();
+        await load(false);
         emit('refreshed');
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Attach failed';
@@ -123,7 +147,8 @@ async function addQuotation() {
         });
         quoteSupplier.value = '';
         quoteAmountPesos.value = 0;
-        await load();
+        bustChainCache();
+        await load(false);
         emit('refreshed');
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Quotation failed';
@@ -137,7 +162,8 @@ async function voidDoc(docId: string) {
     error.value = null;
     try {
         await voidContractDocument(props.token, props.contractId, docId, 'Voided by barangay user');
-        await load();
+        bustChainCache();
+        await load(false);
         emit('refreshed');
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Void failed';
@@ -158,7 +184,7 @@ onMounted(load);
 
 <template>
     <div class="space-y-4">
-        <div v-if="loading" class="text-sm text-ink-muted">Loading document chain…</div>
+        <LedgerSkeleton v-if="loading && !chain" :rows="4" />
         <div
             v-else-if="error"
             class="border border-status-danger/40 bg-status-danger/5 px-3 py-2 text-sm text-status-danger"

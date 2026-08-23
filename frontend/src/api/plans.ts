@@ -1,9 +1,21 @@
 import { apiRequest } from '@/api/client';
 import type { PlanMatrix, PlanSubmission, PlanType } from '@/types';
 
-export function fetchPlanMatrix(token: string, planType?: PlanType) {
-    const query = planType ? `?planType=${planType}` : '';
-    return apiRequest<PlanMatrix>(`/plans/matrix${query}`, {}, token);
+export type FetchPlanMatrixParams = {
+    planType?: PlanType;
+    page?: number;
+    pageSize?: number;
+    q?: string;
+};
+
+export function fetchPlanMatrix(token: string, params: FetchPlanMatrixParams = {}) {
+    const search = new URLSearchParams();
+    if (params.planType) search.set('planType', params.planType);
+    if (params.page) search.set('page', String(params.page));
+    if (params.pageSize) search.set('pageSize', String(params.pageSize));
+    if (params.q?.trim()) search.set('q', params.q.trim());
+    const query = search.toString();
+    return apiRequest<PlanMatrix>(`/plans/matrix${query ? `?${query}` : ''}`, {}, token);
 }
 
 export function fetchPlans(token: string, planType?: PlanType) {

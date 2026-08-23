@@ -84,9 +84,9 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 | Compliance catalog seed (ADM/SOC/SK) | Done | 24 requirements via `GET /compliance/requirements` |
 | ComplianceInstance period tracking | Done | Matrix API + mayor heatmap |
 | Compliance instance lifecycle | Done | Start / submit / review + barangay page |
-| Semestral barangay assembly tracking | Deferred | |
+| Semestral barangay assembly tracking | Done | Mission 21 — H1/H2 matrix + submit/review |
 | Barangay resident registry (PII) | Done | Mission 18 — masked municipal view |
-| BDP / AIP submission tracker | Done | Mission 20 — matrix + submit/review |
+| BDP / AIP submission tracker | Done | Mission 20 — matrix + submit/review; cross-barangay **403** on detail/mutate |
 | In-app notifications | Done | Mission 19 — bell + inbox |
 | SGLG-aligned scoring | Done | `GET /compliance/sglg-scores` + `/mayor/sglg` readiness dashboard |
 | PDF exports with LGU letterhead | Done | `GET /exports/compliance-scorecard.pdf` |
@@ -119,9 +119,14 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 | Geotagged photo submissions | Removed | Device GPS dropped — provenance is JWT barangay |
 | Offline upload queue | Done | Mission 16 — IndexedDB + sync banner |
 | Tagalog UI labels (barangay EN/FIL) | Done | Mission 17 — `frontend/src/i18n/` |
+| Production hardening | Done | Mission 22 — boot gates, rate limits, headers |
+| SPA 404 / error fallback | Done | Mission 22 — `NotFoundView` + `ErrorView` |
+| Paginated registry lists | Done | Mission 23 — `page`/`pageSize`/`q` + skeleton UI |
+| Paginated mayor plan matrix | Done | Mission 23 — barangay pages + search |
+| Skeleton loaders + list cache | Done | Mission 23 — **global** across mayor/barangay screens (30s TTL) |
 
 ---
 
 ## Current mission
 
-**Mission 20 complete** — BDP/AIP submission tracker. Next: semestral barangay assembly tracker when scheduled.
+**Missions 1–23 complete.** List performance is app-wide: every primary screen uses `LedgerSkeleton` + 30s memory cache (`useListCache` / `useCachedLoader`). Logout clears the cache.

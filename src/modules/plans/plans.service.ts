@@ -17,6 +17,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.module';
 import { OpenPlanPeriodsDto, ReviewPlanDto, UpdatePlanDto } from './dto/plan.dto';
 import { periodForPlanType, planTypeLabel } from './plan-period.util';
+import { normalizePagination } from '../common/utils/pagination.util';
 
 const planInclude = {
     barangay: { select: { id: true, name: true, psgcCode: true } },
@@ -44,7 +45,14 @@ export class PlansService {
         });
     }
 
-    async matrix(ctx: TenantContext, planType?: PlanType, periodLabel?: string) {
+    async matrix(
+        ctx: TenantContext,
+        planType?: PlanType,
+        periodLabel?: string,
+        page?: number,
+        pageSize?: number,
+        q?: string,
+    ) {
         this.tenantScope.assertMunicipalScope(ctx);
 
         const types = planType ? [planType] : [PlanType.BDP, PlanType.AIP];
@@ -55,11 +63,28 @@ export class PlansService {
                 : periodForPlanType(t)),
         }));
 
-        const [barangays, rows] = await Promise.all([
+        const pagination = normalizePagination(page, pageSize);
+        const barangayWhere = {
+            municipalityId: ctx.municipality_id,
+            isActive: true,
+            ...(q?.trim()
+                ? {
+                      name: {
+                          contains: q.trim(),
+                          mode: 'insensitive' as const,
+                      },
+                  }
+                : {}),
+        };
+
+        const [totalBarangays, barangays, allRows] = await Promise.all([
+            this.prisma.barangay.count({ where: barangayWhere }),
             this.prisma.barangay.findMany({
-                where: { municipalityId: ctx.municipality_id, isActive: true },
+                where: barangayWhere,
                 select: { id: true, name: true, psgcCode: true },
                 orderBy: { name: 'asc' },
+                skip: pagination.skip,
+                take: pagination.take,
             }),
             this.prisma.planSubmission.findMany({
                 where: {
@@ -83,6 +108,9 @@ export class PlansService {
             }),
         ]);
 
+        const pageBarangayIds = new Set(barangays.map((b) => b.id));
+        const rows = allRows.filter((row) => pageBarangayIds.has(row.barangayId));
+
         const statusCounts = {
             notStarted: 0,
             draft: 0,
@@ -90,7 +118,7 @@ export class PlansService {
             accepted: 0,
             returned: 0,
         };
-        for (const row of rows) {
+        for (const row of allRows) {
             switch (row.status) {
                 case PlanSubmissionStatus.NOT_STARTED:
                     statusCounts.notStarted += 1;
@@ -119,6 +147,12 @@ export class PlansService {
             barangays,
             cells: rows,
             statusCounts,
+            pagination: {
+                page: pagination.page,
+                pageSize: pagination.pageSize,
+                total: totalBarangays,
+                totalPages: Math.max(1, Math.ceil(totalBarangays / pagination.pageSize)),
+            },
         };
     }
 
@@ -175,7 +209,6 @@ export class PlansService {
             where: {
                 id,
                 municipalityId: ctx.municipality_id,
-                ...(ctx.barangay_id ? { barangayId: ctx.barangay_id } : {}),
             },
             include: planInclude,
         });

@@ -63,7 +63,7 @@ Page background uses soft teal/ink radial washes plus a subtle diagonal rule pat
 ### Lists (directives, compliance)
 - One continuous **ledger panel** (`.gl-panel`) — not stacked rounded white cards
 - Rows (`.gl-ledger-row`) separated by hairline `--rule`
-- **3px left status rail** (`.gl-rail` + ok/warn/danger)
+- **3px left status rail** (`.gl-rail` + ok/warn/danger) — always a **child** `<span class="gl-rail">` inside `.gl-ledger-row`, never on the same element (`.gl-rail` is `position: absolute`; combining classes collapses every row)
 - Actions use `.gl-btn-primary` / `.gl-btn-secondary` / `.gl-btn-warn` (2px radius, not pill)
 
 ### Status badges

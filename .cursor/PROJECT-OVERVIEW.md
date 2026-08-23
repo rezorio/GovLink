@@ -1,7 +1,7 @@
 # GovLink — Project Overview
 
-> **Last updated:** 2026-08-23  
-> **Phase:** Missions 1–20 complete — BDP/AIP tracker + notifications  
+> **Last updated:** 2026-08-24  
+> **Phase:** Missions 1–22 complete — pilot hardening + SPA fallbacks  
 > **Audience:** Developers, AI agents, and future contributors
 
 ---
@@ -14,6 +14,7 @@
 | [docs/GETTING-STARTED.md](../docs/GETTING-STARTED.md) | Setup, scripts, troubleshooting |
 | [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) | Stack, MVP flow, roles, tenancy |
 | [docs/API.md](../docs/API.md) | MVP HTTP endpoints + demo flow |
+| [docs/PILOT-DEPLOY.md](../docs/PILOT-DEPLOY.md) | Production hardening + pilot deploy checklist |
 | [context/FEATURES.md](context/FEATURES.md) | Feature build status tracker |
 | [context/DESIGN-SYSTEM.md](context/DESIGN-SYSTEM.md) | **Locked civic UI system** (colors, type, ledger patterns) |
 | [MISSION-BOARD.md](MISSION-BOARD.md) | **Active missions, tasks, blockers** |
@@ -195,29 +196,33 @@ AI development assets already in place. **Do not add more skills until the MVP s
 ## Session checkpoint
 
 > **Live status:** See [MISSION-BOARD.md](MISSION-BOARD.md) for current mission, task checkboxes, and blockers.  
-> **Last handoff:** 2026-08-23 (dropped GPS geotags; evidence provenance = barangay + offline queue)
+> **Last handoff:** 2026-08-24 (Mission 22 — production hardening + 404/error pages)
 
 ### Where we are
 
 | Area | Status |
 |------|--------|
-| Missions 1–20 | Done (BDP/AIP tracker + in-app notifications) |
+| Missions 1–22 | Done (features through assemblies + pilot hardening) |
+| Production boot | Refuses weak JWT / demo S3 / missing HTTPS public URL |
+| Rate limits | Login 20/min · verify 60/min · API 200/min (health skipped) |
+| SPA fallbacks | `/error` + catch-all **404** (`NotFoundView`) |
+| Deploy checklist | [docs/PILOT-DEPLOY.md](../docs/PILOT-DEPLOY.md) |
 | Civic design system | Locked — all primary FE surfaces Done (see `DESIGN-SYSTEM.md`) |
 | Postgres | Host port **5433** (`GOVLINK_PG_PORT`) |
 | MinIO | Compose ports **9000** / **9001**; S3 env in `.env.example` |
 
 ### Start next chat here
 
-1. Read this checkpoint + [MISSION-BOARD.md](MISSION-BOARD.md) “Current mission”.
-2. Follow [DESIGN-SYSTEM.md](context/DESIGN-SYSTEM.md) + `govlink-civic-ui` for any UI work.
-3. **Recommended next mission:** Semestral barangay assembly tracker (scope on start).
+1. Read this checkpoint + [MISSION-BOARD.md](MISSION-BOARD.md).
+2. Follow [DESIGN-SYSTEM.md](context/DESIGN-SYSTEM.md) for UI work.
+3. **Recommended next:** Email/SMS notifications, or package a hosted pilot using `docs/PILOT-DEPLOY.md`.
 
 ### Local demo
 
 - API: `http://localhost:3000/api` · FE: Vite (often `5174` if `5173` busy)
 - Mayor: `mayor@san-jose-batangas.gov.ph` / Punong Barangay: `captain@aguila-sj-batangas.gov.ph` · password `GovLinkDemo1!`
-- SGLG: mayor → `/mayor/sglg` after periods are open
-- Procurement: mayor → `/mayor/procurement` · barangay → `/barangay/procurement`
+- Try a bad URL (e.g. `/mayor/does-not-exist`) → **404 Page not found**
+- Assemblies: mayor → `/mayor/assemblies` · barangay → `/barangay/assemblies`
 
 ---
 
@@ -257,7 +262,9 @@ Execute in order. Full task lists and exit criteria: [MISSION-BOARD.md](MISSION-
 18. ~~RA 10173 PII masking~~ — done
 19. ~~In-app notifications~~ — done
 20. ~~BDP / AIP submission tracker~~ — done
-21. **Semestral barangay assembly tracker** — next
+21. ~~Semestral barangay assembly tracker~~ — done
+22. ~~Production hardening + SPA fallbacks~~ — done
+23. **Email / SMS notifications** (optional) — or hosted pilot packaging
 
 ---
 

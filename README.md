@@ -14,6 +14,7 @@ B2G SaaS for Philippine municipal governance — auditable task tracking and doc
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Stack, MVP flow, roles, multi-tenancy |
 | [docs/DATABASE.md](docs/DATABASE.md) | Prisma schema, migrations, seed data |
 | [docs/API.md](docs/API.md) | MVP HTTP endpoints + demo flow |
+| [docs/PILOT-DEPLOY.md](docs/PILOT-DEPLOY.md) | Production hardening + pilot host checklist |
 | [.cursor/MISSION-BOARD.md](.cursor/MISSION-BOARD.md) | **Active missions, tasks, and blockers** |
 | [.cursor/PROJECT-OVERVIEW.md](.cursor/PROJECT-OVERVIEW.md) | Stack, tenancy rules, pilot data |
 | [.cursor/context/FEATURES.md](.cursor/context/FEATURES.md) | Feature build status tracker |

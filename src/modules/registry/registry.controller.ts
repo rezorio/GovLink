@@ -3,7 +3,7 @@ import { AppRole } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { TenantCtx } from '../common/decorators/tenant-context.decorator';
 import { TenantContext } from '../common/interfaces/auth.interface';
-import { CreateResidentDto, UpdateResidentDto } from './dto/resident.dto';
+import { CreateResidentDto, ListResidentsQueryDto, UpdateResidentDto } from './dto/resident.dto';
 import { RegistryService } from './registry.service';
 
 @Controller('registry/residents')
@@ -12,8 +12,14 @@ export class RegistryController {
 
     @Roles(AppRole.MAYOR, AppRole.DEPT_HEAD, AppRole.BARANGAY_CAPTAIN, AppRole.BARANGAY_SECRETARY)
     @Get()
-    list(@TenantCtx() ctx: TenantContext, @Query('barangayId') barangayId?: string) {
-        return this.registryService.list(ctx, barangayId);
+    list(@TenantCtx() ctx: TenantContext, @Query() query: ListResidentsQueryDto) {
+        return this.registryService.list(
+            ctx,
+            query.barangayId,
+            query.page,
+            query.pageSize,
+            query.q,
+        );
     }
 
     @Roles(AppRole.MAYOR, AppRole.DEPT_HEAD, AppRole.BARANGAY_CAPTAIN, AppRole.BARANGAY_SECRETARY)
