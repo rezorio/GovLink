@@ -181,19 +181,25 @@ onMounted(load);
                 <div
                     v-for="item in chain.checklist"
                     :key="item.docType"
-                    class="gl-ledger-row gl-rail flex items-center justify-between gap-3 px-4 py-2.5 sm:px-5"
-                    :class="item.satisfied ? 'gl-rail-ok' : 'gl-rail-warn'"
+                    class="gl-ledger-row pl-5"
                 >
-                    <div>
-                        <p class="text-sm font-medium text-ink">{{ item.label }}</p>
-                        <p class="text-xs text-ink-muted">
-                            {{ item.present }} / {{ item.minCount }}
-                        </p>
-                    </div>
-                    <StatusBadge
-                        :status="item.satisfied ? 'approved' : 'pending'"
-                        :label="item.satisfied ? 'Met' : 'Needed'"
+                    <span
+                        class="gl-rail"
+                        :class="item.satisfied ? 'gl-rail-ok' : 'gl-rail-warn'"
+                        aria-hidden="true"
                     />
+                    <div class="flex min-w-0 flex-1 items-center justify-between gap-3 sm:col-span-2">
+                        <div>
+                            <p class="text-sm font-medium text-ink">{{ item.label }}</p>
+                            <p class="text-xs text-ink-muted">
+                                {{ item.present }} / {{ item.minCount }}
+                            </p>
+                        </div>
+                        <StatusBadge
+                            :status="item.satisfied ? 'approved' : 'pending'"
+                            :label="item.satisfied ? 'Met' : 'Needed'"
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -319,32 +325,38 @@ onMounted(load);
                 <div
                     v-for="doc in documents"
                     :key="doc.id"
-                    class="gl-ledger-row gl-rail flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 sm:px-5"
-                    :class="doc.voidedAt ? 'gl-rail' : 'gl-rail-ok'"
+                    class="gl-ledger-row pl-5"
                 >
-                    <div class="min-w-0">
-                        <p class="text-sm font-medium text-ink">
-                            {{ doc.docType }} — {{ doc.title }}
-                            <span v-if="doc.voidedAt" class="text-status-danger"> (voided)</span>
-                        </p>
-                        <p class="text-xs text-ink-muted">
-                            v{{ doc.version }}
-                            <template v-if="doc.quotationSupplierName">
-                                · {{ doc.quotationSupplierName }}
-                                · {{ formatPhpCentavos(doc.quotationAmountCentavos ?? '0') }}
-                            </template>
-                            <template v-else-if="doc.fileName"> · {{ doc.fileName }}</template>
-                        </p>
+                    <span
+                        class="gl-rail"
+                        :class="doc.voidedAt ? '' : 'gl-rail-ok'"
+                        aria-hidden="true"
+                    />
+                    <div class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-2 sm:col-span-2">
+                        <div class="min-w-0">
+                            <p class="text-sm font-medium text-ink">
+                                {{ doc.docType }} — {{ doc.title }}
+                                <span v-if="doc.voidedAt" class="text-status-danger"> (voided)</span>
+                            </p>
+                            <p class="text-xs text-ink-muted">
+                                v{{ doc.version }}
+                                <template v-if="doc.quotationSupplierName">
+                                    · {{ doc.quotationSupplierName }}
+                                    · {{ formatPhpCentavos(doc.quotationAmountCentavos ?? '0') }}
+                                </template>
+                                <template v-else-if="doc.fileName"> · {{ doc.fileName }}</template>
+                            </p>
+                        </div>
+                        <button
+                            v-if="canVoidDoc && !doc.voidedAt && (chainEditable || ['CONTRACT_DOC','DELIVERY_RECEIPT','INSPECTION_ACCEPTANCE'].includes(doc.docType))"
+                            type="button"
+                            class="gl-btn-warn"
+                            :disabled="actionLoading"
+                            @click="voidDoc(doc.id)"
+                        >
+                            Void
+                        </button>
                     </div>
-                    <button
-                        v-if="canVoidDoc && !doc.voidedAt && (chainEditable || ['CONTRACT_DOC','DELIVERY_RECEIPT','INSPECTION_ACCEPTANCE'].includes(doc.docType))"
-                        type="button"
-                        class="gl-btn-warn"
-                        :disabled="actionLoading"
-                        @click="voidDoc(doc.id)"
-                    >
-                        Void
-                    </button>
                 </div>
             </div>
         </template>

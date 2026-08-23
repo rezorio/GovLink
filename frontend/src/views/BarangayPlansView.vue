@@ -101,13 +101,18 @@ onMounted(load);
             <article
                 v-for="row in plans"
                 :key="row.id"
-                class="gl-ledger-row gl-rail px-4 py-4 sm:px-5"
-                :class="{
-                    'gl-rail-ok': row.status === 'ACCEPTED',
-                    'gl-rail-danger': row.status === 'RETURNED',
-                    'gl-rail-warn': row.status !== 'ACCEPTED' && row.status !== 'RETURNED',
-                }"
+                class="gl-ledger-row pl-5"
             >
+                <span
+                    class="gl-rail"
+                    :class="{
+                        'gl-rail-ok': row.status === 'ACCEPTED',
+                        'gl-rail-danger': row.status === 'RETURNED',
+                        'gl-rail-warn': row.status !== 'ACCEPTED' && row.status !== 'RETURNED',
+                    }"
+                    aria-hidden="true"
+                />
+                <div class="sm:col-span-2">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div class="min-w-0">
                         <StatusBadge :status="statusVariant(row.status)" :label="row.status.replace(/_/g, ' ')" />
@@ -163,6 +168,7 @@ onMounted(load);
                     >
                         Save draft
                     </button>
+                </div>
                 </div>
             </article>
         </div>

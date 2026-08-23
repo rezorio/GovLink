@@ -85,11 +85,15 @@ onMounted(load);
                 v-for="row in items"
                 :key="row.id"
                 type="button"
-                class="gl-ledger-row gl-rail w-full px-4 py-4 text-left sm:px-5"
-                :class="row.readAt ? 'gl-rail' : 'gl-rail-warn'"
+                class="gl-ledger-row w-full pl-5 text-left"
                 @click="openItem(row)"
             >
-                <div class="min-w-0">
+                <span
+                    class="gl-rail"
+                    :class="row.readAt ? '' : 'gl-rail-warn'"
+                    aria-hidden="true"
+                />
+                <div class="min-w-0 sm:col-span-2">
                     <div class="flex flex-wrap items-center gap-2">
                         <p class="font-display text-base font-semibold text-ink">{{ row.title }}</p>
                         <span

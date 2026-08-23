@@ -159,25 +159,28 @@ onMounted(load);
                     <div
                         v-for="row in pendingAppLines"
                         :key="row.id"
-                        class="gl-ledger-row gl-rail gl-rail-warn flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5"
+                        class="gl-ledger-row pl-5"
                     >
-                        <div class="min-w-0 flex-1">
-                            <p class="font-display text-base font-semibold text-ink">
-                                {{ row.code }} — {{ row.description }}
-                            </p>
-                            <p class="text-xs text-ink-muted">
-                                {{ row.barangay?.name }} · {{ row.category }} ·
-                                {{ formatPhpCentavos(row.approvedAmountCentavos) }}
-                            </p>
+                        <span class="gl-rail gl-rail-warn" aria-hidden="true" />
+                        <div class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3 sm:col-span-2">
+                            <div class="min-w-0 flex-1">
+                                <p class="font-display text-base font-semibold text-ink">
+                                    {{ row.code }} — {{ row.description }}
+                                </p>
+                                <p class="text-xs text-ink-muted">
+                                    {{ row.barangay?.name }} · {{ row.category }} ·
+                                    {{ formatPhpCentavos(row.approvedAmountCentavos) }}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                class="gl-btn-primary"
+                                :disabled="actionLoading"
+                                @click="approveLine(row.id)"
+                            >
+                                Approve APP
+                            </button>
                         </div>
-                        <button
-                            type="button"
-                            class="gl-btn-primary"
-                            :disabled="actionLoading"
-                            @click="approveLine(row.id)"
-                        >
-                            Approve APP
-                        </button>
                     </div>
                 </div>
             </section>
@@ -190,26 +193,29 @@ onMounted(load);
                     <div
                         v-for="row in data.flaggedContracts"
                         :key="row.id"
-                        class="gl-ledger-row gl-rail gl-rail-danger flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5"
+                        class="gl-ledger-row pl-5"
                     >
-                        <div class="min-w-0 flex-1">
-                            <p class="font-display text-base font-semibold text-ink">
-                                {{ row.title }}
-                            </p>
-                            <p class="text-xs text-ink-muted">
-                                {{ row.barangay?.name }} · {{ row.supplierName }} ·
-                                {{ formatPhpCentavos(row.amountCentavos) }} · risk
-                                {{ row.splittingRiskScore ?? '—' }}
-                            </p>
+                        <span class="gl-rail gl-rail-danger" aria-hidden="true" />
+                        <div class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3 sm:col-span-2">
+                            <div class="min-w-0 flex-1">
+                                <p class="font-display text-base font-semibold text-ink">
+                                    {{ row.title }}
+                                </p>
+                                <p class="text-xs text-ink-muted">
+                                    {{ row.barangay?.name }} · {{ row.supplierName }} ·
+                                    {{ formatPhpCentavos(row.amountCentavos) }} · risk
+                                    {{ row.splittingRiskScore ?? '—' }}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                class="gl-btn-warn"
+                                :disabled="actionLoading"
+                                @click="ack(row.id)"
+                            >
+                                Acknowledge split
+                            </button>
                         </div>
-                        <button
-                            type="button"
-                            class="gl-btn-warn"
-                            :disabled="actionLoading"
-                            @click="ack(row.id)"
-                        >
-                            Acknowledge split
-                        </button>
                     </div>
                 </div>
             </section>
@@ -226,32 +232,34 @@ onMounted(load);
                     <div
                         v-for="row in data.contracts"
                         :key="row.id"
-                        class="gl-ledger-row gl-rail flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5"
-                        :class="contractRail(row)"
+                        class="gl-ledger-row pl-5"
                     >
-                        <div class="min-w-0 flex-1">
-                            <p class="font-display text-base font-semibold text-ink">
-                                {{ row.title }}
-                            </p>
-                            <p class="text-xs text-ink-muted">
-                                {{ row.barangay?.name }} · {{ row.mode }} ·
-                                {{ row.appLineItem?.code }} ·
-                                {{ formatPhpCentavos(row.amountCentavos) }}
-                                <span
-                                    v-if="
-                                        [
-                                            'RFQ_ISSUED',
-                                            'QUOTATIONS_RECEIVED',
-                                            'EVALUATION',
-                                            'AWARD_RECOMMENDED',
-                                        ].includes(row.status)
-                                    "
-                                >
-                                    · chain in progress
-                                </span>
-                            </p>
+                        <span class="gl-rail" :class="contractRail(row)" aria-hidden="true" />
+                        <div class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3 sm:col-span-2">
+                            <div class="min-w-0 flex-1">
+                                <p class="font-display text-base font-semibold text-ink">
+                                    {{ row.title }}
+                                </p>
+                                <p class="text-xs text-ink-muted">
+                                    {{ row.barangay?.name }} · {{ row.mode }} ·
+                                    {{ row.appLineItem?.code }} ·
+                                    {{ formatPhpCentavos(row.amountCentavos) }}
+                                    <span
+                                        v-if="
+                                            [
+                                                'RFQ_ISSUED',
+                                                'QUOTATIONS_RECEIVED',
+                                                'EVALUATION',
+                                                'AWARD_RECOMMENDED',
+                                            ].includes(row.status)
+                                        "
+                                    >
+                                        · chain in progress
+                                    </span>
+                                </p>
+                            </div>
+                            <StatusBadge :status="statusVariant(row)" :label="row.status" />
                         </div>
-                        <StatusBadge :status="statusVariant(row)" :label="row.status" />
                     </div>
                 </div>
             </section>

@@ -83,9 +83,10 @@ watch(selectedBarangayId, loadResidents);
             <article
                 v-for="row in residents"
                 :key="row.id"
-                class="gl-ledger-row gl-rail gl-rail-warn px-4 py-4 sm:px-5"
+                class="gl-ledger-row pl-5"
             >
-                <div class="flex flex-wrap items-start justify-between gap-3">
+                <span class="gl-rail gl-rail-warn" aria-hidden="true" />
+                <div class="flex flex-wrap items-start justify-between gap-3 sm:col-span-2">
                     <div class="min-w-0">
                         <p class="font-display text-base font-semibold text-ink">{{ row.fullName }}</p>
                         <p class="mt-1 text-xs text-ink-muted">{{ row.recordType }}</p>

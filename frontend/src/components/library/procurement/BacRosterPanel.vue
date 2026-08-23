@@ -106,25 +106,31 @@ onMounted(load);
             <div
                 v-for="row in members"
                 :key="row.id"
-                class="gl-ledger-row gl-rail flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 sm:px-5"
-                :class="row.isActive ? 'gl-rail-ok' : 'gl-rail'"
+                class="gl-ledger-row pl-5"
             >
-                <div class="min-w-0">
-                    <p class="text-sm font-medium text-ink">
-                        {{ row.displayName }}
-                        <span v-if="!row.isActive" class="text-ink-muted"> (inactive)</span>
-                    </p>
-                    <p class="text-xs text-ink-muted">{{ row.designation }}</p>
+                <span
+                    class="gl-rail"
+                    :class="row.isActive ? 'gl-rail-ok' : ''"
+                    aria-hidden="true"
+                />
+                <div class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-2 sm:col-span-2">
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium text-ink">
+                            {{ row.displayName }}
+                            <span v-if="!row.isActive" class="text-ink-muted"> (inactive)</span>
+                        </p>
+                        <p class="text-xs text-ink-muted">{{ row.designation }}</p>
+                    </div>
+                    <button
+                        v-if="row.isActive"
+                        type="button"
+                        class="gl-btn-warn"
+                        :disabled="actionLoading"
+                        @click="deactivate(row.id)"
+                    >
+                        Deactivate
+                    </button>
                 </div>
-                <button
-                    v-if="row.isActive"
-                    type="button"
-                    class="gl-btn-warn"
-                    :disabled="actionLoading"
-                    @click="deactivate(row.id)"
-                >
-                    Deactivate
-                </button>
             </div>
         </div>
 

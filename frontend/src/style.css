@@ -65,6 +65,7 @@
     }
 
     .gl-rail {
+        /* Must be a child of .gl-ledger-row — never combine classes on the row itself */
         position: absolute;
         left: 0;
         top: 0.75rem;
@@ -72,6 +73,11 @@
         width: 3px;
         transform-origin: top;
         animation: gl-rail-in 160ms ease-out both;
+    }
+
+    /* If someone mistakenly puts gl-rail on the row, keep flow layout */
+    .gl-ledger-row.gl-rail {
+        position: relative;
     }
 
     .gl-rail-ok {

@@ -119,9 +119,10 @@ onMounted(load);
             <article
                 v-for="row in residents"
                 :key="row.id"
-                class="gl-ledger-row gl-rail gl-rail-warn px-4 py-4 sm:px-5"
+                class="gl-ledger-row pl-5"
             >
-                <div class="min-w-0">
+                <span class="gl-rail gl-rail-warn" aria-hidden="true" />
+                <div class="min-w-0 sm:col-span-2">
                     <p class="font-display text-base font-semibold text-ink">{{ row.fullName }}</p>
                     <p class="mt-1 text-xs text-ink-muted">{{ row.recordType }}</p>
                     <p class="mt-2 text-sm text-ink">{{ row.addressLine }}</p>

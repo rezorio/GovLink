@@ -236,23 +236,29 @@ onMounted(load);
                     <div
                         v-for="row in appLines"
                         :key="row.id"
-                        class="gl-ledger-row gl-rail flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5"
-                        :class="row.status === 'APPROVED' ? 'gl-rail-ok' : 'gl-rail-warn'"
+                        class="gl-ledger-row pl-5"
                     >
-                        <div class="min-w-0 flex-1">
-                            <p class="font-display text-base font-semibold text-ink">
-                                {{ row.code }} — {{ row.description }}
-                            </p>
-                            <p class="text-xs text-ink-muted">
-                                {{ row.category }} ·
-                                {{ formatPhpCentavos(row.approvedAmountCentavos) }}
-                            </p>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <StatusBadge :status="variantForStatus(row.status)" :label="row.status" />
-                            <p v-if="row.status === 'DRAFT'" class="text-xs text-ink-muted">
-                                {{ t('procurement.awaitingApproval') }}
-                            </p>
+                        <span
+                            class="gl-rail"
+                            :class="row.status === 'APPROVED' ? 'gl-rail-ok' : 'gl-rail-warn'"
+                            aria-hidden="true"
+                        />
+                        <div class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3 sm:col-span-2">
+                            <div class="min-w-0 flex-1">
+                                <p class="font-display text-base font-semibold text-ink">
+                                    {{ row.code }} — {{ row.description }}
+                                </p>
+                                <p class="text-xs text-ink-muted">
+                                    {{ row.category }} ·
+                                    {{ formatPhpCentavos(row.approvedAmountCentavos) }}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <StatusBadge :status="variantForStatus(row.status)" :label="row.status" />
+                                <p v-if="row.status === 'DRAFT'" class="text-xs text-ink-muted">
+                                    {{ t('procurement.awaitingApproval') }}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -310,34 +316,36 @@ onMounted(load);
                     <div
                         v-for="row in contracts"
                         :key="row.id"
-                        class="gl-ledger-row gl-rail flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5"
-                        :class="railForContract(row)"
+                        class="gl-ledger-row pl-5"
                     >
-                        <button
-                            type="button"
-                            class="min-w-0 flex-1 text-left"
-                            @click="selectedContractId = row.id"
-                        >
-                            <p class="font-display text-base font-semibold text-ink">{{ row.title }}</p>
-                            <p class="text-xs text-ink-muted">
-                                {{ row.supplierName }} · {{ row.mode }} ·
-                                {{ formatPhpCentavos(row.amountCentavos) }}
-                                <span v-if="row.splittingFlagged && !row.splittingAcknowledgedAt">
-                                    · {{ t('procurement.splitFlag') }}
-                                </span>
-                            </p>
-                        </button>
-                        <div class="flex items-center gap-2">
-                            <StatusBadge :status="variantForStatus(row.status)" :label="row.status" />
+                        <span class="gl-rail" :class="railForContract(row)" aria-hidden="true" />
+                        <div class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3 sm:col-span-2">
                             <button
-                                v-if="NEXT[row.status]"
                                 type="button"
-                                class="gl-btn-secondary"
-                                :disabled="actionLoading"
-                                @click="advance(row)"
+                                class="min-w-0 flex-1 text-left"
+                                @click="selectedContractId = row.id"
                             >
-                                {{ t('procurement.advanceTo', { status: NEXT[row.status] ?? '' }) }}
+                                <p class="font-display text-base font-semibold text-ink">{{ row.title }}</p>
+                                <p class="text-xs text-ink-muted">
+                                    {{ row.supplierName }} · {{ row.mode }} ·
+                                    {{ formatPhpCentavos(row.amountCentavos) }}
+                                    <span v-if="row.splittingFlagged && !row.splittingAcknowledgedAt">
+                                        · {{ t('procurement.splitFlag') }}
+                                    </span>
+                                </p>
                             </button>
+                            <div class="flex items-center gap-2">
+                                <StatusBadge :status="variantForStatus(row.status)" :label="row.status" />
+                                <button
+                                    v-if="NEXT[row.status]"
+                                    type="button"
+                                    class="gl-btn-secondary"
+                                    :disabled="actionLoading"
+                                    @click="advance(row)"
+                                >
+                                    {{ t('procurement.advanceTo', { status: NEXT[row.status] ?? '' }) }}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
