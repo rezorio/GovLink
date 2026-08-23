@@ -1,7 +1,7 @@
 # GovLink — Mission Board
 
 > **Last updated:** 2026-08-23  
-> **Current mission:** Mission 19 — In-app notifications ✅  
+> **Current mission:** Mission 20 — BDP / AIP submission tracker ✅  
 > **Phase:** Post-MVP features · civic UI locked
 
 **Source of truth for active work.** Update this file at end-of-session or when a mission completes.  
@@ -33,6 +33,7 @@ For long-term feature catalog: [context/FEATURES.md](context/FEATURES.md).
 | 17 | Tagalog UI labels (barangay-facing) | ✅ Done |
 | 18 | RA 10173 PII field masking | ✅ Done |
 | 19 | In-app notifications | ✅ Done |
+| 20 | BDP / AIP submission tracker | ✅ Done |
 
 **MVP flow we're building toward:**
 
@@ -443,6 +444,29 @@ DirectiveTemplate → SupervisoryTask → TaskAssignment → EvidenceSubmission 
 
 ---
 
+**Completed:** 2026-08-23
+
+---
+
+## Mission 20 — BDP / AIP submission tracker ✅
+
+**Goal:** Municipal matrix of barangay BDP (term) and AIP (annual) submissions with LDC-style accept/return.
+
+**Exit criteria:** `PlanSubmission` model; open periods + matrix + barangay submit/review; FE mayor/barangay views; e2e; notifications on submit/review.
+
+### Tasks
+
+- [x] Schema + migration (`PlanType`, `PlanSubmission`)
+- [x] Period helpers + seed current BDP/AIP rows
+- [x] Plans APIs (list/matrix/open/update/submit/review)
+- [x] Notifications for plan submit/review
+- [x] `/mayor/plans` + `/barangay/plans` civic UI
+- [x] E2E + docs / mission board closeout
+
+**Completed:** 2026-08-24
+
+---
+
 ## Missing / not yet scoped
 
 Items tracked here so they don't clutter mission task lists. Promote to a mission when actively scheduled.
@@ -488,7 +512,7 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 
 _Completed mission details stay in sections above with ✅. Add dated notes here for major milestones._
 
-- **2026-08-23** — Mission 19 complete. In-app notifications (bell + inbox). Handoff: BDP/AIP tracker or email/SMS when scheduled.
+- **2026-08-24** — Mission 20 complete. BDP/AIP submission tracker (municipal matrix + barangay submit). Handoff: semestral assembly tracker or email/SMS.
 - **2026-08-23** — Mission 16 complete (initial). Geotagged photo evidence + IndexedDB offline upload queue. Handoff: Tagalog UI or PII masking.
 - **2026-08-23** — Mission 15 complete. BAC roster (5–7 + chair gate) + delivery/acceptance → COMPLETED. Handoff: geotagged photos or offline queue.
 - **2026-08-23** — Mission 14 complete. RFQ/award document chain (3 quotes, AWARD_RECOMMENDED, void-not-delete). Handoff: BAC roster or delivery/acceptance.

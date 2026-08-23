@@ -187,6 +187,7 @@ export async function cleanupTenantBoundaryFixture(prisma: PrismaClient) {
     }
 
     await prisma.barangayResident.deleteMany({ where: { municipalityId: municipality.id } });
+    await prisma.planSubmission.deleteMany({ where: { municipalityId: municipality.id } });
     await prisma.notification.deleteMany({ where: { municipalityId: municipality.id } });
     await prisma.auditLog.deleteMany({ where: { municipalityId: municipality.id } });
     await prisma.exportDocument.deleteMany({ where: { municipalityId: municipality.id } });

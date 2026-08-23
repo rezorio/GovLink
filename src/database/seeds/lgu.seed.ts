@@ -6,6 +6,7 @@ import { seedComplianceInstances } from './compliance-instances.seed';
 import { seedProcurementDemo } from './procurement-demo.seed';
 import { seedProcurementThresholds } from './procurement-thresholds.seed';
 import { seedResidentRegistry } from './resident-registry.seed';
+import { seedPlanSubmissions } from './plan-submissions.seed';
 import { seedDemoUsers } from './users.seed';
 
 const prisma = new PrismaClient();
@@ -172,6 +173,9 @@ async function main() {
 
     console.log('\nSeeding barangay resident registry...');
     await seedResidentRegistry(prisma);
+
+    console.log('\nSeeding BDP/AIP plan submissions...');
+    await seedPlanSubmissions(prisma);
 
     console.log('\nSeed completed successfully.');
 }

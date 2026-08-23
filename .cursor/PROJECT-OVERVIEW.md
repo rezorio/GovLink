@@ -1,7 +1,7 @@
 # GovLink — Project Overview
 
 > **Last updated:** 2026-08-23  
-> **Phase:** Missions 1–19 complete — notifications + PII masking  
+> **Phase:** Missions 1–20 complete — BDP/AIP tracker + notifications  
 > **Audience:** Developers, AI agents, and future contributors
 
 ---
@@ -201,7 +201,7 @@ AI development assets already in place. **Do not add more skills until the MVP s
 
 | Area | Status |
 |------|--------|
-| Missions 1–19 | Done (in-app notifications + RA 10173 PII masking) |
+| Missions 1–20 | Done (BDP/AIP tracker + in-app notifications) |
 | Civic design system | Locked — all primary FE surfaces Done (see `DESIGN-SYSTEM.md`) |
 | Postgres | Host port **5433** (`GOVLINK_PG_PORT`) |
 | MinIO | Compose ports **9000** / **9001**; S3 env in `.env.example` |
@@ -210,7 +210,7 @@ AI development assets already in place. **Do not add more skills until the MVP s
 
 1. Read this checkpoint + [MISSION-BOARD.md](MISSION-BOARD.md) “Current mission”.
 2. Follow [DESIGN-SYSTEM.md](context/DESIGN-SYSTEM.md) + `govlink-civic-ui` for any UI work.
-3. **Recommended next mission:** BDP/AIP submission tracker (scope on start).
+3. **Recommended next mission:** Semestral barangay assembly tracker (scope on start).
 
 ### Local demo
 
@@ -256,7 +256,8 @@ Execute in order. Full task lists and exit criteria: [MISSION-BOARD.md](MISSION-
 17. ~~Tagalog UI labels~~ — done
 18. ~~RA 10173 PII masking~~ — done
 19. ~~In-app notifications~~ — done
-20. **BDP / AIP submission tracker** — next
+20. ~~BDP / AIP submission tracker~~ — done
+21. **Semestral barangay assembly tracker** — next
 
 ---
 

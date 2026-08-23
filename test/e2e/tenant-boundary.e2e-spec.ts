@@ -867,4 +867,73 @@ describe('Tenant boundary (e2e)', () => {
             expect(leaked.length).toBe(0);
         });
     });
+
+    describe('BDP / AIP plan tracker', () => {
+        it('opens periods, barangay submits, mayor reviews; cross-barangay 403', async () => {
+            await request(app.getHttpServer())
+                .post('/api/plans/periods/open')
+                .set(authHeader(mayorToken))
+                .send({})
+                .expect((res) => {
+                    expect([200, 201]).toContain(res.status);
+                });
+
+            const listA = await request(app.getHttpServer())
+                .get('/api/plans')
+                .query({ planType: 'AIP' })
+                .set(authHeader(captainAToken))
+                .expect(200);
+
+            expect(listA.body.length).toBeGreaterThanOrEqual(1);
+            const planId = listA.body[0].id as string;
+
+            await request(app.getHttpServer())
+                .patch(`/api/plans/${planId}`)
+                .set(authHeader(captainAToken))
+                .send({ notes: 'E2E AIP draft notes' })
+                .expect(200);
+
+            await request(app.getHttpServer())
+                .post(`/api/plans/${planId}/submit`)
+                .set(authHeader(captainAToken))
+                .expect((res) => {
+                    expect([200, 201]).toContain(res.status);
+                });
+
+            await request(app.getHttpServer())
+                .get(`/api/plans/${planId}`)
+                .set(authHeader(captainBToken))
+                .expect(403);
+
+            const matrix = await request(app.getHttpServer())
+                .get('/api/plans/matrix')
+                .set(authHeader(mayorToken))
+                .expect(200);
+
+            expect(matrix.body.barangays.length).toBeGreaterThanOrEqual(2);
+            const cell = matrix.body.cells.find((c: { id: string }) => c.id === planId);
+            expect(cell?.status).toBe('SUBMITTED');
+
+            await request(app.getHttpServer())
+                .post(`/api/plans/${planId}/review`)
+                .set(authHeader(mayorToken))
+                .send({ decision: 'ACCEPTED' })
+                .expect((res) => {
+                    expect([200, 201]).toContain(res.status);
+                });
+
+            const after = await request(app.getHttpServer())
+                .get(`/api/plans/${planId}`)
+                .set(authHeader(captainAToken))
+                .expect(200);
+            expect(after.body.status).toBe('ACCEPTED');
+        });
+
+        it('GET /plans/matrix returns 403 for barangay captain', async () => {
+            await request(app.getHttpServer())
+                .get('/api/plans/matrix')
+                .set(authHeader(captainAToken))
+                .expect(403);
+        });
+    });
 });

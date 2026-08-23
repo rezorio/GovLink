@@ -14,6 +14,7 @@ export const en: MessageTree = {
         myCompliance: 'My compliance',
         registry: 'Registry',
         notifications: 'Notifications',
+        plans: 'BDP / AIP',
     },
     common: {
         loading: 'Loading…',

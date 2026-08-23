@@ -14,6 +14,7 @@ export const tl: MessageTree = {
         myCompliance: 'Aking compliance',
         registry: 'Registry',
         notifications: 'Mga abiso',
+        plans: 'BDP / AIP',
     },
     common: {
         loading: 'Naglo-load…',

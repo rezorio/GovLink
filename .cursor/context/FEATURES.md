@@ -86,7 +86,7 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 | Compliance instance lifecycle | Done | Start / submit / review + barangay page |
 | Semestral barangay assembly tracking | Deferred | |
 | Barangay resident registry (PII) | Done | Mission 18 — masked municipal view |
-| BDP / AIP submission tracker | Deferred | Next mission |
+| BDP / AIP submission tracker | Done | Mission 20 — matrix + submit/review |
 | In-app notifications | Done | Mission 19 — bell + inbox |
 | SGLG-aligned scoring | Done | `GET /compliance/sglg-scores` + `/mayor/sglg` readiness dashboard |
 | PDF exports with LGU letterhead | Done | `GET /exports/compliance-scorecard.pdf` |
@@ -124,4 +124,4 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 
 ## Current mission
 
-**Mission 19 complete** — in-app notifications. Next: BDP/AIP submission tracker when scheduled.
+**Mission 20 complete** — BDP/AIP submission tracker. Next: semestral barangay assembly tracker when scheduled.

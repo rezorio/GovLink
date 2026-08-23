@@ -352,3 +352,51 @@ export interface AppNotification {
     readAt: string | null;
     createdAt: string;
 }
+
+export type PlanType = 'BDP' | 'AIP';
+export type PlanSubmissionStatus =
+    | 'NOT_STARTED'
+    | 'DRAFT'
+    | 'SUBMITTED'
+    | 'ACCEPTED'
+    | 'RETURNED';
+
+export interface PlanSubmission {
+    id: string;
+    municipalityId: string;
+    barangayId: string;
+    planType: PlanType;
+    periodLabel: string;
+    dueDate: string;
+    status: PlanSubmissionStatus;
+    title: string | null;
+    notes: string | null;
+    fileKey: string | null;
+    fileName: string | null;
+    submittedAt: string | null;
+    returnReason: string | null;
+    barangay?: BarangaySummary;
+}
+
+export interface PlanMatrix {
+    periods: Array<{ planType: PlanType; periodLabel: string; label: string }>;
+    barangays: BarangaySummary[];
+    cells: Array<{
+        id: string;
+        barangayId: string;
+        planType: PlanType;
+        periodLabel: string;
+        dueDate: string;
+        status: PlanSubmissionStatus;
+        title: string | null;
+        submittedAt: string | null;
+        returnReason: string | null;
+    }>;
+    statusCounts: {
+        notStarted: number;
+        draft: number;
+        submitted: number;
+        accepted: number;
+        returned: number;
+    };
+}

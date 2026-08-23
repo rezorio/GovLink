@@ -55,8 +55,8 @@ export class UploadsService implements OnModuleInit {
         const client = this.ensureClient();
         const ext = MIME_EXT[dto.contentType] ?? '.bin';
         const safeEntity = dto.entityType.replace(/[^a-z0-9_-]/gi, '').toLowerCase() || 'submissions';
-        if (safeEntity !== 'submissions' && safeEntity !== 'procurement') {
-            throw new BadRequestException('entityType must be submissions or procurement');
+        if (safeEntity !== 'submissions' && safeEntity !== 'procurement' && safeEntity !== 'plans') {
+            throw new BadRequestException('entityType must be submissions, procurement, or plans');
         }
         const fileKey = [
             ctx.municipality_id,

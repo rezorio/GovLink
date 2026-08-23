@@ -142,7 +142,19 @@ Municipal viewers receive **masked** `addressLine` and `phone` with `piiMasked: 
 | `POST` | `/notifications/:id/read` | All authenticated | Mark one notification read |
 | `POST` | `/notifications/read-all` | All authenticated | Mark all unread as read |
 
-Emitted on: task assign → barangay; evidence/compliance submit → municipal; review accept/return → barangay. Email/SMS deferred.
+Emitted on: task assign → barangay; evidence/compliance/plan submit → municipal; review accept/return → barangay. Email/SMS deferred.
+
+### Plans (BDP / AIP)
+
+| Method | Path | Roles | Description |
+|--------|------|-------|-------------|
+| `GET` | `/plans` | All authenticated | Tenant-scoped plan submissions (`?planType=BDP\|AIP`) |
+| `GET` | `/plans/matrix` | `MAYOR`, `DEPT_HEAD` | Municipal matrix by barangay × plan type |
+| `POST` | `/plans/periods/open` | `MAYOR`, `DEPT_HEAD` | Open current BDP term + AIP FY rows for all barangays |
+| `GET` | `/plans/:id` | All authenticated | Detail (403 cross-barangay) |
+| `PATCH` | `/plans/:id` | Barangay roles | Update draft notes / title / file |
+| `POST` | `/plans/:id/submit` | Barangay roles | Submit to municipal LDC |
+| `POST` | `/plans/:id/review` | `MAYOR`, `DEPT_HEAD` | Accept or return with reason |
 
 Amounts are **integer centavos**. SVP ceilings come from `ProcurementThreshold` (never hardcoded). Same supplier + category + fiscal year over SVP max sets `splittingFlagged`; award is blocked until municipal acknowledge.
 

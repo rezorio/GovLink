@@ -1,0 +1,5 @@
+-- RenameIndex
+ALTER INDEX "compliance_instances_barangay_id_requirement_id_period_label_ke" RENAME TO "compliance_instances_barangay_id_requirement_id_period_labe_key";
+
+-- RenameIndex
+ALTER INDEX "procurement_thresholds_regime_income_class_mode_effective_from_" RENAME TO "procurement_thresholds_regime_income_class_mode_effective_f_key";
