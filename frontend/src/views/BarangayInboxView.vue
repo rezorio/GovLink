@@ -5,11 +5,13 @@ import StatusBadge from '@/components/library/badges/StatusBadge.vue';
 import EvidenceUpload from '@/components/library/uploads/EvidenceUpload.vue';
 import OfflineUploadBanner from '@/components/library/uploads/OfflineUploadBanner.vue';
 import { acknowledgeAssignment, fetchAssignments, submitEvidence } from '@/api/assignments';
+import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
 import type { TaskAssignment } from '@/types';
-import { daysRemaining, formatDueDate, statusLabel, statusToVariant } from '@/utils/assignment-status';
+import { daysRemaining, formatDueDate, statusToVariant } from '@/utils/assignment-status';
 
 const auth = useAuthStore();
+const { t, assignmentStatus } = useI18n();
 
 const assignments = ref<TaskAssignment[]>([]);
 const loading = ref(true);
@@ -27,7 +29,7 @@ async function loadInbox() {
     try {
         assignments.value = await fetchAssignments(auth.token);
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Failed to load inbox';
+        error.value = err instanceof Error ? err.message : t('inbox.loadFailed');
     } finally {
         loading.value = false;
     }
@@ -42,7 +44,7 @@ async function acknowledge(id: string) {
         await acknowledgeAssignment(auth.token, id);
         await loadInbox();
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Acknowledge failed';
+        error.value = err instanceof Error ? err.message : t('inbox.acknowledgeFailed');
     } finally {
         actionLoading.value = false;
     }
@@ -67,7 +69,7 @@ async function handleSubmit(
         await loadInbox();
         await offlineBannerRef.value?.refreshCount?.();
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Submit failed';
+        error.value = err instanceof Error ? err.message : t('inbox.submitFailed');
     } finally {
         actionLoading.value = false;
     }
@@ -86,12 +88,11 @@ onMounted(loadInbox);
 
 <template>
     <AppShell
-        title="Directive inbox"
+        :title="t('inbox.title')"
         :subtitle="auth.user?.barangay?.name ?? auth.user?.full_name"
     >
         <p class="mb-6 max-w-xl text-sm leading-relaxed text-ink-muted">
-            Municipal directives assigned to your barangay — acknowledge, attach photo or PDF
-            proof, and await review. Uploads queue locally when offline.
+            {{ t('inbox.intro') }}
         </p>
 
         <OfflineUploadBanner
@@ -102,14 +103,14 @@ onMounted(loadInbox);
         />
 
         <p v-if="error" class="mb-4 text-sm text-status-danger">{{ error }}</p>
-        <p v-if="loading" class="text-sm text-ink-muted">Loading tasks…</p>
+        <p v-if="loading" class="text-sm text-ink-muted">{{ t('inbox.loadingTasks') }}</p>
 
         <div v-else class="gl-panel overflow-hidden">
             <p
                 v-if="assignments.length === 0"
                 class="px-4 py-10 text-center text-sm text-ink-muted"
             >
-                No tasks assigned to your barangay yet.
+                {{ t('inbox.empty') }}
             </p>
 
             <article
@@ -131,12 +132,15 @@ onMounted(loadInbox);
                 <div class="sm:col-span-3">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="min-w-0 flex-1">
-                            <StatusBadge :status="statusToVariant(row.status)" :label="statusLabel(row.status)" />
+                            <StatusBadge
+                                :status="statusToVariant(row.status)"
+                                :label="assignmentStatus(row.status)"
+                            />
                             <h2 class="mt-2 font-display text-lg font-semibold text-ink">{{ row.task.title }}</h2>
                             <p class="mt-1 text-sm text-ink-muted">{{ row.task.description }}</p>
                             <p class="mt-2 text-xs text-ink-muted">
-                                Due {{ formatDueDate(row.task.dueDate) }} ·
-                                {{ daysRemaining(row.task.dueDate) }} days remaining
+                                {{ t('common.due', { date: formatDueDate(row.task.dueDate) }) }} ·
+                                {{ t('common.daysRemaining', { days: daysRemaining(row.task.dueDate) }) }}
                             </p>
                             <p class="mt-1 text-xs text-ink-muted">{{ row.task.legalBasis }}</p>
                         </div>
@@ -150,7 +154,7 @@ onMounted(loadInbox);
                             :disabled="actionLoading"
                             @click="acknowledge(row.id)"
                         >
-                            Acknowledge
+                            {{ t('inbox.acknowledge') }}
                         </button>
                         <button
                             v-if="canSubmit(row.status)"
@@ -158,7 +162,7 @@ onMounted(loadInbox);
                             class="gl-btn-secondary"
                             @click="expandedId = expandedId === row.id ? null : row.id"
                         >
-                            {{ expandedId === row.id ? 'Hide upload' : 'Submit proof' }}
+                            {{ expandedId === row.id ? t('inbox.hideUpload') : t('inbox.submitProof') }}
                         </button>
                     </div>
 

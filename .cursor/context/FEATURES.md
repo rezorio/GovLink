@@ -113,13 +113,13 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 |---------|--------|-------|
 | CI (lint, test, migrate) | Done | GitHub Actions on push/PR |
 | `.env.example` | Done | |
-| RA 10173 PII field masking | Deferred | |
+| RA 10173 PII field masking | Deferred | Next mission |
 | Geotagged photo submissions | Removed | Device GPS dropped — provenance is JWT barangay |
 | Offline upload queue | Done | Mission 16 — IndexedDB + sync banner |
-| Tagalog UI labels | Deferred | Next mission |
+| Tagalog UI labels (barangay EN/FIL) | Done | Mission 17 — `frontend/src/i18n/` |
 
 ---
 
 ## Current mission
 
-**Mission 16 complete** (GPS geotags removed; barangay provenance + offline queue remain). Next chat: Tagalog UI or PII masking (see PROJECT-OVERVIEW session checkpoint).
+**Mission 17 complete** — barangay-facing EN/FIL labels with Filipino default. Next: RA 10173 PII masking.

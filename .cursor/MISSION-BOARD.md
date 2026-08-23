@@ -1,7 +1,7 @@
 # GovLink — Mission Board
 
 > **Last updated:** 2026-08-23  
-> **Current mission:** Next → Tagalog UI labels or RA 10173 PII masking (scope on start)  
+> **Current mission:** Mission 17 — Tagalog UI labels ✅ (PII masking deferred)  
 > **Phase:** Post-MVP features · civic UI locked
 
 **Source of truth for active work.** Update this file at end-of-session or when a mission completes.  
@@ -30,6 +30,7 @@ For long-term feature catalog: [context/FEATURES.md](context/FEATURES.md).
 | 14 | RFQ / award document chain | ✅ Done |
 | 15 | BAC roster / delivery-acceptance | ✅ Done |
 | 16 | Evidence uploads + offline queue | ✅ Done |
+| 17 | Tagalog UI labels (barangay-facing) | ✅ Done |
 
 **MVP flow we're building toward:**
 
@@ -371,6 +372,28 @@ DirectiveTemplate → SupervisoryTask → TaskAssignment → EvidenceSubmission 
 
 ---
 
+**Completed:** 2026-08-23
+
+---
+
+## Mission 17 — Tagalog UI labels ✅
+
+**Goal:** Barangay field users see Filipino labels on inbox, compliance, procurement, and upload flows; EN/FIL toggle with Filipino default for barangay roles.
+
+**Exit criteria:** `frontend/src/i18n/` catalogs; barangay views wired; locale persists in localStorage; mayor views remain English by default.
+
+### Tasks
+
+- [x] Lightweight i18n (`en` + `tl`) without extra dependencies
+- [x] Locale store — Filipino default for barangay JWT roles
+- [x] EN | FIL toggle in `AppShell` for barangay users
+- [x] Barangay inbox, compliance, procurement, upload + offline banner
+- [x] Docs / mission board closeout
+
+**Completed:** 2026-08-23
+
+---
+
 ## Missing / not yet scoped
 
 Items tracked here so they don't clutter mission task lists. Promote to a mission when actively scheduled.
@@ -387,7 +410,8 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 | BAC roster / delivery-acceptance | Done | Mission 15 |
 | Geotagged photo submissions | Removed | Prefer barangay provenance |
 | Offline upload queue | Done | Mission 16 — IndexedDB + sync banner |
-| Tagalog UI labels | English first | **Next mission** |
+| Tagalog UI labels | Done | Mission 17 — barangay EN/FIL toggle |
+| RA 10173 PII field masking | Deferred | Next when scheduled |
 
 ---
 
@@ -415,7 +439,7 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 
 _Completed mission details stay in sections above with ✅. Add dated notes here for major milestones._
 
-- **2026-08-23** — Mission 16 revised. Dropped device GPS geotags; evidence provenance is submitting barangay + offline queue retained. Handoff: Tagalog UI or PII masking.
+- **2026-08-23** — Mission 17 complete. Tagalog UI labels for barangay-facing screens (EN/FIL toggle). Handoff: RA 10173 PII masking when scheduled.
 - **2026-08-23** — Mission 16 complete (initial). Geotagged photo evidence + IndexedDB offline upload queue. Handoff: Tagalog UI or PII masking.
 - **2026-08-23** — Mission 15 complete. BAC roster (5–7 + chair gate) + delivery/acceptance → COMPLETED. Handoff: geotagged photos or offline queue.
 - **2026-08-23** — Mission 14 complete. RFQ/award document chain (3 quotes, AWARD_RECOMMENDED, void-not-delete). Handoff: BAC roster or delivery/acceptance.

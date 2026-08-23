@@ -1,7 +1,7 @@
 # GovLink — Project Overview
 
 > **Last updated:** 2026-08-23  
-> **Phase:** Missions 1–16 complete — civic UI + barangay-scoped evidence + offline queue  
+> **Phase:** Missions 1–17 complete — bilingual barangay UI + offline queue  
 > **Audience:** Developers, AI agents, and future contributors
 
 ---
@@ -201,7 +201,7 @@ AI development assets already in place. **Do not add more skills until the MVP s
 
 | Area | Status |
 |------|--------|
-| Missions 1–16 | Done (barangay-scoped evidence provenance + offline sync; no device GPS) |
+| Missions 1–17 | Done (Tagalog barangay UI + offline evidence queue) |
 | Civic design system | Locked — all primary FE surfaces Done (see `DESIGN-SYSTEM.md`) |
 | Postgres | Host port **5433** (`GOVLINK_PG_PORT`) |
 | MinIO | Compose ports **9000** / **9001**; S3 env in `.env.example` |
@@ -210,7 +210,7 @@ AI development assets already in place. **Do not add more skills until the MVP s
 
 1. Read this checkpoint + [MISSION-BOARD.md](MISSION-BOARD.md) “Current mission”.
 2. Follow [DESIGN-SYSTEM.md](context/DESIGN-SYSTEM.md) + `govlink-civic-ui` for any UI work.
-3. **Recommended next mission:** Tagalog UI labels or RA 10173 PII field masking (scope on start).
+3. **Recommended next mission:** RA 10173 PII field masking (role-based redaction).
 
 ### Local demo
 
@@ -253,7 +253,8 @@ Execute in order. Full task lists and exit criteria: [MISSION-BOARD.md](MISSION-
 14. ~~RFQ / award document chain~~ — done
 15. ~~BAC roster / delivery-acceptance~~ — done
 16. ~~Geotagged photo submissions / offline queue~~ — done
-17. **Tagalog UI labels / PII masking** — next (scope on start)
+17. ~~Tagalog UI labels~~ — done
+18. **RA 10173 PII masking** — next
 
 ---
 

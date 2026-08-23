@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { apiRequest } from '@/api/client';
+import { useLocaleStore } from '@/stores/locale';
 import type { AppRole, AuthUser, LoginResponse } from '@/types';
 
 const TOKEN_KEY = 'govlink_token';
@@ -39,6 +40,9 @@ export const useAuthStore = defineStore('auth', () => {
             token.value = response.access_token;
             user.value = response.user;
             localStorage.setItem(TOKEN_KEY, response.access_token);
+            useLocaleStore().applyDefaultForUser(
+                response.user.roles.some((r) => r === 'BARANGAY_CAPTAIN' || r === 'BARANGAY_SECRETARY'),
+            );
             return homeRouteForRoles(response.user.roles);
         } catch (err) {
             error.value = err instanceof Error ? err.message : 'Login failed';
@@ -53,6 +57,11 @@ export const useAuthStore = defineStore('auth', () => {
             return;
         }
         user.value = await apiRequest<AuthUser>('/auth/me', {}, token.value);
+        if (user.value) {
+            useLocaleStore().applyDefaultForUser(
+                user.value.roles.some((r) => r === 'BARANGAY_CAPTAIN' || r === 'BARANGAY_SECRETARY'),
+            );
+        }
     }
 
     async function hydrate() {

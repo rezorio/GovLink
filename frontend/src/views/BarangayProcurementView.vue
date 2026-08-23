@@ -12,10 +12,12 @@ import {
     fetchContracts,
 } from '@/api/procurement';
 import { useAuthStore } from '@/stores/auth';
+import { useI18n } from '@/composables/useI18n';
 import type { AppLineItem, ContractStatus, ProcurementContract } from '@/types';
 import { formatPhpCentavos, pesosToCentavos } from '@/utils/money';
 
 const auth = useAuthStore();
+const { t } = useI18n();
 const fiscalYear = new Date().getFullYear();
 
 const appLines = ref<AppLineItem[]>([]);
@@ -87,7 +89,7 @@ async function load() {
         appLines.value = lines;
         contracts.value = ctrs;
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Failed to load procurement';
+        error.value = err instanceof Error ? err.message : t('procurement.loadFailed');
     } finally {
         loading.value = false;
     }
@@ -111,7 +113,7 @@ async function submitAppLine() {
         appForm.value = { code: '', description: '', category: 'Goods', amountPesos: 0 };
         await load();
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Create APP line failed';
+        error.value = err instanceof Error ? err.message : t('procurement.createAppFailed');
     } finally {
         actionLoading.value = false;
     }
@@ -141,7 +143,7 @@ async function submitContract() {
         };
         await load();
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Create contract failed';
+        error.value = err instanceof Error ? err.message : t('procurement.createContractFailed');
     } finally {
         actionLoading.value = false;
     }
@@ -161,7 +163,7 @@ async function advance(row: ProcurementContract) {
         await advanceContract(auth.token, row.id, next);
         await load();
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Advance failed';
+        error.value = err instanceof Error ? err.message : t('procurement.advanceFailed');
     } finally {
         actionLoading.value = false;
     }
@@ -171,10 +173,9 @@ onMounted(load);
 </script>
 
 <template>
-    <AppShell title="Barangay procurement" :subtitle="`FY ${fiscalYear}`">
+    <AppShell :title="t('procurement.title')" :subtitle="`FY ${fiscalYear}`">
         <p class="mb-6 max-w-2xl text-sm text-ink-muted">
-            Annual Procurement Plan lines and SVP contracts. Every contract must link to an
-            approved APP line.
+            {{ t('procurement.intro') }}
         </p>
 
         <div
@@ -185,7 +186,7 @@ onMounted(load);
             {{ error }}
         </div>
 
-        <div v-if="loading" class="text-sm text-ink-muted">Loading…</div>
+        <div v-if="loading" class="text-sm text-ink-muted">{{ t('common.loading') }}</div>
         <template v-else>
             <section v-if="auth.token" class="mb-10">
                 <BacRosterPanel :token="auth.token" />
@@ -193,9 +194,9 @@ onMounted(load);
 
             <section class="mb-10">
                 <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
-                    <h2 class="font-display text-lg font-semibold text-ink">APP lines</h2>
+                    <h2 class="font-display text-lg font-semibold text-ink">{{ t('procurement.appLines') }}</h2>
                     <button type="button" class="gl-btn-secondary" @click="showAppForm = !showAppForm">
-                        {{ showAppForm ? 'Cancel' : 'Add APP line' }}
+                        {{ showAppForm ? t('common.cancel') : t('procurement.addAppLine') }}
                     </button>
                 </div>
 
@@ -206,23 +207,23 @@ onMounted(load);
                 >
                     <div class="grid gap-3 sm:grid-cols-2">
                         <label class="block text-sm">
-                            <span class="text-ink-muted">Code</span>
+                            <span class="text-ink-muted">{{ t('procurement.code') }}</span>
                             <input v-model="appForm.code" required class="mt-1 w-full border border-rule bg-surface px-3 py-2 text-ink" style="border-radius: 2px" />
                         </label>
                         <label class="block text-sm">
-                            <span class="text-ink-muted">Category</span>
+                            <span class="text-ink-muted">{{ t('procurement.category') }}</span>
                             <input v-model="appForm.category" required class="mt-1 w-full border border-rule bg-surface px-3 py-2 text-ink" style="border-radius: 2px" />
                         </label>
                     </div>
                     <label class="block text-sm">
-                        <span class="text-ink-muted">Description</span>
+                        <span class="text-ink-muted">{{ t('procurement.description') }}</span>
                         <input v-model="appForm.description" required class="mt-1 w-full border border-rule bg-surface px-3 py-2 text-ink" style="border-radius: 2px" />
                     </label>
                     <label class="block text-sm">
-                        <span class="text-ink-muted">Approved amount (PHP)</span>
+                        <span class="text-ink-muted">{{ t('procurement.approvedAmount') }}</span>
                         <input v-model.number="appForm.amountPesos" type="number" min="1" step="0.01" required class="mt-1 w-full border border-rule bg-surface px-3 py-2 text-ink" style="border-radius: 2px" />
                     </label>
-                    <button type="submit" class="gl-btn-primary" :disabled="actionLoading">Save draft</button>
+                    <button type="submit" class="gl-btn-primary" :disabled="actionLoading">{{ t('procurement.saveDraft') }}</button>
                 </form>
 
                 <div class="gl-panel overflow-hidden">
@@ -230,7 +231,7 @@ onMounted(load);
                         v-if="appLines.length === 0"
                         class="px-4 py-6 text-sm text-ink-muted sm:px-5"
                     >
-                        No APP lines for this year.
+                        {{ t('procurement.noAppLines') }}
                     </div>
                     <div
                         v-for="row in appLines"
@@ -250,7 +251,7 @@ onMounted(load);
                         <div class="flex items-center gap-2">
                             <StatusBadge :status="variantForStatus(row.status)" :label="row.status" />
                             <p v-if="row.status === 'DRAFT'" class="text-xs text-ink-muted">
-                                Awaiting municipal approval
+                                {{ t('procurement.awaitingApproval') }}
                             </p>
                         </div>
                     </div>
@@ -259,14 +260,14 @@ onMounted(load);
 
             <section>
                 <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
-                    <h2 class="font-display text-lg font-semibold text-ink">Contracts</h2>
+                    <h2 class="font-display text-lg font-semibold text-ink">{{ t('procurement.contracts') }}</h2>
                     <button
                         type="button"
                         class="gl-btn-secondary"
                         :disabled="approvedLines.length === 0"
                         @click="showContractForm = !showContractForm"
                     >
-                        {{ showContractForm ? 'Cancel' : 'New contract' }}
+                        {{ showContractForm ? t('common.cancel') : t('procurement.newContract') }}
                     </button>
                 </div>
 
@@ -276,27 +277,27 @@ onMounted(load);
                     @submit.prevent="submitContract"
                 >
                     <label class="block text-sm">
-                        <span class="text-ink-muted">APP line</span>
+                        <span class="text-ink-muted">{{ t('procurement.appLine') }}</span>
                         <select v-model="contractForm.appLineItemId" required class="mt-1 w-full border border-rule bg-surface px-3 py-2 text-ink" style="border-radius: 2px">
-                            <option value="" disabled>Select…</option>
+                            <option value="" disabled>{{ t('procurement.select') }}</option>
                             <option v-for="line in approvedLines" :key="line.id" :value="line.id">
                                 {{ line.code }} ({{ formatPhpCentavos(line.approvedAmountCentavos) }})
                             </option>
                         </select>
                     </label>
                     <label class="block text-sm">
-                        <span class="text-ink-muted">Title</span>
+                        <span class="text-ink-muted">{{ t('procurement.contractTitle') }}</span>
                         <input v-model="contractForm.title" required class="mt-1 w-full border border-rule bg-surface px-3 py-2 text-ink" style="border-radius: 2px" />
                     </label>
                     <label class="block text-sm">
-                        <span class="text-ink-muted">Supplier</span>
+                        <span class="text-ink-muted">{{ t('procurement.supplier') }}</span>
                         <input v-model="contractForm.supplierName" required class="mt-1 w-full border border-rule bg-surface px-3 py-2 text-ink" style="border-radius: 2px" />
                     </label>
                     <label class="block text-sm">
-                        <span class="text-ink-muted">Amount (PHP)</span>
+                        <span class="text-ink-muted">{{ t('procurement.amount') }}</span>
                         <input v-model.number="contractForm.amountPesos" type="number" min="1" step="0.01" required class="mt-1 w-full border border-rule bg-surface px-3 py-2 text-ink" style="border-radius: 2px" />
                     </label>
-                    <button type="submit" class="gl-btn-primary" :disabled="actionLoading">Create draft</button>
+                    <button type="submit" class="gl-btn-primary" :disabled="actionLoading">{{ t('procurement.createDraft') }}</button>
                 </form>
 
                 <div class="gl-panel overflow-hidden">
@@ -304,7 +305,7 @@ onMounted(load);
                         v-if="contracts.length === 0"
                         class="px-4 py-6 text-sm text-ink-muted sm:px-5"
                     >
-                        No contracts yet.
+                        {{ t('procurement.noContracts') }}
                     </div>
                     <div
                         v-for="row in contracts"
@@ -322,7 +323,7 @@ onMounted(load);
                                 {{ row.supplierName }} · {{ row.mode }} ·
                                 {{ formatPhpCentavos(row.amountCentavos) }}
                                 <span v-if="row.splittingFlagged && !row.splittingAcknowledgedAt">
-                                    · split flag (awaiting municipal ack)
+                                    · {{ t('procurement.splitFlag') }}
                                 </span>
                             </p>
                         </button>
@@ -335,7 +336,7 @@ onMounted(load);
                                 :disabled="actionLoading"
                                 @click="advance(row)"
                             >
-                                Advance to {{ NEXT[row.status] }}
+                                {{ t('procurement.advanceTo', { status: NEXT[row.status] ?? '' }) }}
                             </button>
                         </div>
                     </div>

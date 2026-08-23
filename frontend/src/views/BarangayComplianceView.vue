@@ -7,21 +7,26 @@ import {
     startComplianceInstance,
     submitComplianceInstance,
 } from '@/api/compliance';
+import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
 import type { ComplianceInstance, ComplianceStatus } from '@/types';
 import { formatDueDate, daysRemaining } from '@/utils/assignment-status';
-import {
-    complianceStatusLabel,
-    complianceStatusToVariant,
-} from '@/utils/compliance-status';
+import { complianceStatusToVariant } from '@/utils/compliance-status';
 
 const auth = useAuthStore();
+const { t, complianceStatus } = useI18n();
 
 const instances = ref<ComplianceInstance[]>([]);
 const loading = ref(true);
 const actionLoading = ref(false);
 const error = ref<string | null>(null);
 const filter = ref<'all' | 'action' | 'done'>('action');
+
+const filterOptions = computed(() => [
+    { id: 'action' as const, label: t('compliance.filterAction') },
+    { id: 'done' as const, label: t('compliance.filterDone') },
+    { id: 'all' as const, label: t('compliance.filterAll') },
+]);
 
 const filtered = computed(() => {
     if (filter.value === 'all') {
@@ -55,7 +60,7 @@ async function load() {
     try {
         instances.value = await fetchComplianceInstances(auth.token);
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Failed to load compliance items';
+        error.value = err instanceof Error ? err.message : t('compliance.loadFailed');
     } finally {
         loading.value = false;
     }
@@ -70,7 +75,7 @@ async function start(id: string) {
         await startComplianceInstance(auth.token, id);
         await load();
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Start failed';
+        error.value = err instanceof Error ? err.message : t('compliance.startFailed');
     } finally {
         actionLoading.value = false;
     }
@@ -85,7 +90,7 @@ async function submit(id: string) {
         await submitComplianceInstance(auth.token, id);
         await load();
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Submit failed';
+        error.value = err instanceof Error ? err.message : t('compliance.submitFailed');
     } finally {
         actionLoading.value = false;
     }
@@ -104,21 +109,16 @@ onMounted(load);
 
 <template>
     <AppShell
-        title="My compliance"
-        :subtitle="auth.user?.barangay?.name ?? 'Barangay obligations'"
+        :title="t('compliance.title')"
+        :subtitle="auth.user?.barangay?.name ?? t('compliance.subtitleFallback')"
     >
         <p class="mb-6 max-w-xl text-sm leading-relaxed text-ink-muted">
-            Period obligations from the municipal compliance catalog — work each item through
-            start, submit, and municipal review.
+            {{ t('compliance.intro') }}
         </p>
 
         <div class="mb-5 flex flex-wrap gap-6 border-b border-rule">
             <button
-                v-for="opt in [
-                    { id: 'action', label: 'Needs action' },
-                    { id: 'done', label: 'Submitted / accepted' },
-                    { id: 'all', label: 'All' },
-                ] as const"
+                v-for="opt in filterOptions"
                 :key="opt.id"
                 type="button"
                 class="gl-tab"
@@ -130,14 +130,14 @@ onMounted(load);
         </div>
 
         <p v-if="error" class="mb-4 text-sm text-status-danger">{{ error }}</p>
-        <p v-if="loading" class="text-sm text-ink-muted">Loading obligations…</p>
+        <p v-if="loading" class="text-sm text-ink-muted">{{ t('compliance.loading') }}</p>
 
         <div v-else class="gl-panel overflow-hidden">
             <p
                 v-if="filtered.length === 0"
                 class="px-4 py-10 text-center text-sm text-ink-muted"
             >
-                No compliance items in this filter.
+                {{ t('compliance.empty') }}
             </p>
 
             <article
@@ -152,7 +152,7 @@ onMounted(load);
                     <div class="flex flex-wrap items-center gap-2 sm:block">
                         <StatusBadge
                             :status="complianceStatusToVariant(row.status)"
-                            :label="complianceStatusLabel(row.status)"
+                            :label="complianceStatus(row.status)"
                         />
                         <p class="font-mono text-[11px] font-semibold tracking-wide text-ink-muted sm:mt-2">
                             {{ row.requirement.code }}
@@ -164,14 +164,15 @@ onMounted(load);
                             {{ row.requirement.title }}
                         </h2>
                         <p class="mt-1 text-xs text-ink-muted">
-                            Period {{ row.periodLabel }} · Due {{ formatDueDate(row.dueDate) }}
+                            {{ t('common.period', { label: row.periodLabel }) }} ·
+                            {{ t('common.due', { date: formatDueDate(row.dueDate) }) }}
                             <span class="text-ink/70">({{ daysRemaining(row.dueDate) }}d)</span>
                         </p>
                         <p
                             v-if="row.status === 'RETURNED' && row.returnReason"
                             class="mt-3 border-l-2 border-status-danger bg-status-danger/5 px-3 py-2 text-sm text-status-danger"
                         >
-                            Returned: {{ row.returnReason }}
+                            {{ t('common.returned', { reason: row.returnReason }) }}
                         </p>
                     </div>
 
@@ -183,7 +184,7 @@ onMounted(load);
                             :disabled="actionLoading"
                             @click="start(row.id)"
                         >
-                            {{ row.status === 'RETURNED' ? 'Resume work' : 'Start' }}
+                            {{ row.status === 'RETURNED' ? t('compliance.resumeWork') : t('compliance.start') }}
                         </button>
                         <button
                             v-if="canSubmit(row.status)"
@@ -192,7 +193,11 @@ onMounted(load);
                             :disabled="actionLoading"
                             @click="submit(row.id)"
                         >
-                            {{ row.status === 'RETURNED' ? 'Fix & resubmit' : 'Submit for review' }}
+                            {{
+                                row.status === 'RETURNED'
+                                    ? t('compliance.fixResubmit')
+                                    : t('compliance.submitForReview')
+                            }}
                         </button>
                     </div>
                 </div>

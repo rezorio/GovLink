@@ -2,7 +2,9 @@
 import { LogOut } from 'lucide-vue-next';
 import { computed } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
+import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
+import type { Locale } from '@/i18n/types';
 
 defineProps<{
     title: string;
@@ -11,20 +13,21 @@ defineProps<{
 
 const auth = useAuthStore();
 const router = useRouter();
+const { t, locale, setLocale } = useI18n();
 
 const navLinks = computed(() => {
     if (auth.isMunicipal) {
         return [
-            { to: '/mayor', label: 'Dashboard' },
-            { to: '/mayor/sglg', label: 'SGLG' },
-            { to: '/mayor/procurement', label: 'Procurement' },
+            { to: '/mayor', label: t('nav.dashboard') },
+            { to: '/mayor/sglg', label: t('nav.sglg') },
+            { to: '/mayor/procurement', label: t('nav.procurement') },
         ];
     }
     if (auth.isBarangay) {
         return [
-            { to: '/barangay', label: 'Directives' },
-            { to: '/barangay/compliance', label: 'My compliance' },
-            { to: '/barangay/procurement', label: 'Procurement' },
+            { to: '/barangay', label: t('nav.directives') },
+            { to: '/barangay/compliance', label: t('nav.myCompliance') },
+            { to: '/barangay/procurement', label: t('nav.procurement') },
         ];
     }
     return [];
@@ -33,6 +36,10 @@ const navLinks = computed(() => {
 function logout() {
     auth.logout();
     router.push({ name: 'login' });
+}
+
+function pickLocale(next: Locale) {
+    setLocale(next);
 }
 </script>
 
@@ -45,7 +52,7 @@ function logout() {
                         GovLink
                     </p>
                     <p class="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand">
-                        Municipal supervision
+                        {{ t('shell.municipalSupervision') }}
                     </p>
                     <h1 class="mt-4 font-display text-xl font-semibold text-ink sm:text-2xl">
                         {{ title }}
@@ -64,6 +71,29 @@ function logout() {
                     </nav>
                 </div>
                 <div class="flex shrink-0 items-center gap-3 pb-1">
+                    <div
+                        v-if="auth.isBarangay"
+                        class="hidden items-center gap-1 rounded-sm border border-rule bg-surface p-0.5 sm:flex"
+                        role="group"
+                        :aria-label="t('shell.language')"
+                    >
+                        <button
+                            type="button"
+                            class="min-h-9 px-2.5 text-xs font-semibold uppercase tracking-wide transition-colors"
+                            :class="locale === 'en' ? 'bg-brand text-white' : 'text-ink-muted hover:text-ink'"
+                            @click="pickLocale('en')"
+                        >
+                            EN
+                        </button>
+                        <button
+                            type="button"
+                            class="min-h-9 px-2.5 text-xs font-semibold uppercase tracking-wide transition-colors"
+                            :class="locale === 'tl' ? 'bg-brand text-white' : 'text-ink-muted hover:text-ink'"
+                            @click="pickLocale('tl')"
+                        >
+                            FIL
+                        </button>
+                    </div>
                     <div class="hidden text-right text-sm sm:block">
                         <p class="font-medium text-ink">{{ auth.user?.full_name }}</p>
                         <p class="text-ink-muted">{{ auth.user?.email }}</p>
@@ -72,7 +102,7 @@ function logout() {
                         type="button"
                         class="inline-flex min-h-11 min-w-11 items-center justify-center border border-rule bg-surface text-ink hover:border-brand hover:bg-brand-soft"
                         style="border-radius: 2px"
-                        aria-label="Sign out"
+                        :aria-label="t('shell.signOut')"
                         @click="logout"
                     >
                         <LogOut class="h-5 w-5" />

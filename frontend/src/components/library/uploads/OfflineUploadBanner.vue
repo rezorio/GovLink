@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useOfflineUploadQueue } from '@/composables/useOfflineUploadQueue';
+import { useI18n } from '@/composables/useI18n';
 
 const props = defineProps<{
     token: string;
@@ -8,8 +9,15 @@ const props = defineProps<{
 
 const emit = defineEmits<{ synced: [] }>();
 
+const { t } = useI18n();
 const { pendingCount, syncing, lastError, flushQueue, refreshCount } = useOfflineUploadQueue();
 const isOnline = ref(typeof navigator !== 'undefined' ? navigator.onLine : true);
+
+const pendingLabel = computed(() =>
+    pendingCount.value === 1
+        ? t('offline.pendingSingular', { count: pendingCount.value })
+        : t('offline.pendingPlural', { count: pendingCount.value }),
+);
 
 async function syncNow() {
     const count = await flushQueue(props.token);
@@ -42,10 +50,10 @@ defineExpose({ refreshCount });
         style="border-radius: 2px"
     >
         <p class="font-medium text-ink">
-            {{ pendingCount }} proof upload{{ pendingCount === 1 ? '' : 's' }} waiting to sync
+            {{ pendingLabel }}
         </p>
         <p class="mt-1 text-xs text-ink-muted">
-            Saved on this device while offline. Sync when you have connectivity.
+            {{ t('offline.hint') }}
         </p>
         <p v-if="lastError" class="mt-2 text-xs text-status-danger">{{ lastError }}</p>
         <button
@@ -54,7 +62,7 @@ defineExpose({ refreshCount });
             :disabled="syncing || !isOnline"
             @click="syncNow"
         >
-            {{ syncing ? 'Syncing…' : 'Sync now' }}
+            {{ syncing ? t('offline.syncing') : t('offline.syncNow') }}
         </button>
     </div>
 </template>

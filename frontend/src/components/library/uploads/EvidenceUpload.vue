@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { Upload } from 'lucide-vue-next';
 import { confirmUpload, putToPresignedUrl, requestPresign } from '@/api/uploads';
+import { useI18n } from '@/composables/useI18n';
 import { enqueueEvidenceUpload } from '@/utils/offline-upload-queue';
 
 const ACCEPT = 'application/pdf,image/jpeg,image/png';
@@ -28,6 +29,8 @@ const emit = defineEmits<{
     queued: [];
 }>();
 
+const { t } = useI18n();
+
 const error = ref<string | null>(null);
 const info = ref<string | null>(null);
 const selectedFile = ref<File | null>(null);
@@ -36,10 +39,10 @@ const uploading = ref(false);
 
 function validateFile(file: File): string | null {
     if (!ACCEPT.split(',').includes(file.type)) {
-        return 'Only PDF, JPG, and PNG files are allowed.';
+        return t('upload.invalidType');
     }
     if (file.size > MAX_BYTES) {
-        return 'File must be 10 MB or smaller.';
+        return t('upload.tooLarge');
     }
     return null;
 }
@@ -70,13 +73,13 @@ async function queueForLater() {
     }
     await enqueueEvidenceUpload(props.assignmentId, selectedFile.value);
     selectedFile.value = null;
-    info.value = 'Saved on this device. Use Sync now when back online.';
+    info.value = t('upload.savedOffline');
     emit('queued');
 }
 
 async function confirmAndSubmit() {
     if (!selectedFile.value) {
-        error.value = 'Select a file first.';
+        error.value = t('upload.selectFileFirst');
         return;
     }
 
@@ -115,10 +118,10 @@ async function confirmAndSubmit() {
                 await queueForLater();
                 error.value = null;
             } catch {
-                error.value = err instanceof Error ? err.message : 'Upload failed';
+                error.value = err instanceof Error ? err.message : t('upload.uploadFailed');
             }
         } else {
-            error.value = err instanceof Error ? err.message : 'Upload failed';
+            error.value = err instanceof Error ? err.message : t('upload.uploadFailed');
         }
     } finally {
         uploading.value = false;
@@ -130,8 +133,8 @@ async function confirmAndSubmit() {
     <div class="border border-dashed border-rule bg-paper p-4" style="border-radius: 2px">
         <label class="flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 text-center">
             <Upload class="h-8 w-8 text-brand" />
-            <span class="text-sm font-medium text-ink">Tap to upload proof</span>
-            <span class="text-xs text-ink-muted">PDF, JPG, PNG · max 10 MB</span>
+            <span class="text-sm font-medium text-ink">{{ t('upload.tapToUpload') }}</span>
+            <span class="text-xs text-ink-muted">{{ t('upload.fileTypes') }}</span>
             <input
                 type="file"
                 class="sr-only"
@@ -151,7 +154,9 @@ async function confirmAndSubmit() {
             <div v-if="uploading" class="mt-2 h-2 overflow-hidden bg-brand-soft">
                 <div class="h-full bg-brand transition-all" :style="{ width: `${progress}%` }" />
             </div>
-            <p v-if="uploading" class="mt-1 text-xs text-ink-muted">Uploading… {{ progress }}%</p>
+            <p v-if="uploading" class="mt-1 text-xs text-ink-muted">
+                {{ t('upload.uploading', { progress }) }}
+            </p>
         </div>
 
         <p v-if="info" class="mt-2 text-sm text-ink-muted">{{ info }}</p>
@@ -163,7 +168,7 @@ async function confirmAndSubmit() {
             :disabled="!selectedFile || loading || uploading"
             @click="confirmAndSubmit"
         >
-            {{ uploading ? 'Uploading…' : 'Submit evidence' }}
+            {{ uploading ? t('upload.uploading', { progress }) : t('upload.submitEvidence') }}
         </button>
     </div>
 </template>
