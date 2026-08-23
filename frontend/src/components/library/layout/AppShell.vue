@@ -6,6 +6,7 @@ import { fetchUnreadCount } from '@/api/notifications';
 import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
 import type { Locale } from '@/i18n/types';
+import GovLinkLogo from '@/components/library/layout/GovLinkLogo.vue';
 
 defineProps<{
     title: string;
@@ -27,6 +28,8 @@ const navLinks = computed(() => {
     if (auth.isMunicipal) {
         return [
             { to: '/mayor', label: t('nav.dashboard') },
+            { to: '/mayor/compliance', label: t('nav.compliance') },
+            { to: '/mayor/catalog', label: t('nav.catalog') },
             { to: '/mayor/sglg', label: t('nav.sglg') },
             { to: '/mayor/procurement', label: t('nav.procurement') },
             { to: '/mayor/registry', label: t('nav.registry') },
@@ -80,12 +83,10 @@ watch(
 
 <template>
     <div class="gl-shell">
-        <header class="border-b border-rule/80 bg-surface/90 backdrop-blur-sm">
+        <header class="gl-shell-header">
             <div class="mx-auto flex max-w-screen-2xl items-end justify-between gap-4 px-4 pb-4 pt-6 sm:px-6 lg:px-8">
                 <div class="min-w-0">
-                    <p class="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-                        GovLink
-                    </p>
+                    <GovLinkLogo />
                     <p class="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand">
                         {{ t('shell.municipalSupervision') }}
                     </p>

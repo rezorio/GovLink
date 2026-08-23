@@ -8,6 +8,8 @@ export const tl: MessageTree = {
     },
     nav: {
         dashboard: 'Dashboard',
+        compliance: 'Compliance',
+        catalog: 'Katalogo',
         sglg: 'SGLG',
         procurement: 'Pagpapal',
         directives: 'Mga direktiba',

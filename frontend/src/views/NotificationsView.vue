@@ -8,6 +8,7 @@ import {
     markNotificationRead,
 } from '@/api/notifications';
 import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import LedgerNotice from '@/components/library/feedback/LedgerNotice.vue';
 import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import { useAuthStore } from '@/stores/auth';
 import type { AppNotification } from '@/types';
@@ -95,9 +96,11 @@ onMounted(load);
         <LedgerSkeleton v-if="loading && items.length === 0" :rows="5" />
 
         <div v-else class="gl-panel overflow-hidden">
-            <p v-if="items.length === 0" class="px-4 py-10 text-center text-sm text-ink-muted">
-                No notifications yet.
-            </p>
+            <LedgerNotice
+                v-if="items.length === 0"
+                title="No notifications yet"
+                description="Directive reviews, compliance returns, and procurement flags will appear in this ledger."
+            />
             <button
                 v-for="row in items"
                 :key="row.id"

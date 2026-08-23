@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">GovLink monochrome black icon</title>
+  <desc id="desc">A black circular government link surrounding three connected service points.</desc>
+  <g fill="none" stroke="#0b1f1a" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M194 62a91 91 0 1 0 0 132v-62h-55" stroke-width="28"/>
+    <path d="M89 82v84h75" stroke-width="18"/>
+  </g>
+  <g fill="#0b1f1a">
+    <circle cx="89" cy="82" r="13"/>
+    <circle cx="89" cy="166" r="15"/>
+    <circle cx="164" cy="166" r="13"/>
+  </g>
+</svg>

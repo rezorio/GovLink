@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue';
 import AppShell from '@/components/library/layout/AppShell.vue';
 import StatusBadge from '@/components/library/badges/StatusBadge.vue';
 import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import LedgerNotice from '@/components/library/feedback/LedgerNotice.vue';
 import PaginationBar from '@/components/library/feedback/PaginationBar.vue';
 import LoadingSpinner from '@/components/library/feedback/LoadingSpinner.vue';
 import { fetchBarangays } from '@/api/barangays';
@@ -158,9 +159,11 @@ watch(selectedBarangayId, () => {
         <LedgerSkeleton v-if="loading && residents.length === 0" :rows="6" />
 
         <div v-else class="gl-panel overflow-hidden">
-            <p v-if="residents.length === 0" class="px-4 py-10 text-center text-sm text-ink-muted">
-                No registry records for this barangay.
-            </p>
+            <LedgerNotice
+                v-if="residents.length === 0"
+                title="No registry records for this barangay"
+                description="Select another barangay or wait for field officers to enroll resident records."
+            />
             <article
                 v-for="row in residents"
                 :key="row.id"

@@ -1,5 +1,6 @@
 import {
     BadRequestException,
+    ConflictException,
     ForbiddenException,
     Injectable,
     NotFoundException,
@@ -16,6 +17,10 @@ import { TenantScopeService } from '../common/services/tenant-scope.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.module';
 import { OpenPeriodDto } from './dto/open-period.dto';
+import {
+    CreateComplianceRequirementDto,
+    UpdateComplianceRequirementDto,
+} from './dto/requirement.dto';
 import { ReviewComplianceInstanceDto } from './dto/review-instance.dto';
 import {
     currentPeriodForFrequency,
@@ -45,11 +50,100 @@ export class ComplianceService {
         private readonly notifications: NotificationsService,
     ) {}
 
-    listRequirements(scope?: ComplianceScope) {
+    listRequirements(ctx: TenantContext, scope?: ComplianceScope) {
         return this.prisma.complianceRequirement.findMany({
-            where: scope ? { scope } : undefined,
+            where: this.catalogWhere(ctx, scope),
             orderBy: [{ category: 'asc' }, { code: 'asc' }],
         });
+    }
+
+    async createRequirement(ctx: TenantContext, dto: CreateComplianceRequirementDto) {
+        this.tenantScope.assertMunicipalScope(ctx);
+
+        const code = dto.code.trim().toUpperCase();
+        const existing = await this.prisma.complianceRequirement.findUnique({ where: { code } });
+        if (existing) {
+            throw new ConflictException(`Requirement code ${code} already exists`);
+        }
+
+        const created = await this.prisma.complianceRequirement.create({
+            data: {
+                municipalityId: ctx.municipality_id,
+                code,
+                title: dto.title.trim(),
+                legalBasis: dto.legalBasis.trim(),
+                category: dto.category,
+                frequency: dto.frequency,
+                evidenceTypes: dto.evidenceTypes.map((item) => item.trim()).filter(Boolean),
+                weight: dto.weight ?? 1,
+                scope: dto.scope ?? ComplianceScope.BARANGAY,
+                sglgPillar: dto.sglgPillar,
+                isActive: true,
+            },
+        });
+
+        await this.auditLog.record({
+            ctx,
+            action: 'COMPLIANCE_REQUIREMENT_CREATED',
+            entityType: 'ComplianceRequirement',
+            entityId: created.id,
+            after: { code: created.code, category: created.category },
+        });
+
+        return created;
+    }
+
+    async updateRequirement(
+        ctx: TenantContext,
+        id: string,
+        dto: UpdateComplianceRequirementDto,
+    ) {
+        this.tenantScope.assertMunicipalScope(ctx);
+
+        const existing = await this.prisma.complianceRequirement.findFirst({
+            where: { id, municipalityId: ctx.municipality_id },
+        });
+        if (!existing) {
+            throw new NotFoundException(
+                'Requirement not found, or it is a system catalog item (read-only)',
+            );
+        }
+
+        const updated = await this.prisma.complianceRequirement.update({
+            where: { id },
+            data: {
+                ...(dto.title !== undefined ? { title: dto.title.trim() } : {}),
+                ...(dto.legalBasis !== undefined ? { legalBasis: dto.legalBasis.trim() } : {}),
+                ...(dto.category !== undefined ? { category: dto.category } : {}),
+                ...(dto.frequency !== undefined ? { frequency: dto.frequency } : {}),
+                ...(dto.evidenceTypes !== undefined
+                    ? {
+                          evidenceTypes: dto.evidenceTypes
+                              .map((item) => item.trim())
+                              .filter(Boolean),
+                      }
+                    : {}),
+                ...(dto.weight !== undefined ? { weight: dto.weight } : {}),
+                ...(dto.scope !== undefined ? { scope: dto.scope } : {}),
+                ...(dto.sglgPillar !== undefined ? { sglgPillar: dto.sglgPillar } : {}),
+                ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+            },
+        });
+
+        await this.auditLog.record({
+            ctx,
+            action: 'COMPLIANCE_REQUIREMENT_UPDATED',
+            entityType: 'ComplianceRequirement',
+            entityId: updated.id,
+            before: { code: existing.code, isActive: existing.isActive },
+            after: { code: updated.code, isActive: updated.isActive },
+        });
+
+        return updated;
+    }
+
+    async deactivateRequirement(ctx: TenantContext, id: string) {
+        return this.updateRequirement(ctx, id, { isActive: false });
     }
 
     async listInstances(ctx: TenantContext, periodLabel?: string) {
@@ -78,7 +172,7 @@ export class ComplianceService {
                 orderBy: { name: 'asc' },
             }),
             this.prisma.complianceRequirement.findMany({
-                where: { scope: ComplianceScope.BARANGAY },
+                where: this.catalogWhere(ctx, ComplianceScope.BARANGAY),
                 select: {
                     id: true,
                     code: true,
@@ -158,7 +252,7 @@ export class ComplianceService {
                 select: { id: true },
             }),
             this.prisma.complianceRequirement.findMany({
-                where: { scope: ComplianceScope.BARANGAY },
+                where: this.catalogWhere(ctx, ComplianceScope.BARANGAY),
             }),
         ]);
 
@@ -434,6 +528,17 @@ export class ComplianceService {
 
         return row;
     }
+    private catalogWhere(
+        ctx: TenantContext,
+        scope?: ComplianceScope,
+    ): Prisma.ComplianceRequirementWhereInput {
+        return {
+            isActive: true,
+            ...(scope ? { scope } : {}),
+            OR: [{ municipalityId: null }, { municipalityId: ctx.municipality_id }],
+        };
+    }
+
 
     private tenantFilter(ctx: TenantContext) {
         return {

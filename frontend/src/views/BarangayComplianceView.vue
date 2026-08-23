@@ -8,6 +8,7 @@ import {
     submitComplianceInstance,
 } from '@/api/compliance';
 import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import LedgerNotice from '@/components/library/feedback/LedgerNotice.vue';
 import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
@@ -151,12 +152,11 @@ onMounted(load);
         <LedgerSkeleton v-if="loading && instances.length === 0" :rows="6" />
 
         <div v-else class="gl-panel overflow-hidden">
-            <p
+            <LedgerNotice
                 v-if="filtered.length === 0"
-                class="px-4 py-10 text-center text-sm text-ink-muted"
-            >
-                {{ t('compliance.empty') }}
-            </p>
+                :title="t('compliance.empty')"
+                description="Open or filter compliance periods to see obligations assigned to this barangay."
+            />
 
             <article
                 v-for="(row, index) in filtered"

@@ -21,7 +21,7 @@ const defaultLabels: Record<StatusVariant, string> = {
 
 <template>
     <span
-        class="inline-flex items-center rounded-sm px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+        class="gl-status-badge inline-flex items-center rounded-sm px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
         :class="classes[props.status]"
     >
         {{ label ?? defaultLabels[props.status] }}

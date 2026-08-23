@@ -6,6 +6,7 @@ import EvidenceUpload from '@/components/library/uploads/EvidenceUpload.vue';
 import OfflineUploadBanner from '@/components/library/uploads/OfflineUploadBanner.vue';
 import { acknowledgeAssignment, fetchAssignments, submitEvidence } from '@/api/assignments';
 import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import LedgerNotice from '@/components/library/feedback/LedgerNotice.vue';
 import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
@@ -124,12 +125,11 @@ onMounted(loadInbox);
         <LedgerSkeleton v-if="loading && assignments.length === 0" :rows="5" />
 
         <div v-else class="gl-panel overflow-hidden">
-            <p
+            <LedgerNotice
                 v-if="assignments.length === 0"
-                class="px-4 py-10 text-center text-sm text-ink-muted"
-            >
-                {{ t('inbox.empty') }}
-            </p>
+                :title="t('inbox.empty')"
+                description="New municipal directives will land here with due dates and evidence requirements."
+            />
 
             <article
                 v-for="(row, index) in assignments"

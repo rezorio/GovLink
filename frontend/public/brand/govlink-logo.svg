@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220" role="img" aria-labelledby="title desc">
+  <title id="title">GovLink</title>
+  <desc id="desc">GovLink wordmark with a circular government link and three connected service points.</desc>
+  <g transform="translate(8 -18) scale(.9)">
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M194 62a91 91 0 1 0 0 132v-62h-55" stroke="#0f6b5c" stroke-width="28"/>
+      <path d="M89 82v84h75" stroke="#0b1f1a" stroke-width="18"/>
+    </g>
+    <circle cx="89" cy="82" r="13" fill="#0b1f1a"/>
+    <circle cx="89" cy="166" r="15" fill="#f5c242" stroke="#f7faf8" stroke-width="6"/>
+    <circle cx="164" cy="166" r="13" fill="#0b1f1a"/>
+  </g>
+  <text x="228" y="143" fill="#0b1f1a" font-family="Bricolage Grotesque, Source Sans 3, system-ui, sans-serif" font-size="92" font-weight="700" letter-spacing="-4">GovLink</text>
+</svg>

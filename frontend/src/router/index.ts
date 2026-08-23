@@ -1,4 +1,4 @@
-﻿import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 
 const router = createRouter({
@@ -15,6 +15,18 @@ const router = createRouter({
             path: '/mayor',
             name: 'mayor',
             component: () => import('@/views/MayorDashboardView.vue'),
+            meta: { municipal: true },
+        },
+        {
+            path: '/mayor/compliance',
+            name: 'mayor-compliance',
+            component: () => import('@/views/MayorComplianceView.vue'),
+            meta: { municipal: true },
+        },
+        {
+            path: '/mayor/catalog',
+            name: 'mayor-catalog',
+            component: () => import('@/views/MayorCatalogView.vue'),
             meta: { municipal: true },
         },
         {

@@ -15,6 +15,10 @@ export default {
                     DEFAULT: 'var(--brand)',
                     soft: 'var(--brand-soft)',
                 },
+                seal: {
+                    DEFAULT: 'var(--seal)',
+                    soft: 'var(--seal-soft)',
+                },
                 status: {
                     ok: 'var(--ok)',
                     warn: 'var(--warn)',

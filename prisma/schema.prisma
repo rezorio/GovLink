@@ -210,21 +210,22 @@ model Municipality {
   createdAt          DateTime          @default(now()) @map("created_at")
   updatedAt          DateTime          @updatedAt @map("updated_at")
 
-  barangays            Barangay[]
-  users                User[]
-  supervisoryTasks     SupervisoryTask[]
-  taskAssignments      TaskAssignment[]
-  complianceInstances  ComplianceInstance[]
-  exportDocuments      ExportDocument[]
-  auditLogs            AuditLog[]
-  appLineItems         AppLineItem[]
-  procurementContracts ProcurementContract[]
-  procurementDocuments ProcurementDocument[]
-  bacMembers           BacMember[]
-  barangayResidents    BarangayResident[]
-  notifications         Notification[]
-  planSubmissions       PlanSubmission[]
-  assemblySubmissions   AssemblySubmission[]
+  barangays               Barangay[]
+  users                   User[]
+  supervisoryTasks        SupervisoryTask[]
+  taskAssignments         TaskAssignment[]
+  complianceInstances     ComplianceInstance[]
+  complianceRequirements  ComplianceRequirement[]
+  exportDocuments         ExportDocument[]
+  auditLogs               AuditLog[]
+  appLineItems            AppLineItem[]
+  procurementContracts    ProcurementContract[]
+  procurementDocuments    ProcurementDocument[]
+  bacMembers              BacMember[]
+  barangayResidents       BarangayResident[]
+  notifications           Notification[]
+  planSubmissions         PlanSubmission[]
+  assemblySubmissions     AssemblySubmission[]
 
   @@map("municipalities")
 }
@@ -311,23 +312,27 @@ model DirectiveTemplate {
 }
 
 model ComplianceRequirement {
-  id            String               @id @default(uuid())
-  code          String               @unique
-  title         String
-  legalBasis    String               @map("legal_basis")
-  category      ComplianceCategory
-  frequency     ComplianceFrequency
-  evidenceTypes String[]             @map("evidence_types")
-  weight        Int                  @default(1)
-  scope         ComplianceScope      @default(BARANGAY)
-  sglgPillar    SglgPillar?          @map("sglg_pillar")
-  createdAt     DateTime             @default(now()) @map("created_at")
-  updatedAt     DateTime             @updatedAt @map("updated_at")
+  id             String               @id @default(uuid())
+  municipalityId String?              @map("municipality_id")
+  code           String               @unique
+  title          String
+  legalBasis     String               @map("legal_basis")
+  category       ComplianceCategory
+  frequency      ComplianceFrequency
+  evidenceTypes  String[]             @map("evidence_types")
+  weight         Int                  @default(1)
+  scope          ComplianceScope      @default(BARANGAY)
+  sglgPillar     SglgPillar?          @map("sglg_pillar")
+  isActive       Boolean              @default(true) @map("is_active")
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @updatedAt @map("updated_at")
 
-  instances ComplianceInstance[]
+  municipality Municipality?         @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  instances    ComplianceInstance[]
 
   @@index([category, scope])
   @@index([sglgPillar])
+  @@index([municipalityId, isActive])
   @@map("compliance_requirements")
 }
 

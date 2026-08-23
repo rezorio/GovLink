@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import GovLinkLogo from '@/components/library/layout/GovLinkLogo.vue';
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -23,19 +24,26 @@ async function onSubmit() {
     <div class="relative flex min-h-screen items-center justify-center px-4 py-12">
         <div class="absolute inset-0 -z-10 bg-paper" />
         <div
-            class="absolute inset-x-0 top-0 -z-10 h-[42vh]"
+            class="absolute inset-x-0 top-0 -z-10 h-[48vh]"
             style="
                 background: linear-gradient(
                     165deg,
-                    rgba(15, 107, 92, 0.18) 0%,
-                    transparent 70%
+                    color-mix(in srgb, var(--brand) 28%, transparent) 0%,
+                    color-mix(in srgb, var(--seal) 10%, transparent) 38%,
+                    transparent 72%
                 );
+            "
+        />
+        <div
+            class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-1"
+            style="
+                background: linear-gradient(90deg, var(--seal), var(--brand), transparent 70%);
             "
         />
 
         <div class="w-full max-w-md">
             <div class="mb-8">
-                <p class="font-display text-5xl font-bold tracking-tight text-ink">GovLink</p>
+                <GovLinkLogo size="lg" />
                 <p class="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-brand">
                     Republic of the Philippines
                 </p>

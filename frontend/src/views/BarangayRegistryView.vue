@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue';
 import AppShell from '@/components/library/layout/AppShell.vue';
 import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import LedgerNotice from '@/components/library/feedback/LedgerNotice.vue';
 import PaginationBar from '@/components/library/feedback/PaginationBar.vue';
 import LoadingSpinner from '@/components/library/feedback/LoadingSpinner.vue';
 import { createResident, fetchResidents } from '@/api/registry';
@@ -187,9 +188,11 @@ onMounted(() => load());
         <LedgerSkeleton v-if="loading && residents.length === 0" :rows="5" />
 
         <div v-else class="gl-panel overflow-hidden">
-            <p v-if="residents.length === 0" class="px-4 py-10 text-center text-sm text-ink-muted">
-                {{ t('registry.empty') }}
-            </p>
+            <LedgerNotice
+                v-if="residents.length === 0"
+                :title="t('registry.empty')"
+                description="Add a resident or household record to begin the barangay registry ledger."
+            />
             <article
                 v-for="row in residents"
                 :key="row.id"

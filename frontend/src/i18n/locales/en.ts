@@ -8,6 +8,8 @@ export const en: MessageTree = {
     },
     nav: {
         dashboard: 'Dashboard',
+        compliance: 'Compliance',
+        catalog: 'Catalog',
         sglg: 'SGLG',
         procurement: 'Procurement',
         directives: 'Directives',

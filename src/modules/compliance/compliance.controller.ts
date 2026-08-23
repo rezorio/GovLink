@@ -1,10 +1,24 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    ParseUUIDPipe,
+    Patch,
+    Post,
+    Query,
+} from '@nestjs/common';
 import { AppRole, ComplianceScope } from '@prisma/client';
 import { Roles } from '../common/decorators/roles.decorator';
 import { TenantCtx } from '../common/decorators/tenant-context.decorator';
 import { TenantContext } from '../common/interfaces/auth.interface';
 import { ComplianceService } from './compliance.service';
 import { OpenPeriodDto } from './dto/open-period.dto';
+import {
+    CreateComplianceRequirementDto,
+    UpdateComplianceRequirementDto,
+} from './dto/requirement.dto';
 import { ReviewComplianceInstanceDto } from './dto/review-instance.dto';
 import { SglgScoreService } from './sglg/sglg-score.service';
 
@@ -16,8 +30,39 @@ export class ComplianceController {
     ) {}
 
     @Get('requirements')
-    listRequirements(@Query('scope') scope?: ComplianceScope) {
-        return this.complianceService.listRequirements(scope);
+    listRequirements(
+        @TenantCtx() ctx: TenantContext,
+        @Query('scope') scope?: ComplianceScope,
+    ) {
+        return this.complianceService.listRequirements(ctx, scope);
+    }
+
+    @Roles(AppRole.MAYOR, AppRole.DEPT_HEAD)
+    @Post('requirements')
+    createRequirement(
+        @TenantCtx() ctx: TenantContext,
+        @Body() dto: CreateComplianceRequirementDto,
+    ) {
+        return this.complianceService.createRequirement(ctx, dto);
+    }
+
+    @Roles(AppRole.MAYOR, AppRole.DEPT_HEAD)
+    @Patch('requirements/:id')
+    updateRequirement(
+        @TenantCtx() ctx: TenantContext,
+        @Param('id', ParseUUIDPipe) id: string,
+        @Body() dto: UpdateComplianceRequirementDto,
+    ) {
+        return this.complianceService.updateRequirement(ctx, id, dto);
+    }
+
+    @Roles(AppRole.MAYOR, AppRole.DEPT_HEAD)
+    @Delete('requirements/:id')
+    deactivateRequirement(
+        @TenantCtx() ctx: TenantContext,
+        @Param('id', ParseUUIDPipe) id: string,
+    ) {
+        return this.complianceService.deactivateRequirement(ctx, id);
     }
 
     @Get('instances')

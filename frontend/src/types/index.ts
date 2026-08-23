@@ -87,6 +87,21 @@ export type ComplianceStatus =
     | 'RETURNED'
     | 'OVERDUE';
 
+export interface ComplianceRequirement {
+    id: string;
+    municipalityId: string | null;
+    code: string;
+    title: string;
+    legalBasis: string;
+    category: string;
+    frequency: string;
+    evidenceTypes: string[];
+    weight: number;
+    scope: string;
+    sglgPillar: string | null;
+    isActive: boolean;
+}
+
 export interface ComplianceRequirementSummary {
     id: string;
     code: string;

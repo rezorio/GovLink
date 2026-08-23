@@ -9,6 +9,7 @@ import {
     fetchProcurementOversight,
 } from '@/api/procurement';
 import LedgerSkeleton from '@/components/library/feedback/LedgerSkeleton.vue';
+import LedgerNotice from '@/components/library/feedback/LedgerNotice.vue';
 import LoadingSpinner from '@/components/library/feedback/LoadingSpinner.vue';
 import { buildCacheKey, invalidateListCache, readListCache, writeListCache } from '@/composables/useListCache';
 import { useAuthStore } from '@/stores/auth';
@@ -151,8 +152,8 @@ onMounted(load);
         </div>
         <template v-if="data">
             <section class="mb-8">
-                <h2 class="mb-3 font-display text-lg font-semibold text-ink">Summary</h2>
-                <div class="gl-panel px-4 py-4 text-sm text-ink-muted sm:px-5">
+                <h2 class="gl-section-label">Summary</h2>
+                <div class="gl-summary-strip text-sm text-ink-muted">
                     <p>
                         <span class="font-medium text-ink">{{ data.totals.appLineCount }}</span>
                         APP lines ·
@@ -184,7 +185,7 @@ onMounted(load);
             </section>
 
             <section v-if="pendingAppLines.length" class="mb-10">
-                <h2 class="mb-3 font-display text-lg font-semibold text-ink">
+                <h2 class="gl-section-label">
                     APP lines awaiting approval
                 </h2>
                 <div class="gl-panel overflow-hidden">
@@ -218,7 +219,7 @@ onMounted(load);
             </section>
 
             <section v-if="data.flaggedContracts.length" class="mb-10">
-                <h2 class="mb-3 font-display text-lg font-semibold text-ink">
+                <h2 class="gl-section-label">
                     Split flags needing acknowledgment
                 </h2>
                 <div class="gl-panel overflow-hidden">
@@ -253,14 +254,13 @@ onMounted(load);
             </section>
 
             <section>
-                <h2 class="mb-3 font-display text-lg font-semibold text-ink">All contracts</h2>
+                <h2 class="gl-section-label">All contracts</h2>
                 <div class="gl-panel overflow-hidden">
-                    <div
+                    <LedgerNotice
                         v-if="data.contracts.length === 0"
-                        class="px-4 py-6 text-sm text-ink-muted sm:px-5"
-                    >
-                        No contracts for this fiscal year.
-                    </div>
+                        title="No contracts for this fiscal year"
+                        description="Approved APP lines and barangay awards will appear here once recorded."
+                    />
                     <div
                         v-for="row in data.contracts"
                         :key="row.id"

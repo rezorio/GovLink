@@ -18,7 +18,10 @@ type CatalogEntry = {
     sglgPillar: SglgPillar;
 };
 
-/** Source: .cursor/skills/ph-lgu-governance/compliance-catalog.md + Mission 12 pillar map */
+/**
+ * Lean municipal catalog â€” same list for every barangay.
+ * ADM capped at 6 core administrative obligations for demo clarity.
+ */
 export const COMPLIANCE_CATALOG: CatalogEntry[] = [
     {
         code: 'ADM-001',
@@ -65,17 +68,6 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
     {
-        code: 'ADM-005',
-        title: 'Submit BDP to municipal LDC',
-        legalBasis: 'RA 7160 Sec. 114',
-        category: ComplianceCategory.ADMINISTRATIVE,
-        frequency: ComplianceFrequency.AD_HOC,
-        evidenceTypes: ['Transmittal', 'Acceptance receipt'],
-        weight: 2,
-        scope: ComplianceScope.BARANGAY,
-        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
-    },
-    {
         code: 'ADM-006',
         title: 'Formulate Annual Investment Program',
         legalBasis: 'IRR Art. 410',
@@ -83,72 +75,6 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         frequency: ComplianceFrequency.ANNUAL,
         evidenceTypes: ['SB-approved AIP'],
         weight: 3,
-        scope: ComplianceScope.BARANGAY,
-        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
-    },
-    {
-        code: 'ADM-007',
-        title: 'BDC regular meeting',
-        legalBasis: 'RA 7160 Sec. 109',
-        category: ComplianceCategory.ADMINISTRATIVE,
-        frequency: ComplianceFrequency.SEMESTRAL,
-        evidenceTypes: ['Minutes', 'Agenda'],
-        weight: 1,
-        scope: ComplianceScope.BARANGAY,
-        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
-    },
-    {
-        code: 'ADM-008',
-        title: "Maintain Barangay Citizen's Charter",
-        legalBasis: 'RA 11032',
-        category: ComplianceCategory.ADMINISTRATIVE,
-        frequency: ComplianceFrequency.ONGOING,
-        evidenceTypes: ['Published charter', 'Update log'],
-        weight: 1,
-        scope: ComplianceScope.BARANGAY,
-        sglgPillar: SglgPillar.BUSINESS_FRIENDLINESS,
-    },
-    {
-        code: 'ADM-009',
-        title: 'Update Registry of Barangay Inhabitants',
-        legalBasis: 'DILG MC 2005-69',
-        category: ComplianceCategory.ADMINISTRATIVE,
-        frequency: ComplianceFrequency.ONGOING,
-        evidenceTypes: ['Registry snapshot', 'Update date'],
-        weight: 1,
-        scope: ComplianceScope.BARANGAY,
-        sglgPillar: SglgPillar.SOCIAL_PROTECTION,
-    },
-    {
-        code: 'ADM-010',
-        title: 'Kasambahay registration desk operational',
-        legalBasis: 'DILG MC 2013-61',
-        category: ComplianceCategory.ADMINISTRATIVE,
-        frequency: ComplianceFrequency.ONGOING,
-        evidenceTypes: ['Desk officer designation', 'Masterlist'],
-        weight: 1,
-        scope: ComplianceScope.BARANGAY,
-        sglgPillar: SglgPillar.SOCIAL_PROTECTION,
-    },
-    {
-        code: 'ADM-011',
-        title: 'Monthly Kasambahay Report to PESO',
-        legalBasis: 'DILG MC 2013-61',
-        category: ComplianceCategory.ADMINISTRATIVE,
-        frequency: ComplianceFrequency.MONTHLY,
-        evidenceTypes: ['Transmittal record'],
-        weight: 1,
-        scope: ComplianceScope.BARANGAY,
-        sglgPillar: SglgPillar.SOCIAL_PROTECTION,
-    },
-    {
-        code: 'ADM-012',
-        title: 'Smooth turnover of funds/properties (election)',
-        legalBasis: 'DILG MC 2013-115',
-        category: ComplianceCategory.ADMINISTRATIVE,
-        frequency: ComplianceFrequency.AD_HOC,
-        evidenceTypes: ['Inventory', 'Turnover minutes'],
-        weight: 2,
         scope: ComplianceScope.BARANGAY,
         sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
@@ -175,39 +101,6 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
     {
-        code: 'MAY-002',
-        title: 'Review barangay executive orders',
-        legalBasis: 'RA 7160 Sec. 30',
-        category: ComplianceCategory.MUNICIPAL_SUPERVISION,
-        frequency: ComplianceFrequency.AD_HOC,
-        evidenceTypes: ['EO copy', 'Review status', 'SP/SB concurrence'],
-        weight: 2,
-        scope: ComplianceScope.MUNICIPAL,
-        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
-    },
-    {
-        code: 'MAY-003',
-        title: 'Act on punong barangay leave',
-        legalBasis: 'RA 7160 Sec. 47(a)(4)',
-        category: ComplianceCategory.MUNICIPAL_SUPERVISION,
-        frequency: ComplianceFrequency.AD_HOC,
-        evidenceTypes: ['Leave request', 'Approval'],
-        weight: 1,
-        scope: ComplianceScope.MUNICIPAL,
-        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
-    },
-    {
-        code: 'MAY-004',
-        title: 'Act on barangay official resignation',
-        legalBasis: 'RA 7160 Sec. 82(a)(4)',
-        category: ComplianceCategory.MUNICIPAL_SUPERVISION,
-        frequency: ComplianceFrequency.AD_HOC,
-        evidenceTypes: ['Resignation letter', 'Acceptance'],
-        weight: 1,
-        scope: ComplianceScope.MUNICIPAL,
-        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
-    },
-    {
         code: 'MAY-005',
         title: 'Ensure barangay budget review via LFC',
         legalBasis: 'RA 7160 Sec. 316(f)',
@@ -225,28 +118,6 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         category: ComplianceCategory.SOCIAL,
         frequency: ComplianceFrequency.ONGOING,
         evidenceTypes: ['Activity reports'],
-        weight: 1,
-        scope: ComplianceScope.BARANGAY,
-        sglgPillar: SglgPillar.SOCIAL_PROTECTION,
-    },
-    {
-        code: 'SOC-002',
-        title: 'Anti-trafficking barangay coordination',
-        legalBasis: 'RA 9208',
-        category: ComplianceCategory.SOCIAL,
-        frequency: ComplianceFrequency.ONGOING,
-        evidenceTypes: ['Committee activation record'],
-        weight: 1,
-        scope: ComplianceScope.BARANGAY,
-        sglgPillar: SglgPillar.SOCIAL_PROTECTION,
-    },
-    {
-        code: 'SOC-003',
-        title: 'ECCD service coordination',
-        legalBasis: 'RA 8980 IRR',
-        category: ComplianceCategory.SOCIAL,
-        frequency: ComplianceFrequency.ONGOING,
-        evidenceTypes: ['Service delivery reports'],
         weight: 1,
         scope: ComplianceScope.BARANGAY,
         sglgPillar: SglgPillar.SOCIAL_PROTECTION,
@@ -287,6 +158,8 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
 ];
 
 export async function seedComplianceCatalog(prisma: PrismaClient) {
+    const keepCodes = COMPLIANCE_CATALOG.map((entry) => entry.code);
+
     for (const entry of COMPLIANCE_CATALOG) {
         await prisma.complianceRequirement.upsert({
             where: { code: entry.code },
@@ -304,7 +177,17 @@ export async function seedComplianceCatalog(prisma: PrismaClient) {
         });
     }
 
-    console.log(`Seeded ${COMPLIANCE_CATALOG.length} compliance requirements (ADM/SOC/SK/MAY + SGLG pillars)`);
+    // Only retire unused *system* codes — never delete municipal custom catalog rows
+    const removed = await prisma.complianceRequirement.deleteMany({
+        where: {
+            municipalityId: null,
+            code: { notIn: keepCodes },
+        },
+    });
+
+    console.log(
+        `Seeded ${COMPLIANCE_CATALOG.length} compliance requirements (6 ADM + lean SOC/SK/MAY); removed ${removed.count} retired system codes`,
+    );
 }
 
 async function main() {

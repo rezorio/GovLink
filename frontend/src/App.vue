@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onErrorCaptured, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import CivicDensityToggle from '@/components/library/feedback/CivicDensityToggle.vue';
+import DashboardLayoutToggle from '@/components/library/feedback/DashboardLayoutToggle.vue';
 import { useAuthStore } from '@/stores/auth';
 
 const auth = useAuthStore();
@@ -29,4 +31,6 @@ onErrorCaptured((err) => {
 
 <template>
     <RouterView />
+    <DashboardLayoutToggle />
+    <CivicDensityToggle />
 </template>

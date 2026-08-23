@@ -36,3 +36,19 @@ export function cellTint(status: ComplianceStatus): string {
     }
     return 'bg-status-warn/10';
 }
+
+/** Kept for tooling / exports; UI cells now show full complianceStatusLabel. */
+export function complianceHeatMark(status: ComplianceStatus): string {
+    return complianceStatusLabel(status);
+}
+
+export function heatCellClass(status: ComplianceStatus): string {
+    const variant = complianceStatusToVariant(status);
+    if (variant === 'approved') {
+        return 'gl-heat-cell gl-heat-ok';
+    }
+    if (variant === 'overdue') {
+        return 'gl-heat-cell gl-heat-danger';
+    }
+    return 'gl-heat-cell gl-heat-warn';
+}
