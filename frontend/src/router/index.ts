@@ -30,6 +30,18 @@ const router = createRouter({
             meta: { municipal: true },
         },
         {
+            path: '/mayor/notifications',
+            name: 'mayor-notifications',
+            component: () => import('@/views/NotificationsView.vue'),
+            meta: { municipal: true },
+        },
+        {
+            path: '/barangay/notifications',
+            name: 'barangay-notifications',
+            component: () => import('@/views/NotificationsView.vue'),
+            meta: { barangay: true },
+        },
+        {
             path: '/barangay',
             name: 'barangay',
             component: () => import('@/views/BarangayInboxView.vue'),

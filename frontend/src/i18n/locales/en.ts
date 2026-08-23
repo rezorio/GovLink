@@ -13,6 +13,7 @@ export const en: MessageTree = {
         directives: 'Directives',
         myCompliance: 'My compliance',
         registry: 'Registry',
+        notifications: 'Notifications',
     },
     common: {
         loading: 'Loading…',

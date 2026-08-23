@@ -6,8 +6,10 @@ import {
 import { AuditLogService } from '../common/services/audit-log.service';
 import { TenantScopeService } from '../common/services/tenant-scope.service';
 import { TenantContext } from '../common/interfaces/auth.interface';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.module';
 import { CreateTaskDto } from './dto/create-task.dto';
+import { NotificationKind } from '@prisma/client';
 
 @Injectable()
 export class DirectivesService {
@@ -15,6 +17,7 @@ export class DirectivesService {
         private readonly prisma: PrismaService,
         private readonly auditLog: AuditLogService,
         private readonly tenantScope: TenantScopeService,
+        private readonly notifications: NotificationsService,
     ) {}
 
     listTemplates() {
@@ -95,6 +98,18 @@ export class DirectivesService {
                 entityId: assignment.id,
                 barangayId: assignment.barangayId,
                 after: { taskId: result.task.id, status: assignment.status },
+            });
+
+            await this.notifications.notifyBarangayUsers({
+                municipalityId: ctx.municipality_id,
+                barangayId: assignment.barangayId,
+                kind: NotificationKind.TASK_ASSIGNED,
+                title: 'New municipal directive',
+                body: result.task.title,
+                entityType: 'TaskAssignment',
+                entityId: assignment.id,
+                href: '/barangay',
+                excludeUserId: ctx.user_id,
             });
         }
 

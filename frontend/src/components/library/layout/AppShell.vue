@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { LogOut } from 'lucide-vue-next';
-import { computed } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
+import { Bell, LogOut } from 'lucide-vue-next';
+import { computed, onMounted, ref, watch } from 'vue';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { fetchUnreadCount } from '@/api/notifications';
 import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
 import type { Locale } from '@/i18n/types';
@@ -13,7 +14,14 @@ defineProps<{
 
 const auth = useAuthStore();
 const router = useRouter();
+const route = useRoute();
 const { t, locale, setLocale } = useI18n();
+
+const unreadCount = ref(0);
+
+const notificationsPath = computed(() =>
+    auth.isMunicipal ? '/mayor/notifications' : '/barangay/notifications',
+);
 
 const navLinks = computed(() => {
     if (auth.isMunicipal) {
@@ -35,6 +43,19 @@ const navLinks = computed(() => {
     return [];
 });
 
+async function refreshUnread() {
+    if (!auth.token) {
+        unreadCount.value = 0;
+        return;
+    }
+    try {
+        const result = await fetchUnreadCount(auth.token);
+        unreadCount.value = result.count;
+    } catch {
+        unreadCount.value = 0;
+    }
+}
+
 function logout() {
     auth.logout();
     router.push({ name: 'login' });
@@ -43,6 +64,14 @@ function logout() {
 function pickLocale(next: Locale) {
     setLocale(next);
 }
+
+onMounted(refreshUnread);
+watch(
+    () => route.fullPath,
+    () => {
+        void refreshUnread();
+    },
+);
 </script>
 
 <template>
@@ -100,6 +129,21 @@ function pickLocale(next: Locale) {
                         <p class="font-medium text-ink">{{ auth.user?.full_name }}</p>
                         <p class="text-ink-muted">{{ auth.user?.email }}</p>
                     </div>
+                    <RouterLink
+                        :to="notificationsPath"
+                        class="relative inline-flex min-h-11 min-w-11 items-center justify-center border border-rule bg-surface text-ink hover:border-brand hover:bg-brand-soft"
+                        style="border-radius: 2px"
+                        :aria-label="t('nav.notifications')"
+                    >
+                        <Bell class="h-5 w-5" />
+                        <span
+                            v-if="unreadCount > 0"
+                            class="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center bg-status-warn px-1 text-[10px] font-bold text-ink"
+                            style="border-radius: 2px"
+                        >
+                            {{ unreadCount > 99 ? '99+' : unreadCount }}
+                        </span>
+                    </RouterLink>
                     <button
                         type="button"
                         class="inline-flex min-h-11 min-w-11 items-center justify-center border border-rule bg-surface text-ink hover:border-brand hover:bg-brand-soft"

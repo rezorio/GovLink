@@ -133,6 +133,17 @@ Omit `periodLabel` to open every current period derived from requirement frequen
 
 Municipal viewers receive **masked** `addressLine` and `phone` with `piiMasked: true`. Barangay staff see full fields for their barangay only.
 
+### Notifications (in-app)
+
+| Method | Path | Roles | Description |
+|--------|------|-------|-------------|
+| `GET` | `/notifications` | All authenticated | Inbox for current user (`?unread=true` optional) |
+| `GET` | `/notifications/unread-count` | All authenticated | `{ count }` for bell badge |
+| `POST` | `/notifications/:id/read` | All authenticated | Mark one notification read |
+| `POST` | `/notifications/read-all` | All authenticated | Mark all unread as read |
+
+Emitted on: task assign → barangay; evidence/compliance submit → municipal; review accept/return → barangay. Email/SMS deferred.
+
 Amounts are **integer centavos**. SVP ceilings come from `ProcurementThreshold` (never hardcoded). Same supplier + category + fiscal year over SVP max sets `splittingFlagged`; award is blocked until municipal acknowledge.
 
 **Lifecycle:** `DRAFT → PLANNED → RFQ_ISSUED → QUOTATIONS_RECEIVED → EVALUATION → AWARD_RECOMMENDED → AWARDED → ACTIVE → COMPLETED`

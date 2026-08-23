@@ -157,6 +157,16 @@ enum ResidentRecordType {
   KASAMBAHAY
 }
 
+enum NotificationKind {
+  TASK_ASSIGNED
+  EVIDENCE_SUBMITTED
+  REVIEW_ACCEPTED
+  REVIEW_RETURNED
+  COMPLIANCE_SUBMITTED
+  COMPLIANCE_ACCEPTED
+  COMPLIANCE_RETURNED
+}
+
 model Municipality {
   id                 String            @id @default(uuid())
   name               String
@@ -180,6 +190,7 @@ model Municipality {
   procurementDocuments ProcurementDocument[]
   bacMembers           BacMember[]
   barangayResidents    BarangayResident[]
+  notifications        Notification[]
 
   @@map("municipalities")
 }
@@ -204,6 +215,7 @@ model Barangay {
   procurementDocuments ProcurementDocument[]
   bacMembers           BacMember[]
   barangayResidents    BarangayResident[]
+  notifications        Notification[]
 
   @@unique([municipalityId, psgcCode])
   @@index([municipalityId])
@@ -238,6 +250,7 @@ model User {
   procurementDocumentsVoided   ProcurementDocument[] @relation("ProcurementDocVoidedBy")
   bacMemberships               BacMember[]           @relation("BacMemberUser")
   bacDesignations              BacMember[]           @relation("BacDesignatedBy")
+  notifications                Notification[]
 
   @@index([municipalityId, barangayId])
   @@map("users")
@@ -592,4 +605,28 @@ model BarangayResident {
   @@index([barangayId])
   @@index([municipalityId, barangayId])
   @@map("barangay_residents")
+}
+
+/// In-app notification for municipal and barangay users (email/SMS deferred).
+model Notification {
+  id               String           @id @default(uuid())
+  municipalityId   String           @map("municipality_id")
+  barangayId       String?          @map("barangay_id")
+  recipientUserId  String           @map("recipient_user_id")
+  kind             NotificationKind
+  title            String
+  body             String
+  entityType       String           @map("entity_type")
+  entityId         String           @map("entity_id")
+  href             String?
+  readAt           DateTime?        @map("read_at")
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  municipality Municipality @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  barangay     Barangay?    @relation(fields: [barangayId], references: [id], onDelete: Cascade)
+  recipient    User         @relation(fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId, readAt, createdAt])
+  @@index([municipalityId, createdAt])
+  @@map("notifications")
 }

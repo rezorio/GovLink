@@ -806,4 +806,65 @@ describe('Tenant boundary (e2e)', () => {
                 .expect(403);
         });
     });
+
+    describe('In-app notifications', () => {
+        it('creates TASK_ASSIGNED notification for barangay on task create', async () => {
+            await request(app.getHttpServer())
+                .post('/api/directives/tasks')
+                .set(authHeader(mayorToken))
+                .send({
+                    title: 'E2E Notify Task',
+                    description: 'Triggers notification',
+                    legalBasis: 'E2E',
+                    dueDate: '2026-12-31',
+                    barangayIds: [fixture.barangayAId],
+                })
+                .expect(201);
+
+            const listRes = await request(app.getHttpServer())
+                .get('/api/notifications')
+                .set(authHeader(captainAToken))
+                .expect(200);
+
+            const hit = listRes.body.find(
+                (n: { kind: string; title: string }) =>
+                    n.kind === 'TASK_ASSIGNED' && n.title === 'New municipal directive',
+            );
+            expect(hit).toBeDefined();
+            expect(hit.readAt).toBeNull();
+
+            const countRes = await request(app.getHttpServer())
+                .get('/api/notifications/unread-count')
+                .set(authHeader(captainAToken))
+                .expect(200);
+            expect(countRes.body.count).toBeGreaterThanOrEqual(1);
+
+            await request(app.getHttpServer())
+                .post(`/api/notifications/${hit.id}/read`)
+                .set(authHeader(captainAToken))
+                .expect((res) => {
+                    expect([200, 201]).toContain(res.status);
+                });
+
+            const listAfter = await request(app.getHttpServer())
+                .get('/api/notifications')
+                .set(authHeader(captainAToken))
+                .expect(200);
+            const readHit = listAfter.body.find((n: { id: string }) => n.id === hit.id);
+            expect(readHit.readAt).toBeTruthy();
+        });
+
+        it('does not show Alpha task notification to Captain Beta', async () => {
+            const listRes = await request(app.getHttpServer())
+                .get('/api/notifications')
+                .set(authHeader(captainBToken))
+                .expect(200);
+
+            const leaked = listRes.body.filter(
+                (n: { kind: string; body: string }) =>
+                    n.kind === 'TASK_ASSIGNED' && n.body === 'E2E Notify Task',
+            );
+            expect(leaked.length).toBe(0);
+        });
+    });
 });

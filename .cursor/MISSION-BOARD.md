@@ -1,7 +1,7 @@
 # GovLink — Mission Board
 
 > **Last updated:** 2026-08-23  
-> **Current mission:** Mission 18 — RA 10173 PII masking ✅  
+> **Current mission:** Mission 19 — In-app notifications ✅  
 > **Phase:** Post-MVP features · civic UI locked
 
 **Source of truth for active work.** Update this file at end-of-session or when a mission completes.  
@@ -32,6 +32,7 @@ For long-term feature catalog: [context/FEATURES.md](context/FEATURES.md).
 | 16 | Evidence uploads + offline queue | ✅ Done |
 | 17 | Tagalog UI labels (barangay-facing) | ✅ Done |
 | 18 | RA 10173 PII field masking | ✅ Done |
+| 19 | In-app notifications | ✅ Done |
 
 **MVP flow we're building toward:**
 
@@ -419,6 +420,29 @@ DirectiveTemplate → SupervisoryTask → TaskAssignment → EvidenceSubmission 
 
 ---
 
+**Completed:** 2026-08-23
+
+---
+
+## Mission 19 — In-app notifications ✅
+
+**Goal:** Role-scoped in-app alerts for assignments, evidence submissions, and compliance reviews (email/SMS deferred).
+
+**Exit criteria:** `Notification` model + APIs; emit on task assign / submit / review; bell badge + list UI; e2e covers create + read + isolation.
+
+### Tasks
+
+- [x] Schema + migration (`Notification` + `NotificationKind`)
+- [x] `NotificationsService` fan-out to barangay / municipal users
+- [x] Wire emits into directives, assignments, compliance
+- [x] `GET/POST /notifications*` APIs
+- [x] AppShell bell + NotificationsView
+- [x] E2E + docs / mission board closeout
+
+**Completed:** 2026-08-23
+
+---
+
 ## Missing / not yet scoped
 
 Items tracked here so they don't clutter mission task lists. Promote to a mission when actively scheduled.
@@ -446,7 +470,7 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 |-------|----------------------------|
 | Monorepo vs single repo | Stay single repo until frontend + API both exist |
 | Cloud host / region | Prefer PH region for RA 10173 |
-| Email / SMS notifications | In-app first; SMS for overdue later |
+| Email / SMS notifications | Deferred | In-app done (Mission 19); SMS later |
 | Income class for procurement | Config table per tenant; not needed for MVP |
 
 ---
@@ -464,7 +488,7 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 
 _Completed mission details stay in sections above with ✅. Add dated notes here for major milestones._
 
-- **2026-08-23** — Mission 18 complete. RA 10173 PII masking on barangay registry + BAC email redaction. Handoff: scope next post-MVP item (notifications, BDP/AIP trackers).
+- **2026-08-23** — Mission 19 complete. In-app notifications (bell + inbox). Handoff: BDP/AIP tracker or email/SMS when scheduled.
 - **2026-08-23** — Mission 16 complete (initial). Geotagged photo evidence + IndexedDB offline upload queue. Handoff: Tagalog UI or PII masking.
 - **2026-08-23** — Mission 15 complete. BAC roster (5–7 + chair gate) + delivery/acceptance → COMPLETED. Handoff: geotagged photos or offline queue.
 - **2026-08-23** — Mission 14 complete. RFQ/award document chain (3 quotes, AWARD_RECOMMENDED, void-not-delete). Handoff: BAC roster or delivery/acceptance.

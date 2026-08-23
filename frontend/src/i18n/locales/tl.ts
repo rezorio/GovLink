@@ -13,6 +13,7 @@ export const tl: MessageTree = {
         directives: 'Mga direktiba',
         myCompliance: 'Aking compliance',
         registry: 'Registry',
+        notifications: 'Mga abiso',
     },
     common: {
         loading: 'Naglo-load…',

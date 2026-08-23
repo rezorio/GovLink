@@ -11,6 +11,7 @@ import { ExportsModule } from './modules/exports/exports.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { ProcurementModule } from './modules/procurement/procurement.module';
 import { RegistryModule } from './modules/registry/registry.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { RolesGuard } from './modules/common/guards/roles.guard';
 import { HealthModule } from './modules/health/health.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
@@ -31,6 +32,7 @@ import { PrismaModule } from './modules/prisma/prisma.module';
         AssignmentsModule,
         ProcurementModule,
         RegistryModule,
+        NotificationsModule,
     ],
     providers: [
         {

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import {
     EvidenceSubmissionStatus,
+    NotificationKind,
     ReviewDecision,
     TaskAssignmentStatus,
 } from '@prisma/client';
@@ -13,6 +14,7 @@ import { AuditLogService } from '../common/services/audit-log.service';
 import { TenantScopeService } from '../common/services/tenant-scope.service';
 import { assertEvidenceFileKey } from '../common/utils/file-key.util';
 import { TenantContext } from '../common/interfaces/auth.interface';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.module';
 import { ReviewAssignmentDto } from './dto/review-assignment.dto';
 import { SubmitEvidenceDto } from './dto/submit-evidence.dto';
@@ -44,6 +46,7 @@ export class AssignmentsService {
         private readonly prisma: PrismaService,
         private readonly tenantScope: TenantScopeService,
         private readonly auditLog: AuditLogService,
+        private readonly notifications: NotificationsService,
     ) {}
 
     list(ctx: TenantContext) {
@@ -176,6 +179,19 @@ export class AssignmentsService {
             },
         });
 
+        const barangayName = assignment.barangay?.name ?? 'Barangay';
+        await this.notifications.notifyMunicipalUsers({
+            municipalityId: ctx.municipality_id,
+            barangayId: assignment.barangayId,
+            kind: NotificationKind.EVIDENCE_SUBMITTED,
+            title: 'Evidence awaiting review',
+            body: `${barangayName} submitted proof for “${assignment.task.title}”.`,
+            entityType: 'TaskAssignment',
+            entityId: assignment.id,
+            href: '/mayor',
+            excludeUserId: ctx.user_id,
+        });
+
         return result;
     }
 
@@ -260,6 +276,21 @@ export class AssignmentsService {
                 comment: dto.comment ?? null,
                 assignmentStatus,
             },
+        });
+
+        const accepted = dto.decision === ReviewDecision.ACCEPTED;
+        await this.notifications.notifyBarangayUsers({
+            municipalityId: ctx.municipality_id,
+            barangayId: assignment.barangayId,
+            kind: accepted ? NotificationKind.REVIEW_ACCEPTED : NotificationKind.REVIEW_RETURNED,
+            title: accepted ? 'Submission accepted' : 'Submission returned',
+            body: accepted
+                ? `Municipal review accepted “${assignment.task.title}”.`
+                : `Municipal review returned “${assignment.task.title}” for correction.`,
+            entityType: 'TaskAssignment',
+            entityId: assignment.id,
+            href: '/barangay',
+            excludeUserId: ctx.user_id,
         });
 
         return result;

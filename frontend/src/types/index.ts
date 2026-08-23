@@ -328,3 +328,27 @@ export interface BarangayResident {
     createdAt: string;
     updatedAt: string;
 }
+
+export type NotificationKind =
+    | 'TASK_ASSIGNED'
+    | 'EVIDENCE_SUBMITTED'
+    | 'REVIEW_ACCEPTED'
+    | 'REVIEW_RETURNED'
+    | 'COMPLIANCE_SUBMITTED'
+    | 'COMPLIANCE_ACCEPTED'
+    | 'COMPLIANCE_RETURNED';
+
+export interface AppNotification {
+    id: string;
+    municipalityId: string;
+    barangayId: string | null;
+    recipientUserId: string;
+    kind: NotificationKind;
+    title: string;
+    body: string;
+    entityType: string;
+    entityId: string;
+    href: string | null;
+    readAt: string | null;
+    createdAt: string;
+}

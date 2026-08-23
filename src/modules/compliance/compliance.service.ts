@@ -7,11 +7,13 @@ import {
 import {
     ComplianceScope,
     ComplianceStatus,
+    NotificationKind,
     Prisma,
 } from '@prisma/client';
 import { TenantContext } from '../common/interfaces/auth.interface';
 import { AuditLogService } from '../common/services/audit-log.service';
 import { TenantScopeService } from '../common/services/tenant-scope.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.module';
 import { OpenPeriodDto } from './dto/open-period.dto';
 import { ReviewComplianceInstanceDto } from './dto/review-instance.dto';
@@ -40,6 +42,7 @@ export class ComplianceService {
         private readonly prisma: PrismaService,
         private readonly tenantScope: TenantScopeService,
         private readonly auditLog: AuditLogService,
+        private readonly notifications: NotificationsService,
     ) {}
 
     listRequirements(scope?: ComplianceScope) {
@@ -327,6 +330,19 @@ export class ComplianceService {
             after: { status: updated.status, submittedAt: updated.submittedAt },
         });
 
+        const barangayName = updated.barangay?.name ?? 'Barangay';
+        await this.notifications.notifyMunicipalUsers({
+            municipalityId: ctx.municipality_id,
+            barangayId: updated.barangayId,
+            kind: NotificationKind.COMPLIANCE_SUBMITTED,
+            title: 'Compliance item submitted',
+            body: `${barangayName} submitted ${updated.requirement.code}: ${updated.requirement.title}.`,
+            entityType: 'ComplianceInstance',
+            entityId: updated.id,
+            href: '/mayor',
+            excludeUserId: ctx.user_id,
+        });
+
         return this.withEffectiveStatus(updated);
     }
 
@@ -381,6 +397,23 @@ export class ComplianceService {
                 returnReason: updated.returnReason,
                 comment: dto.comment ?? null,
             },
+        });
+
+        const accepted = dto.decision === 'ACCEPTED';
+        await this.notifications.notifyBarangayUsers({
+            municipalityId: ctx.municipality_id,
+            barangayId: updated.barangayId,
+            kind: accepted
+                ? NotificationKind.COMPLIANCE_ACCEPTED
+                : NotificationKind.COMPLIANCE_RETURNED,
+            title: accepted ? 'Compliance accepted' : 'Compliance returned',
+            body: accepted
+                ? `Municipal review accepted ${updated.requirement.code}.`
+                : `Municipal review returned ${updated.requirement.code} for correction.`,
+            entityType: 'ComplianceInstance',
+            entityId: updated.id,
+            href: '/barangay/compliance',
+            excludeUserId: ctx.user_id,
         });
 
         return this.withEffectiveStatus(updated);
