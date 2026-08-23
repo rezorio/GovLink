@@ -69,6 +69,8 @@ jobs:
 
             - name: Seed compliance catalog
               run: npm run db:seed:compliance
+            - name: Seed procurement thresholds
+              run: npm run db:seed:procurement
 
             - name: Lint
               run: npm run lint

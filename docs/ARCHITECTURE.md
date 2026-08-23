@@ -80,7 +80,7 @@ flowchart LR
 - Procurement (RA 9184)
 - DILG/COA PDF exports
 - SGLG scoring dashboards
-- Offline sync, geotagged photos, bilingual UI
+- Offline sync, bilingual UI
 
 ---
 

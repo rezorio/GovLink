@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { X } from 'lucide-vue-next';
+import { MapPin, X } from 'lucide-vue-next';
 import type { TaskAssignment } from '@/types';
 import { daysRemaining, formatDueDate, statusLabel, statusToVariant } from '@/utils/assignment-status';
 import StatusBadge from '@/components/library/badges/StatusBadge.vue';
@@ -94,6 +94,22 @@ function handleClose() {
                             {{ Math.round(latestSubmission.fileSizeBytes / 1024) }} KB ·
                             {{ latestSubmission.mimeType }}
                         </p>
+
+                        <div class="mt-3 border-t border-rule pt-3">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-ink">
+                                Submitted from
+                            </p>
+                            <p class="mt-1 flex items-start gap-1.5 text-sm text-ink">
+                                <MapPin class="mt-0.5 h-4 w-4 shrink-0 text-brand" />
+                                <span>Barangay {{ assignment.barangay.name }}</span>
+                            </p>
+                            <p
+                                v-if="latestSubmission.submittedAt"
+                                class="mt-1 text-xs text-ink-muted"
+                            >
+                                {{ new Date(latestSubmission.submittedAt).toLocaleString() }}
+                            </p>
+                        </div>
                     </div>
 
                     <template v-if="canReview">

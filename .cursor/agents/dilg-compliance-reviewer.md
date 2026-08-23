@@ -12,6 +12,6 @@ Review generated PDF, Excel, and API submission formats for task compliance.
 
 Ensure exports include required official headers (Republic of the Philippines, Province, Municipality, and Official Seals).
 
-Verify that geotagged photo submissions capture timestamp, coordinates, and encoder metadata.
+Verify that evidence submissions record submitting barangay, timestamp, and encoder metadata (device GPS coordinates are not required).
 
 Ensure directive categories map to official SGLG governance pillars (Financial Administration, Disaster Preparedness, Social Protection).

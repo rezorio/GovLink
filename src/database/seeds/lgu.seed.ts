@@ -1,7 +1,10 @@
-import { PrismaClient, DirectiveCategory } from '@prisma/client';
+import { IncomeClass, PrismaClient, DirectiveCategory, ProcurementRegime } from '@prisma/client';
 import { barangays, provinces } from 'psgc';
+import { seedBacRoster } from './bac-roster.seed';
 import { seedComplianceCatalog } from './compliance-catalog.seed';
 import { seedComplianceInstances } from './compliance-instances.seed';
+import { seedProcurementDemo } from './procurement-demo.seed';
+import { seedProcurementThresholds } from './procurement-thresholds.seed';
 import { seedDemoUsers } from './users.seed';
 
 const prisma = new PrismaClient();
@@ -81,12 +84,16 @@ async function seedMunicipality(config: (typeof PILOT_MUNICIPALITIES)[number]) {
             name: displayName,
             province: config.province,
             region,
+            incomeClass: IncomeClass.MUNICIPALITY_4TH,
+            procurementRegime: ProcurementRegime.RA12009,
         },
         create: {
             name: displayName,
             province: config.province,
             region,
             psgcCode: config.psgcCode,
+            incomeClass: IncomeClass.MUNICIPALITY_4TH,
+            procurementRegime: ProcurementRegime.RA12009,
         },
     });
 
@@ -144,6 +151,9 @@ async function main() {
 
     await seedDirectiveTemplates();
 
+    console.log('\nSeeding procurement thresholds...');
+    await seedProcurementThresholds(prisma);
+
     console.log('\nSeeding compliance catalog...');
     await seedComplianceCatalog(prisma);
 
@@ -152,6 +162,12 @@ async function main() {
 
     console.log('\nSeeding demo users...');
     await seedDemoUsers(prisma);
+
+    console.log('\nSeeding procurement demo APP/contracts...');
+    await seedProcurementDemo(prisma);
+
+    console.log('\nSeeding BAC roster...');
+    await seedBacRoster(prisma);
 
     console.log('\nSeed completed successfully.');
 }

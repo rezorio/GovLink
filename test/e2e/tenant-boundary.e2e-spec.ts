@@ -10,6 +10,7 @@ import {
     seedTenantBoundaryFixture,
     TenantBoundaryFixture,
 } from './helpers/fixtures';
+import { seedProcurementThresholds } from '../../src/database/seeds/procurement-thresholds.seed';
 
 describe('Tenant boundary (e2e)', () => {
     let app!: INestApplication;
@@ -22,6 +23,7 @@ describe('Tenant boundary (e2e)', () => {
     beforeAll(async () => {
         app = await createTestApp();
         prisma = app.get(PrismaService);
+        await seedProcurementThresholds(prisma);
         fixture = await seedTenantBoundaryFixture(prisma);
 
         captainAToken = await loginAsCaptainA(app, fixture);
@@ -172,6 +174,44 @@ describe('Tenant boundary (e2e)', () => {
                 .expect(403);
         });
 
+        it('GET /compliance/sglg-scores returns pillar readiness for mayor', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/compliance/sglg-scores')
+                .set(authHeader(mayorToken))
+                .expect(200);
+
+            expect(response.body.municipality).toBeDefined();
+            expect(Array.isArray(response.body.municipality.pillars)).toBe(true);
+            expect(response.body.municipality.pillars).toHaveLength(10);
+            expect(response.body.disclaimer).toMatch(/not official DILG/i);
+
+            const financial = response.body.municipality.pillars.find(
+                (row: { pillar: string }) => row.pillar === 'FINANCIAL_ADMINISTRATION',
+            );
+            expect(financial).toBeDefined();
+            expect(financial.requirementCount).toBeGreaterThan(0);
+            expect(typeof financial.score).toBe('number');
+
+            const disaster = response.body.municipality.pillars.find(
+                (row: { pillar: string }) => row.pillar === 'DISASTER_PREPAREDNESS',
+            );
+            expect(disaster.requirementCount).toBe(0);
+            expect(disaster.score).toBeNull();
+
+            expect(Array.isArray(response.body.barangays)).toBe(true);
+            expect(response.body.barangays.length).toBe(2);
+            const barangayIds = response.body.barangays.map((row: { id: string }) => row.id);
+            expect(barangayIds).toContain(fixture.barangayAId);
+            expect(barangayIds).toContain(fixture.barangayBId);
+        });
+
+        it('GET /compliance/sglg-scores returns 403 for barangay captain', async () => {
+            await request(app.getHttpServer())
+                .get('/api/compliance/sglg-scores')
+                .set(authHeader(captainAToken))
+                .expect(403);
+        });
+
         it('POST /compliance/periods/open returns 403 for barangay captain', async () => {
             await request(app.getHttpServer())
                 .post('/api/compliance/periods/open')
@@ -310,6 +350,56 @@ describe('Tenant boundary (e2e)', () => {
                 .expect(403);
         });
 
+        it('submits photo evidence scoped to the uploading barangay', async () => {
+            await prisma.taskAssignment.update({
+                where: { id: fixture.assignmentForBarangayBId },
+                data: {
+                    status: 'ACKNOWLEDGED',
+                    acknowledgedAt: new Date(),
+                },
+            });
+
+            const jpegBytes = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+            const presign = await request(app.getHttpServer())
+                .post('/api/uploads/presign')
+                .set(authHeader(captainBToken))
+                .send({
+                    filename: 'field-proof.jpg',
+                    contentType: 'image/jpeg',
+                    contentLength: jpegBytes.length,
+                    entityType: 'submissions',
+                })
+                .expect(201);
+
+            const put = await fetch(presign.body.uploadUrl as string, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'image/jpeg' },
+                body: jpegBytes,
+            });
+            expect(put.ok).toBe(true);
+
+            await request(app.getHttpServer())
+                .post('/api/uploads/confirm')
+                .set(authHeader(captainBToken))
+                .send({ fileKey: presign.body.fileKey })
+                .expect(201);
+
+            const submit = await request(app.getHttpServer())
+                .post(`/api/assignments/${fixture.assignmentForBarangayBId}/submissions`)
+                .set(authHeader(captainBToken))
+                .send({
+                    fileKey: presign.body.fileKey,
+                    fileName: 'field-proof.jpg',
+                    mimeType: 'image/jpeg',
+                    fileSizeBytes: jpegBytes.length,
+                })
+                .expect(201);
+
+            expect(submit.body.submission.barangayId).toBe(fixture.barangayBId);
+            expect(submit.body.submission.fileName).toBe('field-proof.jpg');
+            expect(submit.body.submission.submittedAt).toBeTruthy();
+        });
+
         it('POST /directives/tasks with assignToAllBarangays creates all assignments', async () => {
             const response = await request(app.getHttpServer())
                 .post('/api/directives/tasks')
@@ -329,6 +419,333 @@ describe('Tenant boundary (e2e)', () => {
             );
             expect(barangayIds).toContain(fixture.barangayAId);
             expect(barangayIds).toContain(fixture.barangayBId);
+        });
+
+        it('procurement APP + contract spine with tenant isolation and split ack', async () => {
+            const appLineDraft = await request(app.getHttpServer())
+                .post('/api/procurement/app-lines')
+                .set(authHeader(captainAToken))
+                .send({
+                    fiscalYear: 2026,
+                    code: 'E2E-APP-001',
+                    description: 'E2E IT equipment',
+                    category: 'IT Equipment',
+                    approvedAmountCentavos: 200_000_000,
+                })
+                .expect(201);
+
+            expect(appLineDraft.body.code).toBe('E2E-APP-001');
+            expect(appLineDraft.body.status).toBe('DRAFT');
+
+            await request(app.getHttpServer())
+                .post(`/api/procurement/app-lines/${appLineDraft.body.id}/approve`)
+                .set(authHeader(captainAToken))
+                .expect(403);
+
+            const appLine = await request(app.getHttpServer())
+                .post(`/api/procurement/app-lines/${appLineDraft.body.id}/approve`)
+                .set(authHeader(mayorToken))
+                .expect(201);
+            expect(appLine.body.status).toBe('APPROVED');
+
+            const appLineBDraft = await request(app.getHttpServer())
+                .post('/api/procurement/app-lines')
+                .set(authHeader(captainBToken))
+                .send({
+                    fiscalYear: 2026,
+                    code: 'E2E-APP-B',
+                    description: 'Beta APP',
+                    category: 'Goods',
+                    approvedAmountCentavos: 50_000_00,
+                })
+                .expect(201);
+
+            await request(app.getHttpServer())
+                .post(`/api/procurement/app-lines/${appLineBDraft.body.id}/approve`)
+                .set(authHeader(mayorToken))
+                .expect(201);
+
+            const listA = await request(app.getHttpServer())
+                .get('/api/procurement/app-lines')
+                .set(authHeader(captainAToken))
+                .expect(200);
+            expect(
+                listA.body.every((row: { barangayId: string }) => row.barangayId === fixture.barangayAId),
+            ).toBe(true);
+
+            const first = await request(app.getHttpServer())
+                .post('/api/procurement/contracts')
+                .set(authHeader(captainAToken))
+                .send({
+                    appLineItemId: appLine.body.id,
+                    title: 'Laptops batch 1',
+                    supplierName: 'Split Demo Supplier',
+                    amountCentavos: 600_000_00,
+                    mode: 'SVP',
+                })
+                .expect(201);
+            expect(first.body.splittingFlagged).toBe(false);
+
+            const second = await request(app.getHttpServer())
+                .post('/api/procurement/contracts')
+                .set(authHeader(captainAToken))
+                .send({
+                    appLineItemId: appLine.body.id,
+                    title: 'Laptops batch 2',
+                    supplierName: 'Split Demo Supplier',
+                    amountCentavos: 600_000_00,
+                    mode: 'SVP',
+                })
+                .expect(201);
+            expect(second.body.splittingFlagged).toBe(true);
+
+            const contractId = second.body.id as string;
+
+            async function uploadProcurementPdf(name: string) {
+                const pdfBytes = Buffer.from(`%PDF-1.4 e2e-${name}`);
+                const presign = await request(app.getHttpServer())
+                    .post('/api/uploads/presign')
+                    .set(authHeader(captainAToken))
+                    .send({
+                        filename: `${name}.pdf`,
+                        contentType: 'application/pdf',
+                        contentLength: pdfBytes.length,
+                        entityType: 'procurement',
+                    })
+                    .expect(201);
+
+                const put = await fetch(presign.body.uploadUrl as string, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/pdf' },
+                    body: pdfBytes,
+                });
+                expect(put.ok).toBe(true);
+
+                await request(app.getHttpServer())
+                    .post('/api/uploads/confirm')
+                    .set(authHeader(captainAToken))
+                    .send({ fileKey: presign.body.fileKey })
+                    .expect(201);
+
+                return {
+                    fileKey: presign.body.fileKey as string,
+                    fileName: `${name}.pdf`,
+                    mimeType: 'application/pdf',
+                    fileSizeBytes: pdfBytes.length,
+                };
+            }
+
+            async function attachDoc(docType: string, title: string, name: string) {
+                const file = await uploadProcurementPdf(name);
+                await request(app.getHttpServer())
+                    .post(`/api/procurement/contracts/${contractId}/documents`)
+                    .set(authHeader(captainAToken))
+                    .send({
+                        docType,
+                        title,
+                        ...file,
+                    })
+                    .expect(201);
+            }
+
+            async function addQuote(supplier: string, amount: number) {
+                await request(app.getHttpServer())
+                    .post(`/api/procurement/contracts/${contractId}/documents`)
+                    .set(authHeader(captainAToken))
+                    .send({
+                        docType: 'QUOTATION',
+                        title: `Quote ${supplier}`,
+                        quotationSupplierName: supplier,
+                        quotationAmountCentavos: amount,
+                    })
+                    .expect(201);
+            }
+
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/advance`)
+                .set(authHeader(captainAToken))
+                .send({ targetStatus: 'PLANNED' })
+                .expect(201);
+
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/advance`)
+                .set(authHeader(captainAToken))
+                .send({ targetStatus: 'RFQ_ISSUED' })
+                .expect(400);
+
+            await attachDoc('RFQ', 'RFQ for laptops', 'rfq');
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/advance`)
+                .set(authHeader(captainAToken))
+                .send({ targetStatus: 'RFQ_ISSUED' })
+                .expect(201);
+
+            await addQuote('Supplier A', 10_000_00);
+            await addQuote('Supplier B', 11_000_00);
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/documents`)
+                .set(authHeader(captainAToken))
+                .send({
+                    docType: 'QUOTATION',
+                    title: 'Duplicate supplier quote',
+                    quotationSupplierName: 'supplier a',
+                    quotationAmountCentavos: 9_500_00,
+                })
+                .expect(400);
+
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/advance`)
+                .set(authHeader(captainAToken))
+                .send({ targetStatus: 'QUOTATIONS_RECEIVED' })
+                .expect(400);
+
+            await addQuote('Supplier C', 12_000_00);
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/advance`)
+                .set(authHeader(captainAToken))
+                .send({ targetStatus: 'QUOTATIONS_RECEIVED' })
+                .expect(201);
+
+            await attachDoc('ABSTRACT', 'Abstract of quotations', 'abstract');
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/advance`)
+                .set(authHeader(captainAToken))
+                .send({ targetStatus: 'EVALUATION' })
+                .expect(201);
+
+            await attachDoc('BAC_RESOLUTION', 'BAC resolution', 'bac');
+
+            const existingBac = await request(app.getHttpServer())
+                .get('/api/procurement/bac-members')
+                .set(authHeader(captainAToken))
+                .expect(200);
+            for (const member of existingBac.body as Array<{ id: string; isActive: boolean }>) {
+                if (member.isActive) {
+                    await request(app.getHttpServer())
+                        .post(`/api/procurement/bac-members/${member.id}/deactivate`)
+                        .set(authHeader(captainAToken))
+                        .expect(201);
+                }
+            }
+
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/advance`)
+                .set(authHeader(captainAToken))
+                .send({ targetStatus: 'AWARD_RECOMMENDED' })
+                .expect(400);
+
+            const bacMembers = [
+                { displayName: 'E2E Chair', designation: 'CHAIR' },
+                { displayName: 'E2E Vice', designation: 'VICE_CHAIR' },
+                { displayName: 'E2E Member 1', designation: 'MEMBER' },
+                { displayName: 'E2E Member 2', designation: 'MEMBER' },
+                { displayName: 'E2E Member 3', designation: 'MEMBER' },
+            ];
+            for (const member of bacMembers) {
+                await request(app.getHttpServer())
+                    .post('/api/procurement/bac-members')
+                    .set(authHeader(captainAToken))
+                    .send({
+                        ...member,
+                        termStart: '2026-01-01',
+                        designationDate: '2026-01-15',
+                    })
+                    .expect(201);
+            }
+
+            await request(app.getHttpServer())
+                .get('/api/procurement/bac-members')
+                .set(authHeader(captainBToken))
+                .expect(200)
+                .expect((res) => {
+                    expect(res.body.every((row: { barangayId: string }) => row.barangayId === fixture.barangayBId)).toBe(
+                        true,
+                    );
+                });
+
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/advance`)
+                .set(authHeader(captainAToken))
+                .send({ targetStatus: 'AWARD_RECOMMENDED' })
+                .expect(201);
+
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/advance`)
+                .set(authHeader(captainAToken))
+                .send({ targetStatus: 'AWARDED' })
+                .expect(400);
+
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/acknowledge-split`)
+                .set(authHeader(captainAToken))
+                .expect(403);
+
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/acknowledge-split`)
+                .set(authHeader(mayorToken))
+                .expect(201);
+
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/advance`)
+                .set(authHeader(captainAToken))
+                .send({ targetStatus: 'AWARDED' })
+                .expect(400);
+
+            await attachDoc('NOTICE_OF_AWARD', 'Notice of Award', 'noa');
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/advance`)
+                .set(authHeader(captainAToken))
+                .send({ targetStatus: 'AWARDED' })
+                .expect(201);
+
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/advance`)
+                .set(authHeader(captainAToken))
+                .send({ targetStatus: 'ACTIVE' })
+                .expect(400);
+
+            await attachDoc('CONTRACT_DOC', 'Signed contract', 'contract');
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/advance`)
+                .set(authHeader(captainAToken))
+                .send({ targetStatus: 'ACTIVE' })
+                .expect(201);
+
+            await attachDoc('DELIVERY_RECEIPT', 'Delivery receipt', 'delivery');
+            await attachDoc('INSPECTION_ACCEPTANCE', 'Inspection acceptance', 'acceptance');
+            await request(app.getHttpServer())
+                .post(`/api/procurement/contracts/${contractId}/advance`)
+                .set(authHeader(captainAToken))
+                .send({ targetStatus: 'COMPLETED' })
+                .expect(201);
+
+            await request(app.getHttpServer())
+                .get(`/api/procurement/contracts/${contractId}/documents`)
+                .set(authHeader(captainBToken))
+                .expect(403);
+
+            await request(app.getHttpServer())
+                .get(`/api/procurement/contracts/${contractId}`)
+                .set(authHeader(captainBToken))
+                .expect(403);
+
+            const chain = await request(app.getHttpServer())
+                .get(`/api/procurement/contracts/${contractId}/chain`)
+                .set(authHeader(mayorToken))
+                .expect(200);
+            expect(chain.body.status).toBe('COMPLETED');
+            expect(chain.body.minQuotations).toBe(3);
+
+            const oversight = await request(app.getHttpServer())
+                .get('/api/procurement/oversight?fiscalYear=2026')
+                .set(authHeader(mayorToken))
+                .expect(200);
+            expect(oversight.body.totals.contractCount).toBeGreaterThanOrEqual(2);
+
+            await request(app.getHttpServer())
+                .get('/api/procurement/oversight')
+                .set(authHeader(captainAToken))
+                .expect(403);
         });
     });
 

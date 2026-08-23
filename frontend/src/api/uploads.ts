@@ -38,7 +38,7 @@ export function confirmUpload(token: string, fileKey: string) {
 
 export async function putToPresignedUrl(
     uploadUrl: string,
-    file: File,
+    file: Blob,
     onProgress?: (pct: number) => void,
 ): Promise<void> {
     await new Promise<void>((resolve, reject) => {

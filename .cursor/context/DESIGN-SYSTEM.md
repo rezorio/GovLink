@@ -108,6 +108,9 @@ When building new views: extend this system; do not invent a parallel palette or
 | Barangay compliance | Done |
 | Barangay directive inbox | Done |
 | Mayor dashboard | Done |
+| Mayor SGLG readiness | Done |
+| Mayor procurement | Done |
+| Barangay procurement | Done |
 | Drawers / uploads | Done |
 
 ---

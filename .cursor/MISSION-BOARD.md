@@ -1,7 +1,7 @@
 # GovLink — Mission Board
 
 > **Last updated:** 2026-08-23  
-> **Current mission:** Next → **SGLG scoring dashboards** (Mission 12 — scope on start)  
+> **Current mission:** Next → Tagalog UI labels or RA 10173 PII masking (scope on start)  
 > **Phase:** Post-MVP features · civic UI locked
 
 **Source of truth for active work.** Update this file at end-of-session or when a mission completes.  
@@ -25,6 +25,11 @@ For long-term feature catalog: [context/FEATURES.md](context/FEATURES.md).
 | 9 | Compliance instance lifecycle | ✅ Done |
 | 10 | Audit exports (PDF/Excel/QR) | ✅ Done |
 | 11 | Real S3/MinIO uploads | ✅ Done |
+| 12 | SGLG scoring dashboards | ✅ Done |
+| 13 | APP + SVP procurement spine | ✅ Done |
+| 14 | RFQ / award document chain | ✅ Done |
+| 15 | BAC roster / delivery-acceptance | ✅ Done |
+| 16 | Evidence uploads + offline queue | ✅ Done |
 
 **MVP flow we're building toward:**
 
@@ -265,6 +270,107 @@ DirectiveTemplate → SupervisoryTask → TaskAssignment → EvidenceSubmission 
 
 ---
 
+## Mission 12 — SGLG scoring dashboards ✅
+
+**Goal:** Mayor sees SGLG-aligned readiness by pillar and barangay, derived from compliance instances.
+
+**Exit criteria:** Catalog tagged with pillars; `GET /compliance/sglg-scores` returns municipal + per-barangay scores; `/mayor/sglg` ledger UI; e2e covers happy path + RBAC.
+
+**References:** `.cursor/skills/b2g-procurement-ph/sglg-pillars.md`
+
+### Tasks
+
+- [x] `SglgPillar` enum + `ComplianceRequirement.sglgPillar` migration
+- [x] Catalog seed pillar mapping (24 codes)
+- [x] Weighted score util + `SglgScoreService`
+- [x] `GET /compliance/sglg-scores` (MAYOR / DEPT_HEAD)
+- [x] Mayor `/mayor/sglg` civic ledger + AppShell tab
+- [x] E2E happy path + barangay 403
+- [x] Docs / mission board closeout
+
+**Completed:** 2026-08-23
+
+---
+
+## Mission 13 — APP + SVP procurement spine ✅
+
+**Goal:** Barangay APP lines and SVP contracts under municipal oversight with config-driven thresholds and anti-splitting.
+
+**Exit criteria:** Thresholds seeded; APP + contract APIs tenant-safe; split flag blocks award until municipal ack; mayor + barangay procurement ledgers; e2e.
+
+**References:** `.cursor/skills/b2g-procurement-ph/`, `ph-lgu-governance/procurement-rules.md`
+
+### Tasks
+
+- [x] Schema: income class, regime, thresholds, APP lines, contracts
+- [x] Seed thresholds + pilot income class + demo APP/contract
+- [x] Procurement module APIs + anti-splitting + acknowledge-split
+- [x] `/mayor/procurement` + `/barangay/procurement` civic ledgers
+- [x] E2E tenant isolation + split award gate
+- [x] Docs / mission board closeout
+
+**Completed:** 2026-08-23
+
+---
+
+## Mission 14 — RFQ / award document chain ✅
+
+**Goal:** Gate contract award on RFQ → quotations (≥3) → abstract → BAC resolution → NOA; void-not-delete for audit.
+
+**Exit criteria:** Extended lifecycle; document APIs; award blocked until chain (+ split ack); barangay chain panel; e2e.
+
+### Tasks
+
+- [x] ContractStatus + ProcurementDocument (+ void fields)
+- [x] Document chain util (3-quote default) + documents service
+- [x] Advance gates + void endpoint (no hard delete)
+- [x] Barangay `ContractChainPanel` + mayor chain hint
+- [x] E2E chain + cross-barangay 403
+- [x] Docs / mission board closeout
+
+**Completed:** 2026-08-23
+
+---
+
+## Mission 15 — BAC roster / delivery-acceptance ✅
+
+**Goal:** Barangay BAC designation (5–7 members + chair) gates award recommendation; post-award contract / delivery / acceptance docs gate ACTIVE → COMPLETED.
+
+**Exit criteria:** `BacMember` APIs; roster gate on `AWARD_RECOMMENDED`; delivery doc types; barangay BAC + chain UI; e2e.
+
+### Tasks
+
+- [x] Schema: `BacMember` + `DELIVERY_RECEIPT` / `INSPECTION_ACCEPTANCE`
+- [x] BAC list/create/deactivate + assertRosterReady
+- [x] Advance gates: ACTIVE needs contract; COMPLETED needs delivery + acceptance
+- [x] `BacRosterPanel` + post-award attach in `ContractChainPanel`
+- [x] Seed demo roster; e2e BAC + delivery path
+- [x] Docs / mission board closeout
+
+**Completed:** 2026-08-23
+
+---
+
+## Mission 16 — Evidence uploads + offline queue ✅
+
+**Goal:** Field workers submit photo/PDF evidence from their barangay; queue uploads locally when offline and sync when connectivity returns.
+
+**Exit criteria:** Submissions stamped with JWT barangay; inbox upload + IndexedDB queue; mayor review shows submitting barangay; e2e. (Device GPS geotags were tried then removed — barangay provenance is enough.)
+
+### Tasks
+
+- [x] Schema: evidence rows carry `barangayId` (GPS columns dropped)
+- [x] Submit DTO file metadata only
+- [x] `EvidenceUpload` + offline queue (no geolocation)
+- [x] `OfflineUploadBanner` + `useOfflineUploadQueue`
+- [x] Review drawer shows submitting barangay
+- [x] E2E photo submit asserts `barangayId`
+- [x] Docs / mission board closeout
+
+**Completed:** 2026-08-23
+
+---
+
 ## Missing / not yet scoped
 
 Items tracked here so they don't clutter mission task lists. Promote to a mission when actively scheduled.
@@ -275,11 +381,13 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 | CI pipeline | Done | `.github/workflows/ci.yml` |
 | Bulk assign to all barangays | Done | `assignToAllBarangays: true` on POST /directives/tasks |
 | Full compliance catalog seed | Done | 24 ADM/SOC/SK/MAY codes |
-| SGLG scoring dashboards | Pillar scores from compliance matrix | **Next mission** |
-| Procurement module | RA 9184 / RA 12009 | Phase 6 |
-| Geotagged photo submissions | Field worker metadata | Post-MVP |
-| Offline upload queue | Field connectivity | Post-MVP |
-| Tagalog UI labels | English first | Post-MVP |
+| SGLG scoring dashboards | Done | `GET /compliance/sglg-scores` + `/mayor/sglg` |
+| APP + SVP procurement spine | Done | Mission 13 |
+| RFQ / award document chain | Done | Mission 14 |
+| BAC roster / delivery-acceptance | Done | Mission 15 |
+| Geotagged photo submissions | Removed | Prefer barangay provenance |
+| Offline upload queue | Done | Mission 16 — IndexedDB + sync banner |
+| Tagalog UI labels | English first | **Next mission** |
 
 ---
 
@@ -307,6 +415,12 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 
 _Completed mission details stay in sections above with ✅. Add dated notes here for major milestones._
 
+- **2026-08-23** — Mission 16 revised. Dropped device GPS geotags; evidence provenance is submitting barangay + offline queue retained. Handoff: Tagalog UI or PII masking.
+- **2026-08-23** — Mission 16 complete (initial). Geotagged photo evidence + IndexedDB offline upload queue. Handoff: Tagalog UI or PII masking.
+- **2026-08-23** — Mission 15 complete. BAC roster (5–7 + chair gate) + delivery/acceptance → COMPLETED. Handoff: geotagged photos or offline queue.
+- **2026-08-23** — Mission 14 complete. RFQ/award document chain (3 quotes, AWARD_RECOMMENDED, void-not-delete). Handoff: BAC roster or delivery/acceptance.
+- **2026-08-23** — Mission 13 complete. APP + SVP procurement spine (thresholds, anti-splitting, mayor/barangay ledgers). Handoff: BAC/RFQ chain when ready.
+- **2026-08-23** — Mission 12 complete. SGLG-aligned readiness API + mayor `/mayor/sglg` dashboard. Handoff: scope procurement (RA 9184) when ready.
 - **2026-08-23** — Missions 9–11 + civic UI: compliance lifecycle, PDF/Excel/QR exports, MinIO uploads; municipal ledger design system on all primary views. Handoff: start Mission 12 (SGLG scoring).
 - **2026-08-22** — Mission 7 complete. Compliance catalog schema, seed, and list API.
 - **2026-08-22** — Mission 4 complete. Supertest tenant boundary suite (`npm run test:e2e`).

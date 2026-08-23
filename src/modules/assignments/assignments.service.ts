@@ -171,6 +171,7 @@ export class AssignmentsService {
                 assignmentId: assignment.id,
                 fileName: dto.fileName,
                 mimeType: dto.mimeType,
+                barangayId: assignment.barangayId,
                 assignmentStatus: TaskAssignmentStatus.SUBMITTED,
             },
         });

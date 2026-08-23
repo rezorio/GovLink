@@ -19,7 +19,7 @@ import { AppRole } from '@prisma/client';
 import { UPLOAD_ALLOWED_MIMES, UPLOAD_MAX_BYTES } from '../common/constants/upload.constants';
 import { TenantContext } from '../common/interfaces/auth.interface';
 import { AuditLogService } from '../common/services/audit-log.service';
-import { assertEvidenceFileKey } from '../common/utils/file-key.util';
+import { assertTenantFileKey } from '../common/utils/file-key.util';
 import { ConfirmUploadDto } from './dto/confirm-upload.dto';
 import { PresignUploadDto } from './dto/presign-upload.dto';
 
@@ -55,6 +55,9 @@ export class UploadsService implements OnModuleInit {
         const client = this.ensureClient();
         const ext = MIME_EXT[dto.contentType] ?? '.bin';
         const safeEntity = dto.entityType.replace(/[^a-z0-9_-]/gi, '').toLowerCase() || 'submissions';
+        if (safeEntity !== 'submissions' && safeEntity !== 'procurement') {
+            throw new BadRequestException('entityType must be submissions or procurement');
+        }
         const fileKey = [
             ctx.municipality_id,
             ctx.barangay_id,
@@ -78,7 +81,8 @@ export class UploadsService implements OnModuleInit {
 
     async confirmUpload(ctx: TenantContext, dto: ConfirmUploadDto) {
         this.assertBarangayUploader(ctx);
-        assertEvidenceFileKey(ctx, dto.fileKey);
+        const entity = dto.fileKey.split('/')[2] ?? 'submissions';
+        assertTenantFileKey(ctx, dto.fileKey, entity);
 
         const client = this.ensureClient();
         let head;
@@ -118,6 +122,25 @@ export class UploadsService implements OnModuleInit {
             contentType,
             contentLength: head.ContentLength ?? 0,
         };
+    }
+
+    /** Verify a tenant file key points at an existing object (used by procurement docs). */
+    async assertObjectExists(ctx: TenantContext, fileKey: string) {
+        const entity = fileKey.split('/')[2] ?? 'submissions';
+        assertTenantFileKey(ctx, fileKey, entity);
+        const client = this.ensureClient();
+        try {
+            await client.send(
+                new HeadObjectCommand({
+                    Bucket: this.bucket,
+                    Key: fileKey,
+                }),
+            );
+        } catch {
+            throw new BadRequestException(
+                'Uploaded object not found — complete presign PUT + confirm before attaching',
+            );
+        }
     }
 
     private assertBarangayUploader(ctx: TenantContext) {

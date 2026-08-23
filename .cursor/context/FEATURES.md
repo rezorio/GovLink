@@ -64,8 +64,11 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 |---------|--------|-------|
 | Frontend (Vue 3) | Done | Civic design system locked — see DESIGN-SYSTEM.md |
 | Mayor compliance dashboard | Done | `/mayor` — heatmap + assign (civic ledger) |
+| Mayor SGLG readiness | Done | `/mayor/sglg` — pillar + barangay ranking |
+| Mayor procurement oversight | Done | `/mayor/procurement` |
 | Barangay task inbox | Done | `/barangay` — ledger UI |
 | Barangay My compliance | Done | `/barangay/compliance` — ledger UI |
+| Barangay procurement | Done | `/barangay/procurement` — APP + contracts |
 | Review slide-over drawer | Done | Accept / return with comment |
 | Status badges | Done | Civic tint badges (`StatusBadge.vue`) |
 | Mobile-first field uploads | Done | Presign → MinIO PUT → confirm |
@@ -83,7 +86,7 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 | Compliance instance lifecycle | Done | Start / submit / review + barangay page |
 | Semestral barangay assembly tracking | Deferred | |
 | BDP / AIP submission tracker | Deferred | |
-| SGLG-aligned scoring | Deferred | |
+| SGLG-aligned scoring | Done | `GET /compliance/sglg-scores` + `/mayor/sglg` readiness dashboard |
 | PDF exports with LGU letterhead | Done | `GET /exports/compliance-scorecard.pdf` |
 | Excel audit reports | Done | `GET /exports/compliance-scorecard.xlsx` |
 | QR document verification | Done | Public `GET /verify/documents/:token` |
@@ -94,10 +97,13 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| APP line items | Deferred | Phase 6 |
-| Contract lifecycle | Deferred | |
-| SVP threshold config | Deferred | Income-class driven |
-| Splitting detection | Deferred | |
+| APP line items | Done | Mission 13 — barangay APP + municipal oversight |
+| Contract lifecycle (spine) | Done | Through COMPLETED + RFQ/award chain |
+| SVP threshold config | Done | `ProcurementThreshold` config table (demo GPPB refs) |
+| Splitting detection | Done | Flag + municipal acknowledge before award |
+| RFQ / award document chain | Done | Mission 14 — gated advance + voidable docs |
+| BAC roster | Done | Mission 15 — 5–7 members + chair gate |
+| Delivery / acceptance | Done | Mission 15 — gates ACTIVE → COMPLETED |
 
 ---
 
@@ -108,11 +114,12 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 | CI (lint, test, migrate) | Done | GitHub Actions on push/PR |
 | `.env.example` | Done | |
 | RA 10173 PII field masking | Deferred | |
-| Offline upload queue | Deferred | |
-| Tagalog UI labels | Deferred | English first |
+| Geotagged photo submissions | Removed | Device GPS dropped — provenance is JWT barangay |
+| Offline upload queue | Done | Mission 16 — IndexedDB + sync banner |
+| Tagalog UI labels | Deferred | Next mission |
 
 ---
 
 ## Current mission
 
-**Missions 8–11 complete; civic UI locked.** Next chat: **SGLG scoring dashboards** (see PROJECT-OVERVIEW session checkpoint).
+**Mission 16 complete** (GPS geotags removed; barangay provenance + offline queue remain). Next chat: Tagalog UI or PII masking (see PROJECT-OVERVIEW session checkpoint).

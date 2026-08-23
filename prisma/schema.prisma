@@ -76,19 +76,92 @@ enum ComplianceStatus {
   OVERDUE
 }
 
+/// RA 11292 / DILG Seal of Good Local Governance assessment areas
+enum SglgPillar {
+  FINANCIAL_ADMINISTRATION
+  DISASTER_PREPAREDNESS
+  SOCIAL_PROTECTION
+  HEALTH_COMPLIANCE
+  SUSTAINABLE_EDUCATION
+  BUSINESS_FRIENDLINESS
+  SAFETY_PEACE_ORDER
+  ENVIRONMENTAL_MANAGEMENT
+  TOURISM_CULTURE
+  YOUTH_DEVELOPMENT
+}
+
 enum ExportFormat {
   PDF
   XLSX
 }
 
+enum ProcurementRegime {
+  RA9184
+  RA12009
+}
+
+enum IncomeClass {
+  BARANGAY
+  MUNICIPALITY_1ST
+  MUNICIPALITY_2ND
+  MUNICIPALITY_3RD
+  MUNICIPALITY_4TH
+  MUNICIPALITY_5TH
+  CITY
+  PROVINCE
+}
+
+enum ProcurementMode {
+  SHOPPING
+  SVP
+  COMPETITIVE_BIDDING
+  DIRECT
+}
+
+enum AppLineStatus {
+  DRAFT
+  APPROVED
+}
+
+enum ContractStatus {
+  DRAFT
+  PLANNED
+  RFQ_ISSUED
+  QUOTATIONS_RECEIVED
+  EVALUATION
+  AWARD_RECOMMENDED
+  AWARDED
+  ACTIVE
+  COMPLETED
+}
+
+enum ProcurementDocType {
+  RFQ
+  QUOTATION
+  ABSTRACT
+  BAC_RESOLUTION
+  NOTICE_OF_AWARD
+  CONTRACT_DOC
+  DELIVERY_RECEIPT
+  INSPECTION_ACCEPTANCE
+}
+
+enum BacDesignation {
+  CHAIR
+  VICE_CHAIR
+  MEMBER
+}
+
 model Municipality {
-  id        String   @id @default(uuid())
-  name      String
-  province  String
-  region    String
-  psgcCode  String   @unique @map("psgc_code")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id                 String            @id @default(uuid())
+  name               String
+  province           String
+  region             String
+  psgcCode           String            @unique @map("psgc_code")
+  incomeClass        IncomeClass       @default(MUNICIPALITY_4TH) @map("income_class")
+  procurementRegime  ProcurementRegime @default(RA12009) @map("procurement_regime")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
 
   barangays            Barangay[]
   users                User[]
@@ -97,6 +170,10 @@ model Municipality {
   complianceInstances  ComplianceInstance[]
   exportDocuments      ExportDocument[]
   auditLogs            AuditLog[]
+  appLineItems         AppLineItem[]
+  procurementContracts ProcurementContract[]
+  procurementDocuments ProcurementDocument[]
+  bacMembers           BacMember[]
 
   @@map("municipalities")
 }
@@ -110,12 +187,16 @@ model Barangay {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  municipality         Municipality         @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  municipality         Municipality          @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
   users                User[]
   taskAssignments      TaskAssignment[]
   complianceInstances  ComplianceInstance[]
   exportDocuments      ExportDocument[]
   auditLogs            AuditLog[]
+  appLineItems         AppLineItem[]
+  procurementContracts ProcurementContract[]
+  procurementDocuments ProcurementDocument[]
+  bacMembers           BacMember[]
 
   @@unique([municipalityId, psgcCode])
   @@index([municipalityId])
@@ -145,6 +226,11 @@ model User {
   complianceReviews     ComplianceInstance[]  @relation("ComplianceReviewedBy")
   exportDocuments       ExportDocument[]
   auditLogs             AuditLog[]
+  splitAcknowledgedContracts ProcurementContract[] @relation("SplitAcknowledgedBy")
+  procurementDocumentsUploaded ProcurementDocument[] @relation("ProcurementDocUploadedBy")
+  procurementDocumentsVoided   ProcurementDocument[] @relation("ProcurementDocVoidedBy")
+  bacMemberships               BacMember[]           @relation("BacMemberUser")
+  bacDesignations              BacMember[]           @relation("BacDesignatedBy")
 
   @@index([municipalityId, barangayId])
   @@map("users")
@@ -174,12 +260,14 @@ model ComplianceRequirement {
   evidenceTypes String[]             @map("evidence_types")
   weight        Int                  @default(1)
   scope         ComplianceScope      @default(BARANGAY)
+  sglgPillar    SglgPillar?          @map("sglg_pillar")
   createdAt     DateTime             @default(now()) @map("created_at")
   updatedAt     DateTime             @updatedAt @map("updated_at")
 
   instances ComplianceInstance[]
 
   @@index([category, scope])
+  @@index([sglgPillar])
   @@map("compliance_requirements")
 }
 
@@ -343,4 +431,137 @@ model ExportDocument {
   @@index([municipalityId, barangayId])
   @@index([contentHash])
   @@map("export_documents")
+}
+
+model ProcurementThreshold {
+  id                String            @id @default(uuid())
+  regime            ProcurementRegime
+  incomeClass       IncomeClass       @map("income_class")
+  mode              ProcurementMode
+  maxAmountCentavos BigInt            @map("max_amount_centavos")
+  effectiveFrom     DateTime          @map("effective_from") @db.Date
+  gppbReference     String?           @map("gppb_reference")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  @@unique([regime, incomeClass, mode, effectiveFrom])
+  @@index([regime, incomeClass, mode])
+  @@map("procurement_thresholds")
+}
+
+model AppLineItem {
+  id                     String        @id @default(uuid())
+  municipalityId         String        @map("municipality_id")
+  barangayId             String        @map("barangay_id")
+  fiscalYear             Int           @map("fiscal_year")
+  code                   String
+  description            String
+  category               String
+  approvedAmountCentavos BigInt        @map("approved_amount_centavos")
+  status                 AppLineStatus @default(DRAFT)
+  sglgPillar             SglgPillar    @default(FINANCIAL_ADMINISTRATION) @map("sglg_pillar")
+  createdAt              DateTime      @default(now()) @map("created_at")
+  updatedAt              DateTime      @updatedAt @map("updated_at")
+
+  municipality Municipality          @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  barangay     Barangay              @relation(fields: [barangayId], references: [id], onDelete: Cascade)
+  contracts    ProcurementContract[]
+
+  @@unique([barangayId, fiscalYear, code])
+  @@index([municipalityId, fiscalYear])
+  @@index([barangayId, fiscalYear])
+  @@map("app_line_items")
+}
+
+model ProcurementContract {
+  id                       String          @id @default(uuid())
+  municipalityId           String          @map("municipality_id")
+  barangayId               String          @map("barangay_id")
+  appLineItemId            String          @map("app_line_item_id")
+  title                    String
+  supplierName             String          @map("supplier_name")
+  amountCentavos           BigInt          @map("amount_centavos")
+  mode                     ProcurementMode
+  status                   ContractStatus  @default(DRAFT)
+  fiscalYear               Int             @map("fiscal_year")
+  category                 String
+  splittingRiskScore       Int?            @map("splitting_risk_score")
+  splittingFlagged         Boolean         @default(false) @map("splitting_flagged")
+  splittingAcknowledgedAt  DateTime?       @map("splitting_acknowledged_at")
+  splittingAcknowledgedById String?        @map("splitting_acknowledged_by_id")
+  createdAt                DateTime        @default(now()) @map("created_at")
+  updatedAt                DateTime        @updatedAt @map("updated_at")
+
+  municipality            Municipality @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  barangay                Barangay     @relation(fields: [barangayId], references: [id], onDelete: Cascade)
+  appLineItem             AppLineItem  @relation(fields: [appLineItemId], references: [id], onDelete: Restrict)
+  splittingAcknowledgedBy User?        @relation("SplitAcknowledgedBy", fields: [splittingAcknowledgedById], references: [id])
+  documents               ProcurementDocument[]
+
+  @@index([barangayId, fiscalYear])
+  @@index([municipalityId, fiscalYear, status])
+  @@index([municipalityId, splittingFlagged])
+  @@index([barangayId, category, fiscalYear])
+  @@map("procurement_contracts")
+}
+
+model ProcurementDocument {
+  id                       String             @id @default(uuid())
+  municipalityId           String             @map("municipality_id")
+  barangayId               String             @map("barangay_id")
+  contractId               String             @map("contract_id")
+  docType                  ProcurementDocType @map("doc_type")
+  title                    String
+  fileKey                  String?            @map("file_key")
+  fileName                 String?            @map("file_name")
+  mimeType                 String?            @map("mime_type")
+  fileSizeBytes            Int?               @map("file_size_bytes")
+  contentSha256            String?            @map("content_sha256")
+  notes                    String?
+  quotationSupplierName    String?            @map("quotation_supplier_name")
+  quotationAmountCentavos  BigInt?            @map("quotation_amount_centavos")
+  version                  Int                @default(1)
+  voidedAt                 DateTime?          @map("voided_at")
+  voidReason               String?            @map("void_reason")
+  voidedById               String?            @map("voided_by_id")
+  uploadedById             String             @map("uploaded_by_id")
+  createdAt                DateTime           @default(now()) @map("created_at")
+  updatedAt                DateTime           @updatedAt @map("updated_at")
+
+  municipality Municipality        @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  barangay     Barangay            @relation(fields: [barangayId], references: [id], onDelete: Cascade)
+  contract     ProcurementContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  uploadedBy   User                @relation("ProcurementDocUploadedBy", fields: [uploadedById], references: [id])
+  voidedBy     User?               @relation("ProcurementDocVoidedBy", fields: [voidedById], references: [id])
+
+  @@index([contractId, docType])
+  @@index([municipalityId, barangayId])
+  @@index([contractId, voidedAt])
+  @@map("procurement_documents")
+}
+
+/// Barangay Bids and Awards Committee roster (RA 9184 IRR Sec. 7.3.2).
+/// Punong Barangay designates members; PB is not a voting BAC member.
+model BacMember {
+  id               String         @id @default(uuid())
+  municipalityId   String         @map("municipality_id")
+  barangayId       String         @map("barangay_id")
+  userId           String?        @map("user_id")
+  displayName      String         @map("display_name")
+  designation      BacDesignation
+  termStart        DateTime       @map("term_start") @db.Date
+  designationDate  DateTime       @map("designation_date") @db.Date
+  isActive         Boolean        @default(true) @map("is_active")
+  designatedById   String         @map("designated_by_id")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  municipality Municipality @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  barangay     Barangay     @relation(fields: [barangayId], references: [id], onDelete: Cascade)
+  user         User?        @relation("BacMemberUser", fields: [userId], references: [id])
+  designatedBy User         @relation("BacDesignatedBy", fields: [designatedById], references: [id])
+
+  @@index([barangayId, isActive])
+  @@index([municipalityId, barangayId])
+  @@map("bac_members")
 }

@@ -16,7 +16,7 @@ export function statusToVariant(status: TaskAssignmentStatus): StatusVariant {
 
 export function statusLabel(status: TaskAssignmentStatus): string {
     const labels: Record<TaskAssignmentStatus, string> = {
-        PENDING_ACK: 'Pending ack',
+        PENDING_ACK: 'Pending',
         ACKNOWLEDGED: 'Acknowledged',
         IN_PROGRESS: 'In progress',
         SUBMITTED: 'Awaiting review',

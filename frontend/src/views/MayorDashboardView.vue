@@ -6,6 +6,7 @@ import ComplianceReviewDrawer from '@/components/library/drawer/ComplianceReview
 import StatusBadge from '@/components/library/badges/StatusBadge.vue';
 import {
     fetchAssignments,
+    fetchAssignment,
     fetchDirectiveTemplates,
     assignTask,
     reviewAssignment,
@@ -115,7 +116,27 @@ async function loadData() {
 function openReview(row: TaskAssignment) {
     selectedAssignment.value = row;
     drawerOpen.value = true;
+    void refreshSelectedAssignment(row.id);
 }
+
+async function refreshSelectedAssignment(id: string) {
+    if (!auth.token) {
+        return;
+    }
+    try {
+        const fresh = await fetchAssignment(auth.token, id);
+        if (selectedAssignment.value?.id === id) {
+            selectedAssignment.value = fresh;
+        }
+        const idx = assignments.value.findIndex((row) => row.id === id);
+        if (idx >= 0) {
+            assignments.value[idx] = fresh;
+        }
+    } catch (err) {
+        error.value = err instanceof Error ? err.message : 'Failed to load assignment detail';
+    }
+}
+
 
 async function handleReview(payload: { decision: 'ACCEPTED' | 'RETURNED'; comment: string }) {
     if (!auth.token || !selectedAssignment.value) {

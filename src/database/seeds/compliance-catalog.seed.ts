@@ -3,6 +3,7 @@ import {
     ComplianceFrequency,
     ComplianceScope,
     PrismaClient,
+    SglgPillar,
 } from '@prisma/client';
 
 type CatalogEntry = {
@@ -14,9 +15,10 @@ type CatalogEntry = {
     evidenceTypes: string[];
     weight: number;
     scope: ComplianceScope;
+    sglgPillar: SglgPillar;
 };
 
-/** Source: .cursor/skills/ph-lgu-governance/compliance-catalog.md */
+/** Source: .cursor/skills/ph-lgu-governance/compliance-catalog.md + Mission 12 pillar map */
 export const COMPLIANCE_CATALOG: CatalogEntry[] = [
     {
         code: 'ADM-001',
@@ -27,6 +29,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Minutes', 'Attendance', 'Semestral report'],
         weight: 3,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.SOCIAL_PROTECTION,
     },
     {
         code: 'ADM-002',
@@ -37,6 +40,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Minutes', 'Attendance', 'Semestral report'],
         weight: 3,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.SOCIAL_PROTECTION,
     },
     {
         code: 'ADM-003',
@@ -47,6 +51,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Signed report', 'Assembly minutes'],
         weight: 2,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
     {
         code: 'ADM-004',
@@ -57,6 +62,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['SB-approved BDP document'],
         weight: 3,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
     {
         code: 'ADM-005',
@@ -67,6 +73,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Transmittal', 'Acceptance receipt'],
         weight: 2,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
     {
         code: 'ADM-006',
@@ -77,6 +84,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['SB-approved AIP'],
         weight: 3,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
     {
         code: 'ADM-007',
@@ -87,6 +95,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Minutes', 'Agenda'],
         weight: 1,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
     {
         code: 'ADM-008',
@@ -97,6 +106,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Published charter', 'Update log'],
         weight: 1,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.BUSINESS_FRIENDLINESS,
     },
     {
         code: 'ADM-009',
@@ -107,6 +117,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Registry snapshot', 'Update date'],
         weight: 1,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.SOCIAL_PROTECTION,
     },
     {
         code: 'ADM-010',
@@ -117,6 +128,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Desk officer designation', 'Masterlist'],
         weight: 1,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.SOCIAL_PROTECTION,
     },
     {
         code: 'ADM-011',
@@ -127,6 +139,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Transmittal record'],
         weight: 1,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.SOCIAL_PROTECTION,
     },
     {
         code: 'ADM-012',
@@ -137,6 +150,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Inventory', 'Turnover minutes'],
         weight: 2,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
     {
         code: 'ADM-013',
@@ -147,6 +161,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Completed SGBR'],
         weight: 2,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
     {
         code: 'MAY-001',
@@ -157,6 +172,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Visit date', 'Findings', 'Counsel given'],
         weight: 2,
         scope: ComplianceScope.MUNICIPAL,
+        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
     {
         code: 'MAY-002',
@@ -167,6 +183,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['EO copy', 'Review status', 'SP/SB concurrence'],
         weight: 2,
         scope: ComplianceScope.MUNICIPAL,
+        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
     {
         code: 'MAY-003',
@@ -177,6 +194,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Leave request', 'Approval'],
         weight: 1,
         scope: ComplianceScope.MUNICIPAL,
+        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
     {
         code: 'MAY-004',
@@ -187,6 +205,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Resignation letter', 'Acceptance'],
         weight: 1,
         scope: ComplianceScope.MUNICIPAL,
+        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
     {
         code: 'MAY-005',
@@ -197,6 +216,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['LFC review record'],
         weight: 2,
         scope: ComplianceScope.MUNICIPAL,
+        sglgPillar: SglgPillar.FINANCIAL_ADMINISTRATION,
     },
     {
         code: 'SOC-001',
@@ -207,6 +227,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Activity reports'],
         weight: 1,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.SOCIAL_PROTECTION,
     },
     {
         code: 'SOC-002',
@@ -217,6 +238,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Committee activation record'],
         weight: 1,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.SOCIAL_PROTECTION,
     },
     {
         code: 'SOC-003',
@@ -227,6 +249,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Service delivery reports'],
         weight: 1,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.SOCIAL_PROTECTION,
     },
     {
         code: 'SOC-004',
@@ -237,6 +260,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Committee composition'],
         weight: 1,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.SOCIAL_PROTECTION,
     },
     {
         code: 'SK-001',
@@ -247,6 +271,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Budget ordinance line item'],
         weight: 2,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.YOUTH_DEVELOPMENT,
     },
     {
         code: 'SK-002',
@@ -257,6 +282,7 @@ export const COMPLIANCE_CATALOG: CatalogEntry[] = [
         evidenceTypes: ['Activity report'],
         weight: 1,
         scope: ComplianceScope.BARANGAY,
+        sglgPillar: SglgPillar.YOUTH_DEVELOPMENT,
     },
 ];
 
@@ -272,12 +298,13 @@ export async function seedComplianceCatalog(prisma: PrismaClient) {
                 evidenceTypes: entry.evidenceTypes,
                 weight: entry.weight,
                 scope: entry.scope,
+                sglgPillar: entry.sglgPillar,
             },
             create: entry,
         });
     }
 
-    console.log(`Seeded ${COMPLIANCE_CATALOG.length} compliance requirements (ADM/SOC/SK/MAY)`);
+    console.log(`Seeded ${COMPLIANCE_CATALOG.length} compliance requirements (ADM/SOC/SK/MAY + SGLG pillars)`);
 }
 
 async function main() {

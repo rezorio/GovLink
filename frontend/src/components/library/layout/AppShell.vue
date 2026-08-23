@@ -12,14 +12,23 @@ defineProps<{
 const auth = useAuthStore();
 const router = useRouter();
 
-const barangayLinks = computed(() =>
-    auth.isBarangay
-        ? [
-              { to: '/barangay', label: 'Directives' },
-              { to: '/barangay/compliance', label: 'My compliance' },
-          ]
-        : [],
-);
+const navLinks = computed(() => {
+    if (auth.isMunicipal) {
+        return [
+            { to: '/mayor', label: 'Dashboard' },
+            { to: '/mayor/sglg', label: 'SGLG' },
+            { to: '/mayor/procurement', label: 'Procurement' },
+        ];
+    }
+    if (auth.isBarangay) {
+        return [
+            { to: '/barangay', label: 'Directives' },
+            { to: '/barangay/compliance', label: 'My compliance' },
+            { to: '/barangay/procurement', label: 'Procurement' },
+        ];
+    }
+    return [];
+});
 
 function logout() {
     auth.logout();
@@ -30,7 +39,7 @@ function logout() {
 <template>
     <div class="gl-shell">
         <header class="border-b border-rule/80 bg-surface/90 backdrop-blur-sm">
-            <div class="mx-auto flex max-w-5xl items-end justify-between gap-4 px-4 pb-4 pt-6 sm:px-6">
+            <div class="mx-auto flex max-w-screen-2xl items-end justify-between gap-4 px-4 pb-4 pt-6 sm:px-6 lg:px-8">
                 <div class="min-w-0">
                     <p class="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
                         GovLink
@@ -42,13 +51,13 @@ function logout() {
                         {{ title }}
                     </h1>
                     <p v-if="subtitle" class="mt-1 text-sm text-ink-muted">{{ subtitle }}</p>
-                    <nav v-if="barangayLinks.length" class="mt-4 flex flex-wrap gap-5">
+                    <nav v-if="navLinks.length" class="mt-4 flex flex-wrap gap-5">
                         <RouterLink
-                            v-for="link in barangayLinks"
+                            v-for="link in navLinks"
                             :key="link.to"
                             :to="link.to"
                             class="gl-tab"
-                            active-class="gl-tab-active"
+                            exact-active-class="gl-tab-active"
                         >
                             {{ link.label }}
                         </RouterLink>
@@ -71,7 +80,7 @@ function logout() {
                 </div>
             </div>
         </header>
-        <main class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <main class="mx-auto max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-8">
             <slot />
         </main>
     </div>

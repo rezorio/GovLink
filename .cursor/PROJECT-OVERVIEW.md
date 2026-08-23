@@ -1,7 +1,7 @@
 # GovLink — Project Overview
 
 > **Last updated:** 2026-08-23  
-> **Phase:** Missions 1–11 complete — civic UI system locked  
+> **Phase:** Missions 1–16 complete — civic UI + barangay-scoped evidence + offline queue  
 > **Audience:** Developers, AI agents, and future contributors
 
 ---
@@ -195,13 +195,13 @@ AI development assets already in place. **Do not add more skills until the MVP s
 ## Session checkpoint
 
 > **Live status:** See [MISSION-BOARD.md](MISSION-BOARD.md) for current mission, task checkboxes, and blockers.  
-> **Last handoff:** 2026-08-23 (civic UI rollout complete; Missions 9–11 on `master`)
+> **Last handoff:** 2026-08-23 (dropped GPS geotags; evidence provenance = barangay + offline queue)
 
 ### Where we are
 
 | Area | Status |
 |------|--------|
-| Missions 1–11 | Done (periods, lifecycle, audit exports, MinIO uploads) |
+| Missions 1–16 | Done (barangay-scoped evidence provenance + offline sync; no device GPS) |
 | Civic design system | Locked — all primary FE surfaces Done (see `DESIGN-SYSTEM.md`) |
 | Postgres | Host port **5433** (`GOVLINK_PG_PORT`) |
 | MinIO | Compose ports **9000** / **9001**; S3 env in `.env.example` |
@@ -210,12 +210,14 @@ AI development assets already in place. **Do not add more skills until the MVP s
 
 1. Read this checkpoint + [MISSION-BOARD.md](MISSION-BOARD.md) “Current mission”.
 2. Follow [DESIGN-SYSTEM.md](context/DESIGN-SYSTEM.md) + `govlink-civic-ui` for any UI work.
-3. **Recommended next mission:** **SGLG scoring dashboards** (Mission 12 — not yet scoped on board; promote from FEATURES deferred list).
+3. **Recommended next mission:** Tagalog UI labels or RA 10173 PII field masking (scope on start).
 
 ### Local demo
 
 - API: `http://localhost:3000/api` · FE: Vite (often `5174` if `5173` busy)
 - Mayor: `mayor@san-jose-batangas.gov.ph` / Punong Barangay: `captain@aguila-sj-batangas.gov.ph` · password `GovLinkDemo1!`
+- SGLG: mayor → `/mayor/sglg` after periods are open
+- Procurement: mayor → `/mayor/procurement` · barangay → `/barangay/procurement`
 
 ---
 
@@ -246,7 +248,12 @@ Execute in order. Full task lists and exit criteria: [MISSION-BOARD.md](MISSION-
 9. ~~Compliance instance lifecycle~~ — done
 10. ~~Audit exports (PDF/Excel/QR)~~ — done
 11. ~~Real S3/MinIO uploads~~ — done
-12. **SGLG scoring dashboards** — next (scope on start)
+12. ~~SGLG scoring dashboards~~ — done
+13. ~~APP + SVP procurement spine~~ — done
+14. ~~RFQ / award document chain~~ — done
+15. ~~BAC roster / delivery-acceptance~~ — done
+16. ~~Geotagged photo submissions / offline queue~~ — done
+17. **Tagalog UI labels / PII masking** — next (scope on start)
 
 ---
 

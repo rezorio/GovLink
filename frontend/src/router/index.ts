@@ -18,6 +18,18 @@ const router = createRouter({
             meta: { municipal: true },
         },
         {
+            path: '/mayor/sglg',
+            name: 'mayor-sglg',
+            component: () => import('@/views/MayorSglgView.vue'),
+            meta: { municipal: true },
+        },
+        {
+            path: '/mayor/procurement',
+            name: 'mayor-procurement',
+            component: () => import('@/views/MayorProcurementView.vue'),
+            meta: { municipal: true },
+        },
+        {
             path: '/barangay',
             name: 'barangay',
             component: () => import('@/views/BarangayInboxView.vue'),
@@ -27,6 +39,12 @@ const router = createRouter({
             path: '/barangay/compliance',
             name: 'barangay-compliance',
             component: () => import('@/views/BarangayComplianceView.vue'),
+            meta: { barangay: true },
+        },
+        {
+            path: '/barangay/procurement',
+            name: 'barangay-procurement',
+            component: () => import('@/views/BarangayProcurementView.vue'),
             meta: { barangay: true },
         },
     ],

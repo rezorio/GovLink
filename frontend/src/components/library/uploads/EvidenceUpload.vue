@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { Upload } from 'lucide-vue-next';
 import { confirmUpload, putToPresignedUrl, requestPresign } from '@/api/uploads';
+import { enqueueEvidenceUpload } from '@/utils/offline-upload-queue';
 
 const ACCEPT = 'application/pdf,image/jpeg,image/png';
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -9,13 +10,26 @@ const MAX_BYTES = 10 * 1024 * 1024;
 const props = defineProps<{
     token: string;
     loading?: boolean;
+    entityType?: string;
+    /** Queue blob locally when upload fails or device is offline. */
+    enableOfflineQueue?: boolean;
+    assignmentId?: string;
 }>();
 
 const emit = defineEmits<{
-    submit: [payload: { fileKey: string; fileName: string; mimeType: string; fileSizeBytes: number }];
+    submit: [
+        payload: {
+            fileKey: string;
+            fileName: string;
+            mimeType: string;
+            fileSizeBytes: number;
+        },
+    ];
+    queued: [];
 }>();
 
 const error = ref<string | null>(null);
+const info = ref<string | null>(null);
 const selectedFile = ref<File | null>(null);
 const progress = ref(0);
 const uploading = ref(false);
@@ -32,6 +46,7 @@ function validateFile(file: File): string | null {
 
 function onFileChange(event: Event) {
     error.value = null;
+    info.value = null;
     progress.value = 0;
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -49,21 +64,39 @@ function onFileChange(event: Event) {
     selectedFile.value = file;
 }
 
+async function queueForLater() {
+    if (!selectedFile.value || !props.assignmentId) {
+        return;
+    }
+    await enqueueEvidenceUpload(props.assignmentId, selectedFile.value);
+    selectedFile.value = null;
+    info.value = 'Saved on this device. Use Sync now when back online.';
+    emit('queued');
+}
+
 async function confirmAndSubmit() {
     if (!selectedFile.value) {
         error.value = 'Select a file first.';
         return;
     }
+
+    if (!navigator.onLine && props.enableOfflineQueue && props.assignmentId) {
+        await queueForLater();
+        return;
+    }
+
     const file = selectedFile.value;
     uploading.value = true;
     error.value = null;
+    info.value = null;
     progress.value = 0;
+
     try {
         const presign = await requestPresign(props.token, {
             filename: file.name,
             contentType: file.type,
             contentLength: file.size,
-            entityType: 'submissions',
+            entityType: props.entityType ?? 'submissions',
         });
         await putToPresignedUrl(presign.uploadUrl, file, (pct) => {
             progress.value = pct;
@@ -75,8 +108,18 @@ async function confirmAndSubmit() {
             mimeType: file.type,
             fileSizeBytes: file.size,
         });
+        selectedFile.value = null;
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Upload failed';
+        if (props.enableOfflineQueue && props.assignmentId) {
+            try {
+                await queueForLater();
+                error.value = null;
+            } catch {
+                error.value = err instanceof Error ? err.message : 'Upload failed';
+            }
+        } else {
+            error.value = err instanceof Error ? err.message : 'Upload failed';
+        }
     } finally {
         uploading.value = false;
     }
@@ -111,6 +154,7 @@ async function confirmAndSubmit() {
             <p v-if="uploading" class="mt-1 text-xs text-ink-muted">Uploading… {{ progress }}%</p>
         </div>
 
+        <p v-if="info" class="mt-2 text-sm text-ink-muted">{{ info }}</p>
         <p v-if="error" class="mt-2 text-sm text-status-danger">{{ error }}</p>
 
         <button

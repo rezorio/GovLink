@@ -1,4 +1,4 @@
-import { IsIn, IsInt, IsString, Max, Min, MinLength } from 'class-validator';
+import { IsInt, IsIn, IsString, Max, Min, MinLength } from 'class-validator';
 import { UPLOAD_ALLOWED_MIMES, UPLOAD_MAX_BYTES } from '../../common/constants/upload.constants';
 
 export class SubmitEvidenceDto {

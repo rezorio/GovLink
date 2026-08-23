@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import AppShell from '@/components/library/layout/AppShell.vue';
 import StatusBadge from '@/components/library/badges/StatusBadge.vue';
 import EvidenceUpload from '@/components/library/uploads/EvidenceUpload.vue';
+import OfflineUploadBanner from '@/components/library/uploads/OfflineUploadBanner.vue';
 import { acknowledgeAssignment, fetchAssignments, submitEvidence } from '@/api/assignments';
 import { useAuthStore } from '@/stores/auth';
 import type { TaskAssignment } from '@/types';
@@ -15,6 +16,7 @@ const loading = ref(true);
 const actionLoading = ref(false);
 const error = ref<string | null>(null);
 const expandedId = ref<string | null>(null);
+const offlineBannerRef = ref<InstanceType<typeof OfflineUploadBanner> | null>(null);
 
 async function loadInbox() {
     if (!auth.token) {
@@ -48,7 +50,12 @@ async function acknowledge(id: string) {
 
 async function handleSubmit(
     id: string,
-    payload: { fileKey: string; fileName: string; mimeType: string; fileSizeBytes: number },
+    payload: {
+        fileKey: string;
+        fileName: string;
+        mimeType: string;
+        fileSizeBytes: number;
+    },
 ) {
     if (!auth.token) {
         return;
@@ -58,6 +65,7 @@ async function handleSubmit(
         await submitEvidence(auth.token, id, payload);
         expandedId.value = null;
         await loadInbox();
+        await offlineBannerRef.value?.refreshCount?.();
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'Submit failed';
     } finally {
@@ -82,8 +90,16 @@ onMounted(loadInbox);
         :subtitle="auth.user?.barangay?.name ?? auth.user?.full_name"
     >
         <p class="mb-6 max-w-xl text-sm leading-relaxed text-ink-muted">
-            Municipal directives assigned to your barangay — acknowledge, attach proof, and await review.
+            Municipal directives assigned to your barangay — acknowledge, attach photo or PDF
+            proof, and await review. Uploads queue locally when offline.
         </p>
+
+        <OfflineUploadBanner
+            v-if="auth.token"
+            ref="offlineBannerRef"
+            :token="auth.token"
+            @synced="loadInbox"
+        />
 
         <p v-if="error" class="mb-4 text-sm text-status-danger">{{ error }}</p>
         <p v-if="loading" class="text-sm text-ink-muted">Loading tasks…</p>
@@ -150,7 +166,10 @@ onMounted(loadInbox);
                         <EvidenceUpload
                             :token="auth.token"
                             :loading="actionLoading"
+                            enable-offline-queue
+                            :assignment-id="row.id"
                             @submit="(payload) => handleSubmit(row.id, payload)"
+                            @queued="offlineBannerRef?.refreshCount?.()"
                         />
                     </div>
                 </div>

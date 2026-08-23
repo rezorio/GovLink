@@ -10,6 +10,6 @@ When invoked:
 
 Design accessible, high-density dashboard layouts using Vue 3 Composition API (<script setup lang="ts">).
 
-Ensure mobile interfaces for Barangay Secretaries allow seamless camera/photo uploads for geotagged task proof.
+Ensure mobile interfaces for Barangay Secretaries allow seamless camera/photo uploads for task proof (provenance is the submitting barangay).
 
 Enforce high-contrast status badge conventions (Emerald = Compliant, Amber = Pending, Rose = Overdue).

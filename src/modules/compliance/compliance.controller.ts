@@ -6,10 +6,14 @@ import { TenantContext } from '../common/interfaces/auth.interface';
 import { ComplianceService } from './compliance.service';
 import { OpenPeriodDto } from './dto/open-period.dto';
 import { ReviewComplianceInstanceDto } from './dto/review-instance.dto';
+import { SglgScoreService } from './sglg/sglg-score.service';
 
 @Controller('compliance')
 export class ComplianceController {
-    constructor(private readonly complianceService: ComplianceService) {}
+    constructor(
+        private readonly complianceService: ComplianceService,
+        private readonly sglgScoreService: SglgScoreService,
+    ) {}
 
     @Get('requirements')
     listRequirements(@Query('scope') scope?: ComplianceScope) {
@@ -31,6 +35,15 @@ export class ComplianceController {
         @Query('periodLabel') periodLabel?: string,
     ) {
         return this.complianceService.matrix(ctx, periodLabel);
+    }
+
+    @Roles(AppRole.MAYOR, AppRole.DEPT_HEAD)
+    @Get('sglg-scores')
+    sglgScores(
+        @TenantCtx() ctx: TenantContext,
+        @Query('periodLabel') periodLabel?: string,
+    ) {
+        return this.sglgScoreService.scores(ctx, periodLabel);
     }
 
     @Roles(AppRole.MAYOR, AppRole.DEPT_HEAD)
