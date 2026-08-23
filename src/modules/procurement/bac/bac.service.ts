@@ -10,6 +10,8 @@ import { TenantContext } from '../../common/interfaces/auth.interface';
 import { PrismaService } from '../../prisma/prisma.module';
 import { CreateBacMemberDto } from '../dto/bac.dto';
 import { MAX_ACTIVE_BAC_MEMBERS, MIN_ACTIVE_BAC_MEMBERS } from './bac.constants';
+import { maskEmail } from '../../common/pii/pii-mask.util';
+import { shouldMaskLinkedUserEmail } from '../../common/pii/pii-policy';
 
 const bacInclude = {
     user: { select: { id: true, fullName: true, email: true } },
@@ -47,7 +49,7 @@ export class BacService {
             }
         }
 
-        return this.prisma.bacMember.findMany({
+        const rows = await this.prisma.bacMember.findMany({
             where: {
                 municipalityId: ctx.municipality_id,
                 barangayId: scopeBarangayId!,
@@ -55,6 +57,24 @@ export class BacService {
             include: bacInclude,
             orderBy: [{ isActive: 'desc' }, { designation: 'asc' }, { displayName: 'asc' }],
         });
+
+        return rows.map((row) => this.maskBacRow(ctx, row));
+    }
+
+    private maskBacRow(
+        ctx: TenantContext,
+        row: Prisma.BacMemberGetPayload<{ include: typeof bacInclude }>,
+    ) {
+        if (!row.user?.email || !shouldMaskLinkedUserEmail(ctx, row.user.id)) {
+            return row;
+        }
+        return {
+            ...row,
+            user: {
+                ...row.user,
+                email: maskEmail(row.user.email),
+            },
+        };
     }
 
     async create(ctx: TenantContext, dto: CreateBacMemberDto) {
@@ -133,7 +153,7 @@ export class BacService {
             },
         });
 
-        return row;
+        return this.maskBacRow(ctx, row);
     }
 
     async deactivate(ctx: TenantContext, id: string) {
@@ -167,7 +187,7 @@ export class BacService {
             after: { isActive: false },
         });
 
-        return row;
+        return this.maskBacRow(ctx, row);
     }
 
     /** Gate before BAC resolution / award recommendation. */

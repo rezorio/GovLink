@@ -312,3 +312,19 @@ export interface ProcurementOversight {
     flaggedContracts: ProcurementContract[];
     contracts: ProcurementContract[];
 }
+
+export type ResidentRecordType = 'RESIDENT' | 'KASAMBAHAY';
+
+export interface BarangayResident {
+    id: string;
+    municipalityId: string;
+    barangayId: string;
+    fullName: string;
+    addressLine: string;
+    phone: string;
+    birthYear: number | null;
+    recordType: ResidentRecordType;
+    piiMasked: boolean;
+    createdAt: string;
+    updatedAt: string;
+}

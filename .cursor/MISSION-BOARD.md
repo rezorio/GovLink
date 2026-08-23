@@ -1,7 +1,7 @@
 # GovLink — Mission Board
 
 > **Last updated:** 2026-08-23  
-> **Current mission:** Mission 17 — Tagalog UI labels ✅ (PII masking deferred)  
+> **Current mission:** Mission 18 — RA 10173 PII masking ✅  
 > **Phase:** Post-MVP features · civic UI locked
 
 **Source of truth for active work.** Update this file at end-of-session or when a mission completes.  
@@ -31,6 +31,7 @@ For long-term feature catalog: [context/FEATURES.md](context/FEATURES.md).
 | 15 | BAC roster / delivery-acceptance | ✅ Done |
 | 16 | Evidence uploads + offline queue | ✅ Done |
 | 17 | Tagalog UI labels (barangay-facing) | ✅ Done |
+| 18 | RA 10173 PII field masking | ✅ Done |
 
 **MVP flow we're building toward:**
 
@@ -394,6 +395,30 @@ DirectiveTemplate → SupervisoryTask → TaskAssignment → EvidenceSubmission 
 
 ---
 
+**Completed:** 2026-08-23
+
+---
+
+## Mission 18 — RA 10173 PII masking ✅
+
+**Goal:** Role-based redaction of personal data in barangay registry and linked user contact fields.
+
+**Exit criteria:** `BarangayResident` model + registry API; municipal viewers get masked address/phone; barangay staff see full fields; e2e asserts masking + 403 cross-barangay.
+
+### Tasks
+
+- [x] PII mask utilities + policy (`pii-mask.util`, `pii-policy`)
+- [x] `BarangayResident` schema + migration + demo seed
+- [x] `GET/POST/PATCH /registry/residents` with tenant isolation
+- [x] BAC linked-user email masking for municipal viewers
+- [x] Barangay + mayor registry UI with masked badge
+- [x] E2E masking + cross-barangay 403
+- [x] Docs / mission board closeout
+
+**Completed:** 2026-08-23
+
+---
+
 ## Missing / not yet scoped
 
 Items tracked here so they don't clutter mission task lists. Promote to a mission when actively scheduled.
@@ -411,7 +436,7 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 | Geotagged photo submissions | Removed | Prefer barangay provenance |
 | Offline upload queue | Done | Mission 16 — IndexedDB + sync banner |
 | Tagalog UI labels | Done | Mission 17 — barangay EN/FIL toggle |
-| RA 10173 PII field masking | Deferred | Next when scheduled |
+| RA 10173 PII field masking | Done | Mission 18 — registry + municipal mask |
 
 ---
 
@@ -439,7 +464,7 @@ Items tracked here so they don't clutter mission task lists. Promote to a missio
 
 _Completed mission details stay in sections above with ✅. Add dated notes here for major milestones._
 
-- **2026-08-23** — Mission 17 complete. Tagalog UI labels for barangay-facing screens (EN/FIL toggle). Handoff: RA 10173 PII masking when scheduled.
+- **2026-08-23** — Mission 18 complete. RA 10173 PII masking on barangay registry + BAC email redaction. Handoff: scope next post-MVP item (notifications, BDP/AIP trackers).
 - **2026-08-23** — Mission 16 complete (initial). Geotagged photo evidence + IndexedDB offline upload queue. Handoff: Tagalog UI or PII masking.
 - **2026-08-23** — Mission 15 complete. BAC roster (5–7 + chair gate) + delivery/acceptance → COMPLETED. Handoff: geotagged photos or offline queue.
 - **2026-08-23** — Mission 14 complete. RFQ/award document chain (3 quotes, AWARD_RECOMMENDED, void-not-delete). Handoff: BAC roster or delivery/acceptance.

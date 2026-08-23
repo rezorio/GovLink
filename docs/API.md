@@ -122,6 +122,17 @@ Omit `periodLabel` to open every current period derived from requirement frequen
 | `POST` | `/procurement/bac-members` | Barangay roles | Designate BAC member (max 7 active) |
 | `POST` | `/procurement/bac-members/:id/deactivate` | Barangay roles | Deactivate BAC member |
 
+### Registry (RA 10173)
+
+| Method | Path | Roles | Description |
+|--------|------|-------|-------------|
+| `GET` | `/registry/residents` | All authenticated | List residents; barangay scope implicit; mayor requires `?barangayId=` |
+| `GET` | `/registry/residents/:id` | All authenticated | Single record (403 cross-barangay) |
+| `POST` | `/registry/residents` | Barangay roles | Create household / kasambahay record |
+| `PATCH` | `/registry/residents/:id` | Barangay roles | Update record in own barangay |
+
+Municipal viewers receive **masked** `addressLine` and `phone` with `piiMasked: true`. Barangay staff see full fields for their barangay only.
+
 Amounts are **integer centavos**. SVP ceilings come from `ProcurementThreshold` (never hardcoded). Same supplier + category + fiscal year over SVP max sets `splittingFlagged`; award is blocked until municipal acknowledge.
 
 **Lifecycle:** `DRAFT → PLANNED → RFQ_ISSUED → QUOTATIONS_RECEIVED → EVALUATION → AWARD_RECOMMENDED → AWARDED → ACTIVE → COMPLETED`

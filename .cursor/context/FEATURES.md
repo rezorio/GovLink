@@ -85,6 +85,7 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 | ComplianceInstance period tracking | Done | Matrix API + mayor heatmap |
 | Compliance instance lifecycle | Done | Start / submit / review + barangay page |
 | Semestral barangay assembly tracking | Deferred | |
+| Barangay resident registry (PII) | Done | Mission 18 — masked municipal view |
 | BDP / AIP submission tracker | Deferred | |
 | SGLG-aligned scoring | Done | `GET /compliance/sglg-scores` + `/mayor/sglg` readiness dashboard |
 | PDF exports with LGU letterhead | Done | `GET /exports/compliance-scorecard.pdf` |
@@ -113,7 +114,7 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 |---------|--------|-------|
 | CI (lint, test, migrate) | Done | GitHub Actions on push/PR |
 | `.env.example` | Done | |
-| RA 10173 PII field masking | Deferred | Next mission |
+| RA 10173 PII field masking | Done | Mission 18 — registry API + masked municipal view |
 | Geotagged photo submissions | Removed | Device GPS dropped — provenance is JWT barangay |
 | Offline upload queue | Done | Mission 16 — IndexedDB + sync banner |
 | Tagalog UI labels (barangay EN/FIL) | Done | Mission 17 — `frontend/src/i18n/` |
@@ -122,4 +123,4 @@ Target flow: **Directive → Assign → Acknowledge → Submit → Review → Au
 
 ## Current mission
 
-**Mission 17 complete** — barangay-facing EN/FIL labels with Filipino default. Next: RA 10173 PII masking.
+**Mission 18 complete** — RA 10173 PII masking on barangay registry. Next: notifications or BDP/AIP trackers when scheduled.

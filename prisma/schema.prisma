@@ -152,6 +152,11 @@ enum BacDesignation {
   MEMBER
 }
 
+enum ResidentRecordType {
+  RESIDENT
+  KASAMBAHAY
+}
+
 model Municipality {
   id                 String            @id @default(uuid())
   name               String
@@ -174,6 +179,7 @@ model Municipality {
   procurementContracts ProcurementContract[]
   procurementDocuments ProcurementDocument[]
   bacMembers           BacMember[]
+  barangayResidents    BarangayResident[]
 
   @@map("municipalities")
 }
@@ -197,6 +203,7 @@ model Barangay {
   procurementContracts ProcurementContract[]
   procurementDocuments ProcurementDocument[]
   bacMembers           BacMember[]
+  barangayResidents    BarangayResident[]
 
   @@unique([municipalityId, psgcCode])
   @@index([municipalityId])
@@ -564,4 +571,25 @@ model BacMember {
   @@index([barangayId, isActive])
   @@index([municipalityId, barangayId])
   @@map("bac_members")
+}
+
+/// Barangay household / kasambahay registry entries (RA 10173 personal data).
+model BarangayResident {
+  id             String             @id @default(uuid())
+  municipalityId String             @map("municipality_id")
+  barangayId     String             @map("barangay_id")
+  fullName       String             @map("full_name")
+  addressLine    String             @map("address_line")
+  phone          String
+  birthYear      Int?               @map("birth_year")
+  recordType     ResidentRecordType @default(RESIDENT) @map("record_type")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  municipality Municipality @relation(fields: [municipalityId], references: [id], onDelete: Cascade)
+  barangay     Barangay     @relation(fields: [barangayId], references: [id], onDelete: Cascade)
+
+  @@index([barangayId])
+  @@index([municipalityId, barangayId])
+  @@map("barangay_residents")
 }

@@ -42,6 +42,18 @@ const router = createRouter({
             meta: { barangay: true },
         },
         {
+            path: '/mayor/registry',
+            name: 'mayor-registry',
+            component: () => import('@/views/MayorRegistryView.vue'),
+            meta: { municipal: true },
+        },
+        {
+            path: '/barangay/registry',
+            name: 'barangay-registry',
+            component: () => import('@/views/BarangayRegistryView.vue'),
+            meta: { barangay: true },
+        },
+        {
             path: '/barangay/procurement',
             name: 'barangay-procurement',
             component: () => import('@/views/BarangayProcurementView.vue'),

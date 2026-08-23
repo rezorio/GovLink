@@ -20,6 +20,7 @@ export interface TenantBoundaryFixture {
     barangayAId: string;
     barangayBId: string;
     assignmentForBarangayBId: string;
+    residentForBarangayBId: string;
     mayorEmail: string;
     captainAEmail: string;
     captainBEmail: string;
@@ -151,11 +152,24 @@ export async function seedTenantBoundaryFixture(
         },
     });
 
+    const resident = await prisma.barangayResident.create({
+        data: {
+            municipalityId: municipality.id,
+            barangayId: barangayB.id,
+            fullName: 'E2E Test Resident',
+            addressLine: 'Purok 1, E2E Barangay Beta, Test Municipality',
+            phone: '09171234567',
+            birthYear: 1990,
+            recordType: 'RESIDENT',
+        },
+    });
+
     return {
         municipalityId: municipality.id,
         barangayAId: barangayA.id,
         barangayBId: barangayB.id,
         assignmentForBarangayBId: assignment.id,
+        residentForBarangayBId: resident.id,
         mayorEmail: FIXTURE.mayorEmail,
         captainAEmail: FIXTURE.captainAEmail,
         captainBEmail: FIXTURE.captainBEmail,
@@ -172,6 +186,7 @@ export async function cleanupTenantBoundaryFixture(prisma: PrismaClient) {
         return;
     }
 
+    await prisma.barangayResident.deleteMany({ where: { municipalityId: municipality.id } });
     await prisma.auditLog.deleteMany({ where: { municipalityId: municipality.id } });
     await prisma.exportDocument.deleteMany({ where: { municipalityId: municipality.id } });
     await prisma.procurementDocument.deleteMany({ where: { municipalityId: municipality.id } });

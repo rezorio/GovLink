@@ -5,6 +5,7 @@ import { seedComplianceCatalog } from './compliance-catalog.seed';
 import { seedComplianceInstances } from './compliance-instances.seed';
 import { seedProcurementDemo } from './procurement-demo.seed';
 import { seedProcurementThresholds } from './procurement-thresholds.seed';
+import { seedResidentRegistry } from './resident-registry.seed';
 import { seedDemoUsers } from './users.seed';
 
 const prisma = new PrismaClient();
@@ -168,6 +169,9 @@ async function main() {
 
     console.log('\nSeeding BAC roster...');
     await seedBacRoster(prisma);
+
+    console.log('\nSeeding barangay resident registry...');
+    await seedResidentRegistry(prisma);
 
     console.log('\nSeed completed successfully.');
 }

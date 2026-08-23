@@ -769,4 +769,41 @@ describe('Tenant boundary (e2e)', () => {
             expect(ids).not.toContain(fixture.assignmentForBarangayBId);
         });
     });
+
+    describe('Registry PII masking (RA 10173)', () => {
+        it('Barangay staff see full contact fields for own barangay', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/registry/residents')
+                .set(authHeader(captainBToken))
+                .expect(200);
+
+            const row = response.body.find((r: { id: string }) => r.id === fixture.residentForBarangayBId);
+            expect(row).toBeDefined();
+            expect(row.piiMasked).toBe(false);
+            expect(row.phone).toBe('09171234567');
+            expect(row.addressLine).toContain('Purok 1');
+        });
+
+        it('Municipal mayor sees masked contact fields', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/registry/residents')
+                .query({ barangayId: fixture.barangayBId })
+                .set(authHeader(mayorToken))
+                .expect(200);
+
+            const row = response.body.find((r: { id: string }) => r.id === fixture.residentForBarangayBId);
+            expect(row).toBeDefined();
+            expect(row.piiMasked).toBe(true);
+            expect(row.phone).not.toBe('09171234567');
+            expect(row.phone).toContain('***');
+            expect(row.addressLine).toContain('[address redacted]');
+        });
+
+        it('GET /registry/residents/:id returns 403 across barangays', async () => {
+            await request(app.getHttpServer())
+                .get(`/api/registry/residents/${fixture.residentForBarangayBId}`)
+                .set(authHeader(captainAToken))
+                .expect(403);
+        });
+    });
 });
